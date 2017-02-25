@@ -1,9 +1,9 @@
 {
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
-  "name": "college-trie",
+  "name": "trie-hard",
   "description": "javascript compressed-trie data-structure",
   "version": "0.0.1",
-  "main": "./builds/trie.js",
+  "main": "./builds/trie-hard.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/nlp-compromise/college-trie.git"
