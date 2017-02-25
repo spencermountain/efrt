@@ -1,5 +1,5 @@
 'use strict';
-const Trie = require('./src/trie');
+const Trie = require('./src');
 let ptrie = require('./src/ptrie');
 let PackedTrie = ptrie.PackedTrie;
 
