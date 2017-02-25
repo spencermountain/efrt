@@ -1,15 +1,15 @@
 'use strict';
-const Trie = require('./trie');
-let ptrie = require('./ptrie');
+const Trie = require('./src/trie');
+let ptrie = require('./src/ptrie');
 let PackedTrie = ptrie.PackedTrie;
 
-// let arr = [
-//   'cool',
-//   'coolish',
-//   'cool hat',
-//   'cooledomingo',
-// ];
-let arr = require('../../src/data/nouns/nouns.js');
+let arr = [
+  'cool',
+  'coolish',
+  'cool hat',
+  'cooledomingo',
+];
+// let arr = require('../../src/data/nouns/nouns.js');
 let t = new Trie(arr);
 // console.log('\n\n' + t.isWord('nothing'));
 
@@ -19,7 +19,7 @@ console.log(compressed);
 let p = new PackedTrie(compressed);
 // console.log(p);
 
-for(let i = 0; i < arr.length; i++) {
+for (let i = 0; i < arr.length; i++) {
   if (!p.isWord(arr[i])) {
     console.log(arr[i]);
   }
