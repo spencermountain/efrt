@@ -1,75 +1,35 @@
 'use strict';
-const trieHard = require('./src');
-const debug = require('./test/debug');
+// const trieHard = require('./src');
+// const debug = require('./test/debug');
+const bits = require('./bits/bits.js');
+const Trie = bits.Trie;
+const RankDirectory = bits.RankDirectory;
+const FrozenTrie = bits.FrozenTrie;
 
-var arr = [
-  'brian',
-  'bruce',
-  'bryan',
-  'bryat',
-  'bryon',
-  'bu',
-  'dejan',
-  'burton',
-  // 'byron',
-  'caleb',
-  'calvin',
-  'carlo',
-  'carlton',
-  'carroll',
-  'cedric',
-  'cesar',
-  'cha',
-  'charle',
-  // 'charli',
-  'chester',
-  'chri',
-  'christian',
-  'christopher',
-  'chuck',
-  'clarence',
-  'clark',
-  'claude',
-  'clay',
-  'clayton',
-  'damian',
-  'damien',
-  'damon',
-  'daniel',
-  'danny',
-  'darin',
-  'dariu',
-  'darwin',
-  'daryl',
-  'dav',
-  'davi',
-  'david',
-  'dean',
-  'delbert',
-  'deni',
-  'demetriu',
-  'denni',
-  'derek',
-  'derrick',
-  'desmond',
-  'deven',
-  'devin',
-  'dewayne',
-  'dewey',
-  'dever',
+// create a trie
+var trie = new Trie();
+
+var words = [
+  'cool',
+  'happy',
+  'coolish',
+  'happier',
+  'cooldude',
 ];
+words.sort();
+words.forEach((str) => {
+  trie.insert(str);
+});
 
-let str = trieHard.pack(arr);
-// debug(str);
+// Encode the trie.
+var trieData = trie.encode();
 
-let trie = trieHard.unpack(str);
-// console.log(trie);
+var L1 = 32 * 32;
+var L2 = 32;
 
-console.log('\n');
-for (let i = 0; i < arr.length; i++) {
-  if (!trie.isWord(arr[i])) {
-    console.log(arr[i]);
-  }
-}
-console.log(trie.isWord('dejan'));
-console.log(trie.words('de'));
+var directory = RankDirectory.Create(trieData, trie.getNodeCount() * 2 + 1, L1, L2);
+var ftrie = new FrozenTrie(trieData, directory.getData(), trie.getNodeCount());
+
+words.forEach((str) => {
+  console.log(ftrie.lookup(str));
+});
