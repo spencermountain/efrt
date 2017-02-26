@@ -3,6 +3,58 @@ const Histogram = require('./histogram');
 const config = require('../config');
 const fns = require('../fns');
 // Return packed representation of Trie as a string.
+
+function analyzeRefs(self, node, histAbs, histRel) {
+  if (self.visited(node)) {
+    return;
+  }
+  let props = self.nodeProps(node, true);
+  for (let i = 0; i < props.length; i++) {
+    let prop = props[i];
+    let ref = node._n - node[prop]._n - 1;
+    // Count the number of single-character relative refs
+    if (ref < config.BASE) {
+      histRel.add(ref);
+    }
+    // Count the number of characters saved by converting an absolute
+    // reference to a one-character symbol.
+    histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
+    analyzeRefs(self, node[prop], histAbs, histRel);
+  }
+}
+
+function symbolCount(histAbs, histRel, nodeCount) {
+  histAbs = histAbs.highest(config.BASE);
+  let savings = [];
+  savings[-1] = 0;
+  let best = 0;
+  let symbCount = 0;
+  let defSize = 3 + fns.toAlphaCode(nodeCount).length;
+  for (let sym = 0; sym < config.BASE; sym++) {
+    if (histAbs[sym] === undefined) {
+      break;
+    }
+    // Cumulative savings of:
+    //   saved characters in refs
+    //   minus definition size
+    //   minus relative size wrapping to 2 digits
+    savings[sym] = histAbs[sym][1] - defSize -
+    histRel.countOf(config.BASE - sym - 1) +
+    savings[sym - 1];
+    // console.log('savings[' + sym + '] ' + savings[sym] + ' = ' +
+    //   savings[sym - 1] + ' +' +
+    //   histAbs[sym][1] + ' - ' + defSize + ' - ' +
+    //   histRel.countOf(config.BASE - sym - 1) + ')');
+    if (savings[sym] >= best) {
+      best = savings[sym];
+      symbCount = sym + 1;
+    }
+  }
+  return symbCount;
+}
+
+
+
 //
 // Each node of the Trie is output on a single line.
 //
@@ -92,61 +144,13 @@ const pack = (self) => {
   let histAbs = new Histogram();
   let histRel = new Histogram();
 
-  function analyzeRefs(node) {
-    if (self.visited(node)) {
-      return;
-    }
-    let props = self.nodeProps(node, true);
-    for (let i = 0; i < props.length; i++) {
-      let prop = props[i];
-      let ref = node._n - node[prop]._n - 1;
-      // Count the number of single-character relative refs
-      if (ref < config.BASE) {
-        histRel.add(ref);
-      }
-      // Count the number of characters saved by converting an absolute
-      // reference to a one-character symbol.
-      histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
-      analyzeRefs(node[prop]);
-    }
-  }
-
-  function symbolCount() {
-    histAbs = histAbs.highest(config.BASE);
-    let savings = [];
-    savings[-1] = 0;
-    let best = 0;
-    let symbCount = 0;
-    let defSize = 3 + fns.toAlphaCode(nodeCount).length;
-    for (let sym = 0; sym < config.BASE; sym++) {
-      if (histAbs[sym] === undefined) {
-        break;
-      }
-      // Cumulative savings of:
-      //   saved characters in refs
-      //   minus definition size
-      //   minus relative size wrapping to 2 digits
-      savings[sym] = histAbs[sym][1] - defSize -
-      histRel.countOf(config.BASE - sym - 1) +
-      savings[sym - 1];
-      // console.log('savings[' + sym + '] ' + savings[sym] + ' = ' +
-      //   savings[sym - 1] + ' +' +
-      //   histAbs[sym][1] + ' - ' + defSize + ' - ' +
-      //   histRel.countOf(config.BASE - sym - 1) + ')');
-      if (savings[sym] >= best) {
-        best = savings[sym];
-        symbCount = sym + 1;
-      }
-    }
-    return symbCount;
-  }
 
   numberNodes(self.root, 0);
   nodeCount = nodes.length;
 
   self.prepDFS();
-  analyzeRefs(self.root);
-  symCount = symbolCount();
+  analyzeRefs(self, self.root, histAbs, histRel);
+  symCount = symbolCount(histAbs, histRel, nodeCount);
   for (let sym = 0; sym < symCount; sym++) {
     syms[histAbs[sym][0]] = fns.toAlphaCode(sym);
   }
