@@ -51,36 +51,34 @@ const BitWriter = require('./bitWriter');
   A Trie node, for use in building the encoding trie. This is not needed for
   the decoder.
   */
-function TrieNode( letter ){
-  this.letter = letter;
-  this.final = false;
-  this.children = [];
+class TrieNode {
+  constructor( letter ) {
+    this.letter = letter;
+    this.final = false;
+    this.children = [];
+  }
 }
 
-function Trie(){
-  this.init();
-}
-
-Trie.prototype = {
-  init: function() {
+class Trie {
+  constructor() {
     this.previousWord = '';
     this.root = new TrieNode(' ');
     this.cache = [this.root];
     this.nodeCount = 1;
-  },
+  }
 
   /**
     Returns the number of nodes in the trie
    */
-  getNodeCount: function() {
+  getNodeCount() {
     return this.nodeCount;
-  },
+  }
 
   /**
     Inserts a word into the trie. This function is fastest if the words are
     inserted in alphabetical order.
    */
-  insert: function( word ) {
+  insert( word ) {
 
     var commonPrefix = 0;
     for(var i = 0; i < Math.min(word.length, this.previousWord.length);
@@ -104,12 +102,12 @@ Trie.prototype = {
 
     node.final = true;
     this.previousWord = word;
-  },
+  }
 
   /**
     Apply a function to each node, traversing the trie in level order.
     */
-  apply: function( fn ) {
+  apply( fn ) {
     var level = [this.root];
     while (level.length > 0) {
       var node = level.shift();
@@ -119,13 +117,13 @@ Trie.prototype = {
       fn(node);
     }
 
-  },
+  }
 
   /**
     Encode the trie and all of its nodes. Returns a string representing the
     encoded data.
     */
-  encode: function() {
+  encode() {
     // Write the unary encoding of the tree in level order.
     var bits = new BitWriter();
     bits.write(0x02, 2);
@@ -151,7 +149,7 @@ Trie.prototype = {
 
     return bits.getData();
   }
-};
+}
 
 
 

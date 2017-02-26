@@ -21,13 +21,8 @@ function CHR(id){
 */
 class BitWriter {
   constructor() {
-    this.init();
-  }
-
-  init() {
     this.bits = [];
   }
-
   /**
       Write some data to the bit string. The number of bits must be 32 or
       fewer.

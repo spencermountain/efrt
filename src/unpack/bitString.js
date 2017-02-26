@@ -103,10 +103,6 @@ function ORD(ch){
 */
 class BitString {
   constructor(str) {
-    this.init(str);
-  }
-
-  init( str ) {
     this.bytes = str;
     this.length = this.bytes.length * W;
   }

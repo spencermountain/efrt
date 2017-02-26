@@ -8,22 +8,21 @@ const config = require('../config');
 /**
   This class is used for traversing the succinctly encoded trie.
   */
-function FrozenTrieNode( trie, index, letter, final, firstChild, childCount ){
-  this.trie = trie;
-  this.index = index;
-  this.letter = letter;
-  this.final = final;
-  this.firstChild = firstChild;
-  this.childCount = childCount;
-}
-
-FrozenTrieNode.prototype = {
+class FrozenTrieNode {
+  constructor( trie, index, letter, final, firstChild, childCount ) {
+    this.trie = trie;
+    this.index = index;
+    this.letter = letter;
+    this.final = final;
+    this.firstChild = firstChild;
+    this.childCount = childCount;
+  }
   /**
     Returns the number of children.
     */
-  getChildCount: function() {
+  getChildCount() {
     return this.childCount;
-  },
+  }
 
   /**
     Returns the FrozenTrieNode for the given child.
@@ -31,10 +30,10 @@ FrozenTrieNode.prototype = {
     @param index The 0-based index of the child of this node. For example, if
     the node has 5 children, and you wanted the 0th one, pass in 0.
   */
-  getChild: function(index) {
+  getChild(index) {
     return this.trie.getNodeByIndex(this.firstChild + index);
   }
-};
+}
 
 
 /**
@@ -47,12 +46,8 @@ FrozenTrieNode.prototype = {
 
     @param nodeCount The number of nodes in the trie.
   */
-function FrozenTrie( data, directoryData, nodeCount ){
-  this.init(data, directoryData, nodeCount);
-}
-
-FrozenTrie.prototype = {
-  init: function( data, directoryData, nodeCount ) {
+class FrozenTrie {
+  constructor( data, directoryData, nodeCount ) {
     this.data = new BitString(data);
     this.directory = new RankDirectory(directoryData, data,
       nodeCount * 2 + 1, config.L1, config.L2);
@@ -60,13 +55,12 @@ FrozenTrie.prototype = {
     // The position of the first bit of the data in 0th node. In non-root
     // nodes, this would contain 6-bit letters.
     this.letterStart = nodeCount * 2 + 1;
-  },
-
+  }
   /**
      Retrieve the FrozenTrieNode of the trie, given its index in level-order.
      This is a private function that you don't have to use.
     */
-  getNodeByIndex: function( index ) {
+  getNodeByIndex( index ) {
     // retrieve the 6-bit letter.
     var final = this.data.get(this.letterStart + index * 6, 1) === 1;
     var letter = String.fromCharCode(
@@ -80,21 +74,21 @@ FrozenTrie.prototype = {
 
     return new FrozenTrieNode(this, index, letter, final, firstChild,
       childOfNextNode - firstChild);
-  },
+  }
 
   /**
     Retrieve the root node. You can use this node to obtain all of the other
     nodes in the trie.
     */
-  getRoot: function() {
+  getRoot() {
     return this.getNodeByIndex(0);
-  },
+  }
 
   /**
     Look-up a word in the trie. Returns true if and only if the word exists
     in the trie.
     */
-  lookup: function( word ) {
+  lookup( word ) {
     word = normalize(word);
     var node = this.getRoot();
     for (var i = 0; i < word.length; i++) {
@@ -115,5 +109,5 @@ FrozenTrie.prototype = {
 
     return node.final;
   }
-};
+}
 module.exports = FrozenTrie;
