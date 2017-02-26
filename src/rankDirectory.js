@@ -1,6 +1,6 @@
 'use strict';
-const BitString = require('./bitString');
-const BitWriter = require('./bitWriter');
+const BitString = require('./unpack/bitString');
+const BitWriter = require('./pack/bitWriter');
 /**
     The rank directory allows you to build an index to quickly compute the
     rank() and select() functions. The index can itself be encoded as a binary

@@ -1,6 +1,6 @@
 'use strict';
-const FrozenTrie = require('./frozenTrie');
-const Trie = require('./trie');
+const Trie = require('./pack/trie');
+const FrozenTrie = require('./unpack/frozenTrie');
 const RankDirectory = require('./rankDirectory');
 const config = require('./config');
 const normalize = require('./normalize');
