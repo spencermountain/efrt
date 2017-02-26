@@ -1,11 +1,12 @@
 'use strict';
 const config = require('../config');
 const fns = require('../fns');
+var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
+var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+
 /*
-  PackedTrie - Trie traversla of the Trie packed-string representation.
-
+  PackedTrie - Trie traversal of the Trie packed-string representation.
   Usage:
-
       ptrie = new PackedTrie(<string> compressed);
       bool = ptrie.isWord(word);
       longestWord = ptrie.match(string);
@@ -14,16 +15,12 @@ const fns = require('../fns');
       ptrie.enumerate(inode, prefix, context);
 */
 
-var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
-var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-
 // Implement isWord given a packed representation of a Trie.
 class PackedTrie {
   constructor(pack) {
     this.nodes = pack.split(config.NODE_SEP);
     this.syms = [];
     this.symCount = 0;
-
     while (true) {
       var m = reSymbol.exec(this.nodes[0]);
       if (!m) {
@@ -33,7 +30,6 @@ class PackedTrie {
       this.symCount++;
       this.nodes.shift();
     }
-
   }
 
   isWord(word) {

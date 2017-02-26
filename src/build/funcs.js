@@ -1,5 +1,24 @@
 'use strict';
-let types = require('./types');
+
+function toString(obj) {
+  return Object.prototype.toString.call(obj);
+}
+
+function isType(obj, type) {
+  return toString(obj) === '[object ' + type + ']';
+}
+
+const types = {
+  'isArray': function(obj) {
+    return isType(obj, 'Array');
+  },
+  'isArguments': function(obj) {
+    return isType(obj, 'Arguments');
+  },
+  'toString': toString,
+  'isType': isType
+};
+
 
 let enumBug = !{
     toString: true
@@ -86,7 +105,7 @@ const extend = function(dest) {
   for (let i = 1; i < arguments.length; i++) {
     let source = arguments[i];
     let keys = Object.keys(source);
-    for(let o = 0; o < keys.length; o++) {
+    for (let o = 0; o < keys.length; o++) {
       let prop = source[keys[o]];
       if (source.hasOwnProperty(prop)) {
         dest[prop] = source[prop];

@@ -30,11 +30,11 @@ class Histogram {
   highest(top) {
     let sorted = [];
     let keys = Object.keys(this.counts);
-    for(let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       let sym = keys[i];
       sorted.push([sym, this.counts[sym]]);
     }
-    sorted.sort(function (a, b) {
+    sorted.sort(function(a, b) {
       return b[1] - a[1];
     });
     if (top) {
