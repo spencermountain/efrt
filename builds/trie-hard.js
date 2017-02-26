@@ -1,657 +1,357 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.trieHard = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-'use strict';
+"use strict";
 
 module.exports = {
-  NODE_SEP: ';',
-  STRING_SEP: ',',
-  TERMINAL_PREFIX: '!',
-  BASE: 36
+  L1: 32 * 32,
+  L2: 32,
+  /**
+      The width of each unit of the encoding, in bits. Here we use 6, for base-64
+      encoding.
+   */
+  W: 6
 };
 
 },{}],2:[function(_dereq_,module,exports){
 'use strict';
 
+var unpack = _dereq_('./unpack');
+var Trie = _dereq_('./pack/trie');
+var RankDirectory = _dereq_('./rankDirectory');
 var config = _dereq_('./config');
+var normalize = _dereq_('./normalize');
 
-// 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
-var toAlphaCode = function toAlphaCode(n) {
-  var places,
-      range,
-      s = '',
-      d;
-
-  for (places = 1, range = config.BASE; n >= range; n -= range, places++, range *= config.BASE) {}
-
-  while (places--) {
-    d = n % config.BASE;
-    s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
-    n = (n - d) / config.BASE;
-  }
-  return s;
-};
-
-var fromAlphaCode = function fromAlphaCode(s) {
-  var n = 0,
-      places,
-      range,
-      pow,
-      i,
-      d;
-
-  for (places = 1, range = config.BASE; places < s.length; n += range, places++, range *= config.BASE) {}
-
-  for (i = s.length - 1, pow = 1; i >= 0; i--, pow *= config.BASE) {
-    d = s.charCodeAt(i) - 48;
-    if (d > 10) {
-      d -= 7;
-    }
-    n += d * pow;
-  }
-  return n;
-};
-
-/* Sort elements and remove duplicates from array (modified in place) */
-var unique = function unique(a) {
-  a.sort();
-  for (var i = 1; i < a.length; i++) {
-    if (a[i - 1] === a[i]) {
-      a.splice(i, 1);
-    }
-  }
-};
-
-var commonPrefix = function commonPrefix(w1, w2) {
-  var len = Math.min(w1.length, w2.length);
-  while (len > 0) {
-    var prefix = w1.slice(0, len);
-    if (prefix === w2.slice(0, len)) {
-      return prefix;
-    }
-    len -= 1;
-  }
-  return '';
+//
+var pack = function pack(words) {
+  var trie = new Trie();
+  words.sort();
+  words.forEach(function (str) {
+    str = normalize(str);
+    trie.insert(str);
+  });
+  var trieData = trie.encode();
+  // console.log(trie.root.children[0]);
+  var nodes = trie.getNodeCount();
+  var directory = RankDirectory.Create(trieData, nodes * 2 + 1, config.L1, config.L2);
+  return {
+    data: trieData,
+    directory: directory.getData(),
+    nodes: nodes
+  };
 };
 
 module.exports = {
-  toAlphaCode: toAlphaCode,
-  fromAlphaCode: fromAlphaCode,
-  unique: unique,
-  commonPrefix: commonPrefix
+  pack: pack,
+  unpack: unpack
 };
 
-},{"./config":1}],3:[function(_dereq_,module,exports){
+},{"./config":1,"./normalize":3,"./pack/trie":5,"./rankDirectory":6,"./unpack":9}],3:[function(_dereq_,module,exports){
 'use strict';
+//NOTHING TO SEE HERE, PLEASE LOOK AT THE FLOOR
+//really, nothing interesting in this file
 
-module.exports = {
-  pack: _dereq_('./pack/index'),
-  unpack: _dereq_('./unpack/index')
+//elite programming!
+
+var funMapping = {
+  0: 'qxq', //0
+  1: 'qzq', //1
+  2: 'qxz', //2
+  3: 'qqx', //3
+  4: 'qqz', //4
+  5: 'xqz', //5
+  6: 'xqx', //6
+  7: 'xqq', //7
+  8: 'zxq', //8
+  9: 'zqx', //9
+  ' ': 'zzx', //' '
+  '\'': 'zzq' //'
 };
 
-},{"./pack/index":5,"./unpack/index":8}],4:[function(_dereq_,module,exports){
+// look, umm
+var normalize = function normalize(str) {
+  //ok..
+  str = str.replace(/[0-9 ']/g, function (c) {
+    return funMapping[c];
+  });
+  return str;
+};
+
+module.exports = normalize;
+// console.log(normalize('b52\'s'));
+
+},{}],4:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Histogram = function () {
-  function Histogram() {
-    _classCallCheck(this, Histogram);
+var config = _dereq_('../config');
+var W = config.W;
 
-    this.counts = {};
+// Configure the bit writing and reading functions to work natively in BASE-64
+// encoding. That way, we don't have to convert back and forth to bytes.
+
+var BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+/**
+    Returns the character unit that represents the given value. If this were
+    binary data, we would simply return id.
+ */
+function CHR(id) {
+  return BASE64[id];
+}
+
+/**
+    The BitWriter will create a stream of bytes, letting you write a certain
+    number of bits at a time. This is part of the encoder, so it is not
+    optimized for memory or speed.
+*/
+
+var BitWriter = function () {
+  function BitWriter() {
+    _classCallCheck(this, BitWriter);
+
+    this.bits = [];
   }
+  /**
+      Write some data to the bit string. The number of bits must be 32 or
+      fewer.
+  */
 
-  _createClass(Histogram, [{
-    key: 'init',
-    value: function init(sym) {
-      if (this.counts[sym] === undefined) {
-        this.counts[sym] = 0;
+
+  _createClass(BitWriter, [{
+    key: 'write',
+    value: function write(data, numBits) {
+      for (var i = numBits - 1; i >= 0; i--) {
+        if (data & 1 << i) {
+          this.bits.push(1);
+        } else {
+          this.bits.push(0);
+        }
       }
     }
+
+    /**
+        Get the bitstring represented as a javascript string of bytes
+    */
+
   }, {
-    key: 'add',
-    value: function add(sym, n) {
-      if (n === undefined) {
-        n = 1;
+    key: 'getData',
+    value: function getData() {
+      var chars = [];
+      var b = 0;
+      var i = 0;
+
+      for (var j = 0; j < this.bits.length; j++) {
+        b = b << 1 | this.bits[j];
+        i += 1;
+        if (i === W) {
+          chars.push(CHR(b));
+          i = b = 0;
+        }
       }
-      this.init(sym);
-      this.counts[sym] += n;
+
+      if (i) {
+        chars.push(CHR(b << W - i));
+      }
+
+      return chars.join('');
     }
+
+    /**
+        Returns the bits as a human readable binary string for debugging
+     */
+
   }, {
-    key: 'change',
-    value: function change(symNew, symOld, n) {
-      if (n === undefined) {
-        n = 1;
+    key: 'getDebugString',
+    value: function getDebugString(group) {
+      var chars = [];
+      var i = 0;
+
+      for (var j = 0; j < this.bits.length; j++) {
+        chars.push('' + this.bits[j]);
+        i++;
+        if (i === group) {
+          chars.push(' ');
+          i = 0;
+        }
       }
-      this.add(symOld, -n);
-      this.add(symNew, n);
-    }
-  }, {
-    key: 'countOf',
-    value: function countOf(sym) {
-      this.init(sym);
-      return this.counts[sym];
-    }
-  }, {
-    key: 'highest',
-    value: function highest(top) {
-      var sorted = [];
-      var keys = Object.keys(this.counts);
-      for (var i = 0; i < keys.length; i++) {
-        var sym = keys[i];
-        sorted.push([sym, this.counts[sym]]);
-      }
-      sorted.sort(function (a, b) {
-        return b[1] - a[1];
-      });
-      if (top) {
-        sorted = sorted.slice(0, top);
-      }
-      return sorted;
+
+      return chars.join('');
     }
   }]);
 
-  return Histogram;
+  return BitWriter;
 }();
 
-module.exports = Histogram;
+module.exports = BitWriter;
 
-},{}],5:[function(_dereq_,module,exports){
+},{"../config":1}],5:[function(_dereq_,module,exports){
 'use strict';
-
-var Trie = _dereq_('./trie');
-
-//turn an array into a compressed string
-var pack = function pack(arr) {
-  var t = new Trie(arr);
-  return t.pack();
-};
-module.exports = pack;
-
-},{"./trie":7}],6:[function(_dereq_,module,exports){
-'use strict';
-
-var Histogram = _dereq_('./histogram');
-var config = _dereq_('../config');
-var fns = _dereq_('../fns');
-// Return packed representation of Trie as a string.
-
-function analyzeRefs(self, node, histAbs, histRel) {
-  if (self.visited(node)) {
-    return;
-  }
-  var props = self.nodeProps(node, true);
-  for (var i = 0; i < props.length; i++) {
-    var prop = props[i];
-    var ref = node._n - node[prop]._n - 1;
-    // Count the number of single-character relative refs
-    if (ref < config.BASE) {
-      histRel.add(ref);
-    }
-    // Count the number of characters saved by converting an absolute
-    // reference to a one-character symbol.
-    histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
-    analyzeRefs(self, node[prop], histAbs, histRel);
-  }
-}
-
-function symbolCount(histAbs, histRel, nodeCount) {
-  histAbs = histAbs.highest(config.BASE);
-  var savings = [];
-  savings[-1] = 0;
-  var best = 0;
-  var symbCount = 0;
-  var defSize = 3 + fns.toAlphaCode(nodeCount).length;
-  for (var sym = 0; sym < config.BASE; sym++) {
-    if (histAbs[sym] === undefined) {
-      break;
-    }
-    // Cumulative savings of:
-    //   saved characters in refs
-    //   minus definition size
-    //   minus relative size wrapping to 2 digits
-    savings[sym] = histAbs[sym][1] - defSize - histRel.countOf(config.BASE - sym - 1) + savings[sym - 1];
-    // console.log('savings[' + sym + '] ' + savings[sym] + ' = ' +
-    //   savings[sym - 1] + ' +' +
-    //   histAbs[sym][1] + ' - ' + defSize + ' - ' +
-    //   histRel.countOf(config.BASE - sym - 1) + ')');
-    if (savings[sym] >= best) {
-      best = savings[sym];
-      symbCount = sym + 1;
-    }
-  }
-  return symbCount;
-}
-
-//
-// Each node of the Trie is output on a single line.
-//
-// For example Trie("the them there thesis this"):
-// {
-//    "th": {
-//      "is": 1,
-//      "e": {
-//        "": 1,
-//        "m": 1,
-//        "re": 1,
-//        "sis": 1
-//      }
-//    }
-//  }
-//
-// Would be reperesented as:
-//
-// th0
-// e0is
-// !m,re,sis
-//
-// The line begins with a '!' iff it is a terminal node of the Trie.
-// For each string property in a node, the string is listed, along
-// with a (relative!) line number of the node that string references.
-// Terminal strings (those without child node references) are
-// separated by ',' characters.
-var pack = function pack(self) {
-  var nodes = [];
-  var nodeCount = void 0;
-  var syms = {};
-  var symCount = void 0;
-  var pos = 0;
-
-  // Make sure we've combined all the common suffixes
-  self.optimize();
-
-  function nodeLine(node) {
-    var line = '',
-        sep = '';
-
-    if (self.isTerminal(node)) {
-      line += config.TERMINAL_PREFIX;
-    }
-
-    var props = self.nodeProps(node);
-    for (var i = 0; i < props.length; i++) {
-      var prop = props[i];
-      if (typeof node[prop] === 'number') {
-        line += sep + prop;
-        sep = config.STRING_SEP;
-        continue;
-      }
-      if (syms[node[prop]._n]) {
-        line += sep + prop + syms[node[prop]._n];
-        sep = '';
-        continue;
-      }
-      var ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + symCount);
-      // Large reference to smaller string suffix -> duplicate suffix
-      if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
-        ref = node[prop]._g;
-        sep = config.STRING_SEP;
-        continue;
-      }
-      line += sep + prop + ref;
-      sep = '';
-    }
-
-    return line;
-  }
-
-  // Topological sort into nodes array
-  function numberNodes(node) {
-    if (node._n !== undefined) {
-      return;
-    }
-    var props = self.nodeProps(node, true);
-    for (var i = 0; i < props.length; i++) {
-      numberNodes(node[props[i]]);
-    }
-    node._n = pos++;
-    nodes.unshift(node);
-  }
-
-  var histAbs = new Histogram();
-  var histRel = new Histogram();
-
-  numberNodes(self.root, 0);
-  nodeCount = nodes.length;
-
-  self.prepDFS();
-  analyzeRefs(self, self.root, histAbs, histRel);
-  symCount = symbolCount(histAbs, histRel, nodeCount);
-  for (var sym = 0; sym < symCount; sym++) {
-    syms[histAbs[sym][0]] = fns.toAlphaCode(sym);
-  }
-
-  for (var i = 0; i < nodeCount; i++) {
-    nodes[i] = nodeLine(nodes[i]);
-  }
-
-  // Prepend symbols
-  for (var _sym = symCount - 1; _sym >= 0; _sym--) {
-    nodes.unshift(fns.toAlphaCode(_sym) + ':' + fns.toAlphaCode(nodeCount - histAbs[_sym][0] - 1));
-  }
-
-  return nodes.join(config.NODE_SEP);
-};
-module.exports = pack;
-
-},{"../config":1,"../fns":2,"./histogram":4}],7:[function(_dereq_,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = _dereq_('../config');
-var Histogram = _dereq_('./histogram');
-var fns = _dereq_('../fns');
-var _pack = _dereq_('./packer');
-/*
- A JavaScript implementation of a Trie search datastructure.
-  Usage:
-      trie = new Trie(dictionary-string);
-      bool = trie.isWord(word);
-  To use a packed (compressed) version of the trie stored as a string:
-      compressed = trie.pack();
-      ptrie = new PackedTrie(compressed);
-      bool = ptrie.isWord(word)
-  Node structure:
-    Each node of the Trie is an Object that can contain the following properties:
-      '' - If present (with value == 1), the node is a Terminal Node - the prefix
-          leading to this node is a word in the dictionary.
-      numeric properties (value == 1) - the property name is a terminal string
-          so that the prefix + string is a word in the dictionary.
-      Object properties - the property name is one or more characters to be consumed
-          from the prefix of the test string, with the remainder to be checked in
-          the child node.
-      '_c': A unique name for the node (starting from 1), used in combining Suffixes.
-      '_n': Created when packing the Trie, the sequential node number
-          (in pre-order traversal).
-      '_d': The number of times a node is shared (it's in-degree from other nodes).
-      '_v': Visited in DFS.
-      '_g': For singleton nodes, the name of it's single property.
- */
+var BitWriter = _dereq_('./bitWriter');
 
-// Create a Trie data structure for searching for membership of strings
-// in a dictionary in a very space efficient way.
+/*
+ A Succinct Trie for Javascript
+
+ By Steve Hanov
+ Released to the public domain.
+
+ This file contains functions for creating a succinctly encoded trie structure
+ from a list of words. The trie is encoded to a succinct bit string using the
+ method of Jacobson (1989). The bitstring is then encoded using BASE-64.
+
+ The resulting trie does not have to be decoded to be used. This file also
+ contains functions for looking up a word in the BASE-64 encoded data, in
+ O(mlogn) time, where m is the number of letters in the target word, and n is
+ the number of nodes in the trie.
+
+ Objects for encoding:
+
+ TrieNode
+ Trie
+ BitWriter
+
+ Objects for decoding:
+ BitString
+ FrozenTrieNode
+ FrozenTrie
+
+ QUICK USAGE:
+
+ Suppose we let data be some output of the demo encoder:
+
+ var data = {
+    "nodeCount": 37,
+    "directory": "BMIg",
+    "trie": "v2qqqqqqqpIUn4A5JZyBZ4ggCKh55ZZgBA5ZZd5vIEl1wx8g8A"
+ };
+
+ var frozenTrie = new FrozenTrie( Data.trie, Data.directory, Data.nodeCount);
+
+ alert( frozenTrie.lookup( "hello" ) ); // outputs true
+ alert( frozenTrie.lookup( "kwijibo" ) ); // outputs false
+
+*/
+
+/**
+  A Trie node, for use in building the encoding trie. This is not needed for
+  the decoder.
+  */
+
+var TrieNode = function TrieNode(letter) {
+  _classCallCheck(this, TrieNode);
+
+  this.letter = letter;
+  this.final = false;
+  this.children = [];
+};
 
 var Trie = function () {
-  function Trie(words) {
+  function Trie() {
     _classCallCheck(this, Trie);
 
-    this.root = {};
-    this.lastWord = '';
-    this.suffixes = {};
-    this.suffixCounts = {};
-    this.cNext = 1;
-    this.wordCount = 0;
-    this.insertWords(words);
-    this.vCur = 0;
+    this.previousWord = '';
+    this.root = new TrieNode(' ');
+    this.cache = [this.root];
+    this.nodeCount = 1;
   }
-  // Insert words from one big string, or from an array.
+
+  /**
+    Returns the number of nodes in the trie
+   */
 
 
   _createClass(Trie, [{
-    key: 'insertWords',
-    value: function insertWords(words) {
-      if (typeof words === 'string') {
-        words = words.split(/\n/);
-      }
-      fns.unique(words);
-      for (var i = 0; i < words.length; i++) {
-        this.insert(words[i]);
-      }
+    key: 'getNodeCount',
+    value: function getNodeCount() {
+      return this.nodeCount;
     }
+
+    /**
+      Inserts a word into the trie. This function is fastest if the words are
+      inserted in alphabetical order.
+     */
+
   }, {
     key: 'insert',
     value: function insert(word) {
-      this._insert(word, this.root);
-      var lastWord = this.lastWord;
-      this.lastWord = word;
 
-      var prefix = fns.commonPrefix(word, lastWord);
-      if (prefix === lastWord) {
-        return;
-      }
-
-      var freeze = this.uniqueNode(lastWord, word, this.root);
-      if (freeze) {
-        this.combineSuffixNode(freeze);
-      }
-    }
-  }, {
-    key: '_insert',
-    value: function _insert(word, node) {
-      // Do any existing props share a common prefix?
-      var keys = Object.keys(node);
-      for (var i = 0; i < keys.length; i++) {
-        var prop = keys[i];
-        var prefix = fns.commonPrefix(word, prop);
-        if (prefix.length === 0) {
-          continue;
+      var commonPrefix = 0;
+      for (var i = 0; i < Math.min(word.length, this.previousWord.length); i++) {
+        if (word[i] !== this.previousWord[i]) {
+          break;
         }
-        // Prop is a proper prefix - recurse to child node
-        if (prop === prefix && _typeof(node[prop]) === 'object') {
-          this._insert(word.slice(prefix.length), node[prop]);
-          return;
+        commonPrefix += 1;
+      }
+
+      this.cache.length = commonPrefix + 1;
+      var node = this.cache[this.cache.length - 1];
+
+      for (i = commonPrefix; i < word.length; i++) {
+        var next = new TrieNode(word[i]);
+        this.nodeCount++;
+        node.children.push(next);
+        this.cache.push(next);
+        node = next;
+      }
+
+      node.final = true;
+      this.previousWord = word;
+    }
+
+    /**
+      Apply a function to each node, traversing the trie in level order.
+      */
+
+  }, {
+    key: 'apply',
+    value: function apply(fn) {
+      var level = [this.root];
+      while (level.length > 0) {
+        var node = level.shift();
+        for (var i = 0; i < node.children.length; i++) {
+          level.push(node.children[i]);
         }
-        // Duplicate terminal string - ignore
-        if (prop === word && typeof node[prop] === 'number') {
-          return;
+        fn(node);
+      }
+    }
+
+    /**
+      Encode the trie and all of its nodes. Returns a string representing the
+      encoded data.
+      */
+
+  }, {
+    key: 'encode',
+    value: function encode() {
+      // Write the unary encoding of the tree in level order.
+      var bits = new BitWriter();
+      bits.write(0x02, 2);
+      this.apply(function (node) {
+        for (var i = 0; i < node.children.length; i++) {
+          bits.write(1, 1);
         }
-        var next = {};
-        next[prop.slice(prefix.length)] = node[prop];
-        this.addTerminal(next, word = word.slice(prefix.length));
-        delete node[prop];
-        node[prefix] = next;
-        this.wordCount++;
-        return;
-      }
+        bits.write(0, 1);
+      });
 
-      // No shared prefix.  Enter the word here as a terminal string.
-      this.addTerminal(node, word);
-      this.wordCount++;
-    }
-
-    // Add a terminal string to node.
-    // If 2 characters or less, just add with value == 1.
-    // If more than 2 characters, point to shared node
-    // Note - don't prematurely share suffixes - these
-    // terminals may become split and joined with other
-    // nodes in this part of the tree.
-
-  }, {
-    key: 'addTerminal',
-    value: function addTerminal(node, prop) {
-      if (prop.length <= 1) {
-        node[prop] = 1;
-        return;
-      }
-      var next = {};
-      node[prop[0]] = next;
-      this.addTerminal(next, prop.slice(1));
-    }
-
-    // Well ordered list of properties in a node (string or object properties)
-    // Use nodesOnly==true to return only properties of child nodes (not
-    // terminal strings.
-
-  }, {
-    key: 'nodeProps',
-    value: function nodeProps(node, nodesOnly) {
-      var props = [];
-      for (var prop in node) {
-        if (prop !== '' && prop[0] !== '_') {
-          if (!nodesOnly || _typeof(node[prop]) === 'object') {
-            props.push(prop);
-          }
+      // Write the data for each node, using 6 bits for node. 1 bit stores
+      // the "final" indicator. The other 5 bits store one of the 26 letters
+      // of the alphabet.
+      var a = 'a'.charCodeAt(0);
+      this.apply(function (node) {
+        var value = node.letter.charCodeAt(0) - a;
+        // console.log(node.letter + ' ' + node.letter.charCodeAt(0) + '  ' + value);
+        if (node.final) {
+          value |= 0x20;
         }
-      }
-      props.sort();
-      return props;
-    }
-  }, {
-    key: 'optimize',
-    value: function optimize() {
-      this.combineSuffixNode(this.root);
-      this.prepDFS();
-      this.countDegree(this.root);
-      this.prepDFS();
-      this.collapseChains(this.root);
-    }
+        bits.write(value, 6);
+      });
 
-    // Convert Trie to a DAWG by sharing identical nodes
-
-  }, {
-    key: 'combineSuffixNode',
-    value: function combineSuffixNode(node) {
-      // Frozen node - can't change.
-      if (node._c) {
-        return node;
-      }
-      // Make sure all children are combined and generate unique node
-      // signature for this node.
-      var sig = [];
-      if (this.isTerminal(node)) {
-        sig.push('!');
-      }
-      var props = this.nodeProps(node);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        if (_typeof(node[prop]) === 'object') {
-          node[prop] = this.combineSuffixNode(node[prop]);
-          sig.push(prop);
-          sig.push(node[prop]._c);
-        } else {
-          sig.push(prop);
-        }
-      }
-      sig = sig.join('-');
-
-      var shared = this.suffixes[sig];
-      if (shared) {
-        return shared;
-      }
-      this.suffixes[sig] = node;
-      node._c = this.cNext++;
-      return node;
-    }
-  }, {
-    key: 'prepDFS',
-    value: function prepDFS() {
-      this.vCur++;
-    }
-  }, {
-    key: 'visited',
-    value: function visited(node) {
-      if (node._v === this.vCur) {
-        return true;
-      }
-      node._v = this.vCur;
-      return false;
-    }
-  }, {
-    key: 'countDegree',
-    value: function countDegree(node) {
-      if (node._d === undefined) {
-        node._d = 0;
-      }
-      node._d++;
-      if (this.visited(node)) {
-        return;
-      }
-      var props = this.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        this.countDegree(node[props[i]]);
-      }
-    }
-
-    // Remove intermediate singleton nodes by hoisting into their parent
-
-  }, {
-    key: 'collapseChains',
-    value: function collapseChains(node) {
-      var prop = void 0,
-          props = void 0,
-          child = void 0,
-          i = void 0;
-      if (this.visited(node)) {
-        return;
-      }
-      props = this.nodeProps(node);
-      for (i = 0; i < props.length; i++) {
-        prop = props[i];
-        child = node[prop];
-        if ((typeof child === 'undefined' ? 'undefined' : _typeof(child)) !== 'object') {
-          continue;
-        }
-        this.collapseChains(child);
-        // Hoist the singleton child's single property to the parent
-        if (child._g !== undefined && (child._d === 1 || child._g.length === 1)) {
-          delete node[prop];
-          prop += child._g;
-          node[prop] = child[child._g];
-        }
-      }
-      // Identify singleton nodes
-      if (props.length === 1 && !this.isTerminal(node)) {
-        node._g = prop;
-      }
-    }
-  }, {
-    key: 'isWord',
-    value: function isWord(word) {
-      return this.isFragment(word, this.root);
-    }
-  }, {
-    key: 'isTerminal',
-    value: function isTerminal(node) {
-      return !!node[''];
-    }
-  }, {
-    key: 'isFragment',
-    value: function isFragment(word, node) {
-      if (word.length === 0) {
-        return this.isTerminal(node);
-      }
-
-      if (node[word] === 1) {
-        return true;
-      }
-      // Find a prefix of word reference to a child
-      var props = this.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        if (prop === word.slice(0, prop.length)) {
-          return this.isFragment(word.slice(prop.length), node[prop]);
-        }
-      }
-      return false;
-    }
-
-    // Find highest node in Trie that is on the path to word
-    // and that is NOT on the path to other.
-
-  }, {
-    key: 'uniqueNode',
-    value: function uniqueNode(word, other, node) {
-      var props = this.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        if (prop === word.slice(0, prop.length)) {
-          if (prop !== other.slice(0, prop.length)) {
-            return node[prop];
-          }
-          return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node[prop]);
-        }
-      }
-      return undefined;
-    }
-  }, {
-    key: 'pack',
-    value: function pack() {
-      return _pack(this);
+      return bits.getData();
     }
   }]);
 
@@ -660,17 +360,162 @@ var Trie = function () {
 
 module.exports = Trie;
 
-},{"../config":1,"../fns":2,"./histogram":4,"./packer":6}],8:[function(_dereq_,module,exports){
+},{"./bitWriter":4}],6:[function(_dereq_,module,exports){
 'use strict';
 
-var Ptrie = _dereq_('./ptrie');
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var unpack = function unpack(str) {
-  return new Ptrie(str);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var BitString = _dereq_('./unpack/bitString');
+var BitWriter = _dereq_('./pack/bitWriter');
+/**
+    The rank directory allows you to build an index to quickly compute the
+    rank() and select() functions. The index can itself be encoded as a binary
+    string.
+ */
+/**
+Used to build a rank directory from the given input string.
+
+@param data A javascript string containing the data, as readable using the
+BitString object.
+
+@param numBits The number of bits to index.
+
+@param l1Size The number of bits that each entry in the Level 1 table
+summarizes. This should be a multiple of l2Size.
+
+@param l2Size The number of bits that each entry in the Level 2 table
+summarizes.
+*/
+
+var RankDirectory = function () {
+  function RankDirectory(directoryData, bitData, numBits, l1Size, l2Size) {
+    _classCallCheck(this, RankDirectory);
+
+    this.directory = new BitString(directoryData);
+    this.data = new BitString(bitData);
+    this.l1Size = l1Size;
+    this.l2Size = l2Size;
+    this.l1Bits = Math.ceil(Math.log(numBits) / Math.log(2));
+    this.l2Bits = Math.ceil(Math.log(l1Size) / Math.log(2));
+    this.sectionBits = (l1Size / l2Size - 1) * this.l2Bits + this.l1Bits;
+    this.numBits = numBits;
+  }
+
+  /**
+      Returns the string representation of the directory.
+   */
+
+
+  _createClass(RankDirectory, [{
+    key: 'getData',
+    value: function getData() {
+      return this.directory.getData();
+    }
+
+    /**
+      Returns the number of 1 or 0 bits (depending on the "which" parameter) to
+      to and including position x.
+      */
+
+  }, {
+    key: 'rank',
+    value: function rank(which, x) {
+
+      if (which === 0) {
+        return x - this.rank(1, x) + 1;
+      }
+
+      var rank = 0;
+      var o = x;
+      var sectionPos = 0;
+
+      if (o >= this.l1Size) {
+        sectionPos = (o / this.l1Size | 0) * this.sectionBits;
+        rank = this.directory.get(sectionPos - this.l1Bits, this.l1Bits);
+        o = o % this.l1Size;
+      }
+
+      if (o >= this.l2Size) {
+        sectionPos += (o / this.l2Size | 0) * this.l2Bits;
+        rank += this.directory.get(sectionPos - this.l2Bits, this.l2Bits);
+      }
+
+      rank += this.data.count(x - x % this.l2Size, x % this.l2Size + 1);
+
+      return rank;
+    }
+
+    /**
+      Returns the position of the y'th 0 or 1 bit, depending on the "which"
+      parameter.
+      */
+
+  }, {
+    key: 'select',
+    value: function select(which, y) {
+      var high = this.numBits;
+      var low = -1;
+      var val = -1;
+
+      while (high - low > 1) {
+        var probe = (high + low) / 2 | 0;
+        var r = this.rank(which, probe);
+
+        if (r === y) {
+          // We have to continue searching after we have found it,
+          // because we want the _first_ occurrence.
+          val = probe;
+          high = probe;
+        } else if (r < y) {
+          low = probe;
+        } else {
+          high = probe;
+        }
+      }
+
+      return val;
+    }
+  }]);
+
+  return RankDirectory;
+}();
+
+//static
+
+
+RankDirectory.Create = function (data, numBits, l1Size, l2Size) {
+  var bits = new BitString(data);
+  var p = 0;
+  var i = 0;
+  var count1 = 0,
+      count2 = 0;
+  var l1bits = Math.ceil(Math.log(numBits) / Math.log(2));
+  var l2bits = Math.ceil(Math.log(l1Size) / Math.log(2));
+
+  var directory = new BitWriter();
+
+  while (p + l2Size <= numBits) {
+    count2 += bits.count(p, l2Size);
+    i += l2Size;
+    p += l2Size;
+    if (i === l1Size) {
+      count1 += count2;
+      directory.write(count1, l1bits);
+      count2 = 0;
+      i = 0;
+    } else {
+      directory.write(count2, l2bits);
+    }
+  }
+
+  return new RankDirectory(directory.getData(), data, numBits, l1Size, l2Size);
 };
-module.exports = unpack;
 
-},{"./ptrie":9}],9:[function(_dereq_,module,exports){
+module.exports = RankDirectory;
+
+},{"./pack/bitWriter":4,"./unpack/bitString":7}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -678,204 +523,345 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var config = _dereq_('../config');
-var fns = _dereq_('../fns');
-var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
-var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-var MAX_WORD = 'zzzzzzzzzz';
-/*
-  PackedTrie - Trie traversal of the Trie packed-string representation.
-  Usage:
-      ptrie = new PackedTrie(<string> compressed);
-      bool = ptrie.isWord(word);
-      longestWord = ptrie.match(string);
-      matchArray = ptrie.matches(string);
-      wordArray = ptrie.words(from, beyond, limit);
-      ptrie.enumerate(inode, prefix, context);
+var W = config.W;
+
+/**
+    Returns the decimal value of the given character unit.
+ */
+
+var BASE64_CACHE = {
+  'A': 0,
+  'B': 1,
+  'C': 2,
+  'D': 3,
+  'E': 4,
+  'F': 5,
+  'G': 6,
+  'H': 7,
+  'I': 8,
+  'J': 9,
+  'K': 10,
+  'L': 11,
+  'M': 12,
+  'N': 13,
+  'O': 14,
+  'P': 15,
+  'Q': 16,
+  'R': 17,
+  'S': 18,
+  'T': 19,
+  'U': 20,
+  'V': 21,
+  'W': 22,
+  'X': 23,
+  'Y': 24,
+  'Z': 25,
+  'a': 26,
+  'b': 27,
+  'c': 28,
+  'd': 29,
+  'e': 30,
+  'f': 31,
+  'g': 32,
+  'h': 33,
+  'i': 34,
+  'j': 35,
+  'k': 36,
+  'l': 37,
+  'm': 38,
+  'n': 39,
+  'o': 40,
+  'p': 41,
+  'q': 42,
+  'r': 43,
+  's': 44,
+  't': 45,
+  'u': 46,
+  'v': 47,
+  'w': 48,
+  'x': 49,
+  'y': 50,
+  'z': 51,
+  '0': 52,
+  '1': 53,
+  '2': 54,
+  '3': 55,
+  '4': 56,
+  '5': 57,
+  '6': 58,
+  '7': 59,
+  '8': 60,
+  '9': 61,
+  '-': 62,
+  '_': 63
+};
+
+var MaskTop = [0x3f, 0x1f, 0x0f, 0x07, 0x03, 0x01, 0x00];
+
+var BitsInByte = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8];
+
+function ORD(ch) {
+  // Used to be: return BASE64.indexOf(ch);
+  return BASE64_CACHE[ch];
+}
+
+/**
+    Given a string of data (eg, in BASE-64), the BitString class supports
+    reading or counting a number of bits from an arbitrary position in the
+    string.
 */
 
-// Implement isWord given a packed representation of a Trie.
+var BitString = function () {
+  function BitString(str) {
+    _classCallCheck(this, BitString);
 
-var PackedTrie = function () {
-  function PackedTrie(pack) {
-    _classCallCheck(this, PackedTrie);
-
-    this.nodes = pack.split(config.NODE_SEP);
-    this.syms = [];
-    this.symCount = 0;
-    while (true) {
-      var m = reSymbol.exec(this.nodes[0]);
-      if (!m) {
-        break;
-      }
-      this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
-      this.symCount++;
-      this.nodes.shift();
-    }
+    this.bytes = str;
+    this.length = this.bytes.length * W;
   }
 
-  _createClass(PackedTrie, [{
-    key: 'isWord',
-    value: function isWord(word) {
-      if (word === '') {
-        return false;
-      }
-      return this.match(word) === word;
+  /**
+    Returns the internal string of bytes
+  */
+
+
+  _createClass(BitString, [{
+    key: 'getData',
+    value: function getData() {
+      return this.bytes;
     }
 
-    // Return largest matching string in the dictionary (or '')
+    /**
+        Returns a decimal number, consisting of a certain number, n, of bits
+        starting at a certain position, p.
+     */
 
   }, {
-    key: 'match',
-    value: function match(word) {
-      var matches = this.matches(word);
-      if (matches.length === 0) {
-        return '';
-      }
-      return matches[matches.length - 1];
-    }
+    key: 'get',
+    value: function get(p, n) {
 
-    // Return array of all the prefix matches in the dictionary
+      // case 1: bits lie within the given byte
+      if (p % W + n <= W) {
+        return (ORD(this.bytes[p / W | 0]) & MaskTop[p % W]) >> W - p % W - n;
 
-  }, {
-    key: 'matches',
-    value: function matches(word) {
-      return this.words(word, word + 'a');
-    }
+        // case 2: bits lie incompletely in the given byte
+      } else {
+        var result = ORD(this.bytes[p / W | 0]) & MaskTop[p % W];
 
-    // Largest possible word in the dictionary - hard coded for now
+        var l = W - p % W;
+        p += l;
+        n -= l;
 
-  }, {
-    key: 'max',
-    value: function max() {
-      return MAX_WORD;
-    }
-
-    // words() - return all strings in dictionary - same as words('')
-    // words(string) - return all words with prefix
-    // words(string, limit) - limited number of words
-    // words(string, beyond) - max (alphabetical) word
-    // words(string, beyond, limit)
-
-  }, {
-    key: 'words',
-    value: function words(from, beyond, limit) {
-      var words = [];
-
-      if (from === undefined) {
-        from = '';
-      }
-
-      if (typeof beyond === 'number') {
-        limit = beyond;
-        beyond = undefined;
-      }
-
-      // By default list all words with 'from' as prefix
-      if (beyond === undefined) {
-        beyond = this.beyond(from);
-      }
-
-      function catchWords(word) {
-        if (words.length >= limit) {
-          this.abort = true;
-          return;
+        while (n >= W) {
+          result = result << W | ORD(this.bytes[p / W | 0]);
+          p += W;
+          n -= W;
         }
-        words.push(word);
-      }
 
-      this.enumerate(0, '', {
-        from: from,
-        beyond: beyond,
-        fn: catchWords,
-        prefixes: from + 'a' === beyond
-      });
-      return words;
+        if (n > 0) {
+          result = result << n | ORD(this.bytes[p / W | 0]) >> W - n;
+        }
+
+        return result;
+      }
     }
 
-    // Enumerate words in dictionary.  Two modes:
-    //
-    // ctx.prefixes: Just enumerate terminal strings that are
-    // prefixes of 'from'.
-    //
-    // !ctx.prefixes: Enumerate all words s.t.:
-    //
-    //    ctx.from <= word < ctx.beyond
-    //
+    /**
+        Counts the number of bits set to 1 starting at position p and
+        ending at position p + n
+     */
 
   }, {
-    key: 'enumerate',
-    value: function enumerate(inode, prefix, ctx) {
-      var node = this.nodes[inode];
-      var self = this;
+    key: 'count',
+    value: function count(p, n) {
 
-      function emit(word) {
-        if (ctx.prefixes) {
-          if (word === ctx.from.slice(0, word.length)) {
-            ctx.fn(word);
-          }
-          return;
-        }
-        if (ctx.from <= word && word < ctx.beyond) {
-          ctx.fn(word);
+      var count = 0;
+      while (n >= 8) {
+        count += BitsInByte[this.get(p, 8)];
+        p += 8;
+        n -= 8;
+      }
+
+      return count + BitsInByte[this.get(p, n)];
+    }
+
+    /**
+        Returns the number of bits set to 1 up to and including position x.
+        This is the slow implementation used for testing.
+    */
+
+  }, {
+    key: 'rank',
+    value: function rank(x) {
+      var rank = 0;
+      for (var i = 0; i <= x; i++) {
+        if (this.get(i, 1)) {
+          rank++;
         }
       }
 
-      if (node[0] === config.TERMINAL_PREFIX) {
-        emit(prefix);
-        if (ctx.abort) {
-          return;
-        }
-        node = node.slice(1);
-      }
-
-      node.replace(reNodePart, function (w, str, ref) {
-        var match = prefix + str;
-
-        // Done or no possible future match from str
-        if (ctx.abort || match >= ctx.beyond || match < ctx.from.slice(0, match.length)) {
-          return;
-        }
-
-        var isTerminal = ref === config.STRING_SEP || ref === '';
-
-        if (isTerminal) {
-          emit(match);
-          return;
-        }
-
-        self.enumerate(self.inodeFromRef(ref, inode), match, ctx);
-      });
-    }
-
-    // References are either absolute (symbol) or relative (1 - based)
-
-  }, {
-    key: 'inodeFromRef',
-    value: function inodeFromRef(ref, inode) {
-      var dnode = fns.fromAlphaCode(ref);
-      if (dnode < this.symCount) {
-        return this.syms[dnode];
-      }
-      return inode + dnode + 1 - this.symCount;
-    }
-
-    // Increment a string one beyond any string with the current prefix
-
-  }, {
-    key: 'beyond',
-    value: function beyond(s) {
-      if (s.length === 0) {
-        return this.max();
-      }
-      var asc = s.charCodeAt(s.length - 1);
-      return s.slice(0, -1) + String.fromCharCode(asc + 1);
+      return rank;
     }
   }]);
 
-  return PackedTrie;
+  return BitString;
 }();
 
-module.exports = PackedTrie;
+module.exports = BitString;
 
-},{"../config":1,"../fns":2}]},{},[3])(3)
+},{"../config":1}],8:[function(_dereq_,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var BitString = _dereq_('./bitString');
+var RankDirectory = _dereq_('../rankDirectory');
+var normalize = _dereq_('../normalize');
+var config = _dereq_('../config');
+
+/**
+  This class is used for traversing the succinctly encoded trie.
+  */
+
+var FrozenTrieNode = function () {
+  function FrozenTrieNode(trie, index, letter, final, firstChild, childCount) {
+    _classCallCheck(this, FrozenTrieNode);
+
+    this.trie = trie;
+    this.index = index;
+    this.letter = letter;
+    this.final = final;
+    this.firstChild = firstChild;
+    this.childCount = childCount;
+  }
+  /**
+    Returns the number of children.
+    */
+
+
+  _createClass(FrozenTrieNode, [{
+    key: 'getChildCount',
+    value: function getChildCount() {
+      return this.childCount;
+    }
+
+    /**
+      Returns the FrozenTrieNode for the given child.
+       @param index The 0-based index of the child of this node. For example, if
+      the node has 5 children, and you wanted the 0th one, pass in 0.
+    */
+
+  }, {
+    key: 'getChild',
+    value: function getChild(index) {
+      return this.trie.getNodeByIndex(this.firstChild + index);
+    }
+  }]);
+
+  return FrozenTrieNode;
+}();
+
+/**
+    The FrozenTrie is used for looking up words in the encoded trie.
+
+    @param data A string representing the encoded trie.
+
+    @param directoryData A string representing the RankDirectory. The global L1
+    and L2 constants are used to determine the L1Size and L2size.
+
+    @param nodeCount The number of nodes in the trie.
+  */
+
+
+var FrozenTrie = function () {
+  function FrozenTrie(data, directoryData, nodeCount) {
+    _classCallCheck(this, FrozenTrie);
+
+    this.data = new BitString(data);
+    this.directory = new RankDirectory(directoryData, data, nodeCount * 2 + 1, config.L1, config.L2);
+
+    // The position of the first bit of the data in 0th node. In non-root
+    // nodes, this would contain 6-bit letters.
+    this.letterStart = nodeCount * 2 + 1;
+  }
+  /**
+     Retrieve the FrozenTrieNode of the trie, given its index in level-order.
+     This is a private function that you don't have to use.
+    */
+
+
+  _createClass(FrozenTrie, [{
+    key: 'getNodeByIndex',
+    value: function getNodeByIndex(index) {
+      // retrieve the 6-bit letter.
+      var final = this.data.get(this.letterStart + index * 6, 1) === 1;
+      var letter = String.fromCharCode(this.data.get(this.letterStart + index * 6 + 1, 5) + 'a'.charCodeAt(0));
+      var firstChild = this.directory.select(0, index + 1) - index;
+
+      // Since the nodes are in level order, this nodes children must go up
+      // until the next node's children start.
+      var childOfNextNode = this.directory.select(0, index + 2) - index - 1;
+
+      return new FrozenTrieNode(this, index, letter, final, firstChild, childOfNextNode - firstChild);
+    }
+
+    /**
+      Retrieve the root node. You can use this node to obtain all of the other
+      nodes in the trie.
+      */
+
+  }, {
+    key: 'getRoot',
+    value: function getRoot() {
+      return this.getNodeByIndex(0);
+    }
+
+    /**
+      Look-up a word in the trie. Returns true if and only if the word exists
+      in the trie.
+      */
+
+  }, {
+    key: 'lookup',
+    value: function lookup(word) {
+      word = normalize(word);
+      var node = this.getRoot();
+      for (var i = 0; i < word.length; i++) {
+        var child;
+        var j = 0;
+        for (; j < node.getChildCount(); j++) {
+          child = node.getChild(j);
+          if (child.letter === word[i]) {
+            break;
+          }
+        }
+
+        if (j === node.getChildCount()) {
+          return false;
+        }
+        node = child;
+      }
+
+      return node.final;
+    }
+  }]);
+
+  return FrozenTrie;
+}();
+
+module.exports = FrozenTrie;
+
+},{"../config":1,"../normalize":3,"../rankDirectory":6,"./bitString":7}],9:[function(_dereq_,module,exports){
+'use strict';
+
+var FrozenTrie = _dereq_('./frozenTrie');
+//
+var unpack = function unpack(o) {
+  var ftrie = new FrozenTrie(o.data, o.directory, o.nodes);
+  return ftrie;
+};
+module.exports = unpack;
+
+},{"./frozenTrie":8}]},{},[2])(2)
 });
