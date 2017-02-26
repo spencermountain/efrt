@@ -3,12 +3,14 @@ const FrozenTrie = require('./frozenTrie');
 const Trie = require('./trie');
 const RankDirectory = require('./rankDirectory');
 const config = require('./config');
+const normalize = require('./normalize');
 
 //
 const pack = (words) => {
   var trie = new Trie();
   words.sort();
   words.forEach((str) => {
+    str = normalize(str);
     trie.insert(str);
   });
   var trieData = trie.encode();

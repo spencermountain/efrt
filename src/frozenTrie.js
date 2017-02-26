@@ -1,6 +1,7 @@
 'use strict';
 const BitString = require('./bitString');
 const RankDirectory = require('./rankDirectory');
+const normalize = require('./normalize');
 const config = require('./config');
 
 
@@ -94,6 +95,7 @@ FrozenTrie.prototype = {
     in the trie.
     */
   lookup: function( word ) {
+    word = normalize(word);
     var node = this.getRoot();
     for (var i = 0; i < word.length; i++) {
       var child;
