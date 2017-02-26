@@ -3,7 +3,7 @@ const trieHard = require('./src');
 const debug = require('./test/debug');
 
 let arr = [
-  // 'cool',
+  'cool',
   // 'coolish',
   // 'cool hat',
   // 'cool hatting',
