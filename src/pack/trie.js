@@ -1,8 +1,8 @@
 'use strict';
-const Histogram = require('./histogram');
 const config = require('../config');
+const Histogram = require('./histogram');
 const fns = require('../fns');
-const pack = require('./pack');
+const pack = require('./packer');
 /*
  A JavaScript implementation of a Trie search datastructure.
   Usage:

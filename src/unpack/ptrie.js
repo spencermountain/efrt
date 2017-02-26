@@ -3,6 +3,7 @@ const config = require('../config');
 const fns = require('../fns');
 const reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
 const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+const MAX_WORD = 'zzzzzzzzzz'
 /*
   PackedTrie - Trie traversal of the Trie packed-string representation.
   Usage:
@@ -54,7 +55,7 @@ class PackedTrie {
 
   // Largest possible word in the dictionary - hard coded for now
   max() {
-    return config.MAX_WORD;
+    return MAX_WORD;
   }
 
   // words() - return all strings in dictionary - same as words('')

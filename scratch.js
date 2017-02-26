@@ -5,6 +5,8 @@ let arr = [
   'coolish',
   'cool hat',
   'cooledomingo',
+  'zzzzzzzzzz',
+  'zzzzzzzzzzzz'
 ];
 
 let str = trieHard.pack(arr);
