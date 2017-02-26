@@ -1,6 +1,6 @@
 'use strict';
+const unpack = require('./unpack');
 const Trie = require('./pack/trie');
-const FrozenTrie = require('./unpack/frozenTrie');
 const RankDirectory = require('./rankDirectory');
 const config = require('./config');
 const normalize = require('./normalize');
@@ -24,10 +24,6 @@ const pack = (words) => {
   };
 };
 
-const unpack = (o) => {
-  var ftrie = new FrozenTrie(o.data, o.directory, o.nodes);
-  return ftrie;
-};
 module.exports = {
   pack: pack,
   unpack: unpack
