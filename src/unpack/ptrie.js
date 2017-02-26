@@ -1,9 +1,8 @@
 'use strict';
 const config = require('../config');
 const fns = require('../fns');
-var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
-var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-
+const reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
+const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
 /*
   PackedTrie - Trie traversal of the Trie packed-string representation.
   Usage:
@@ -22,14 +21,15 @@ class PackedTrie {
     this.syms = [];
     this.symCount = 0;
     while (true) {
-      var m = reSymbol.exec(this.nodes[0]);
+      let m = reSymbol.exec(this.nodes[0]);
       if (!m) {
         break;
       }
-      this.syms[fromAlphaCode(m[1])] = fromAlphaCode(m[2]);
+      this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
       this.symCount++;
       this.nodes.shift();
     }
+    console.log(this.syms)
   }
 
   isWord(word) {
@@ -41,7 +41,7 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   match(word) {
-    var matches = this.matches(word);
+    let matches = this.matches(word);
     if (matches.length === 0) {
       return '';
     }
@@ -64,7 +64,7 @@ class PackedTrie {
   // words(string, beyond) - max (alphabetical) word
   // words(string, beyond, limit)
   words(from, beyond, limit) {
-    var words = [];
+    let words = [];
 
     if (from === undefined) {
       from = '';
@@ -108,8 +108,8 @@ class PackedTrie {
   //    ctx.from <= word < ctx.beyond
   //
   enumerate(inode, prefix, ctx) {
-    var node = this.nodes[inode];
-    var self = this;
+    let node = this.nodes[inode];
+    let self = this;
 
     function emit(word) {
       if (ctx.prefixes) {
@@ -132,7 +132,7 @@ class PackedTrie {
     }
 
     node.replace(reNodePart, function(w, str, ref) {
-      var match = prefix + str;
+      let match = prefix + str;
 
       // Done or no possible future match from str
       if (ctx.abort ||
@@ -141,7 +141,7 @@ class PackedTrie {
         return;
       }
 
-      var isTerminal = ref === config.STRING_SEP || ref === '';
+      let isTerminal = ref === config.STRING_SEP || ref === '';
 
       if (isTerminal) {
         emit(match);
@@ -154,7 +154,7 @@ class PackedTrie {
 
   // References are either absolute (symbol) or relative (1 - based)
   inodeFromRef(ref, inode) {
-    var dnode = fromAlphaCode(ref);
+    let dnode = fns.fromAlphaCode(ref);
     if (dnode < this.symCount) {
       return this.syms[dnode];
     }
@@ -166,7 +166,7 @@ class PackedTrie {
     if (s.length === 0) {
       return this.max();
     }
-    var asc = s.charCodeAt(s.length - 1);
+    let asc = s.charCodeAt(s.length - 1);
     return s.slice(0, -1) + String.fromCharCode(asc + 1);
   }
 

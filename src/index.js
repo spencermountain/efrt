@@ -1,9 +1,17 @@
 'use strict';
-const Trie = require('./build/trie');
+const Trie = require('./pack/trie');
+const Ptrie = require('./unpack/ptrie');
 
-const create = function(arr) {
+const pack = function(arr) {
   let t = new Trie(arr)
   return t.pack();
 }
-const unpack = function(str) {}
+const unpack = function(str) {
+  return new Ptrie(str)
+}
 module.exports = Trie
+
+module.exports = {
+  pack: pack,
+  unpack: unpack
+}

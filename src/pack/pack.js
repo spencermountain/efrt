@@ -144,7 +144,6 @@ const pack = (self) => {
   let histAbs = new Histogram();
   let histRel = new Histogram();
 
-
   numberNodes(self.root, 0);
   nodeCount = nodes.length;
 
