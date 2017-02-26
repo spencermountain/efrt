@@ -12,6 +12,7 @@ const pack = (words) => {
     trie.insert(str);
   });
   var trieData = trie.encode();
+  // console.log(trie.root.children[0]);
   var nodes = trie.getNodeCount();
   var directory = RankDirectory.Create(trieData, nodes * 2 + 1, config.L1, config.L2);
   return {

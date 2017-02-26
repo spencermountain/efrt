@@ -1,23 +1,22 @@
 'use strict';
 var test = require('tape');
-const Trie = require('../src/pack/trie');
 const trieHard = require('../src/index');
 
-test('trie has everything:', function(t) {
-  var arr = [
-    'cool',
-    'coolish',
-    'cool hat',
-    'cooledomingo',
-  ];
-  var trie = new Trie(arr);
-  for (var i = 0; i < arr.length; i++) {
-    var has = trie.isWord(arr[i]);
-    t.equal(has, true, 'trie has \'' + arr[i] + '\'');
-  }
-  t.equal(trie.isWord('farmington'), false, 'no-false-positive');
-  t.end();
-});
+// test('trie has everything:', function(t) {
+//   var arr = [
+//     'cool',
+//     'coolish',
+//     'cool hat',
+//     'cooledomingo',
+//   ];
+//   var trie = new Trie(arr);
+//   for (var i = 0; i < arr.length; i++) {
+//     var has = trie.isWord(arr[i]);
+//     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
+//   }
+//   t.equal(trie.isWord('farmington'), false, 'no-false-positive');
+//   t.end();
+// });
 
 test('Ptrie has everything:', function(t) {
   var arr = [
@@ -26,12 +25,12 @@ test('Ptrie has everything:', function(t) {
     'cool hat',
     'cooledomingo',
   ];
-  var str = trieHard.pack(arr);
-  t.equal(typeof str, 'string', 'packed-string');
+  var obj = trieHard.pack(arr);
+  // t.equal(typeof str, 'string', 'packed-string');
 
-  var ptrie = trieHard.unpack(str);
+  var ptrie = trieHard.unpack(obj);
   for (var i = 0; i < arr.length; i++) {
-    var has = ptrie.isWord(arr[i]);
+    var has = ptrie.lookup(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
   }
   t.equal(ptrie.isWord('farmington'), false, 'no-false-positive');
