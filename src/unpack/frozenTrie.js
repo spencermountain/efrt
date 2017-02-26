@@ -1,8 +1,8 @@
 'use strict';
 const BitString = require('./bitString');
-const RankDirectory = require('./rankDirectory');
-const normalize = require('./normalize');
-const config = require('./config');
+const RankDirectory = require('../rankDirectory');
+const normalize = require('../normalize');
+const config = require('../config');
 
 
 /**

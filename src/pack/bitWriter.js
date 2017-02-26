@@ -1,5 +1,5 @@
 'use strict';
-const config = require('./config');
+const config = require('../config');
 const W = config.W;
 
 // Configure the bit writing and reading functions to work natively in BASE-64
