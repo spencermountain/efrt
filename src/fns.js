@@ -73,4 +73,4 @@ module.exports = {
   fromAlphaCode: fromAlphaCode,
   unique: unique,
   commonPrefix: commonPrefix
-}
+};

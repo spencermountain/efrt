@@ -2,25 +2,68 @@
 const trieHard = require('./src');
 const debug = require('./test/debug');
 
-let arr = [
-  'cool',
-  // 'coolish',
-  // 'cool hat',
-  // 'cool hatting',
-  'cool3',
-// 'fun',
-// 'funish',
-// 'smoke',
-// 'turkey'
-// 'lkj hat',
-// 'fim hat'
+var arr = [
+  'brian',
+  'bruce',
+  'bryan',
+  'bryat',
+  'bryon',
+  'bu',
+  'dejan',
+  'burton',
+  // 'byron',
+  'caleb',
+  'calvin',
+  'carlo',
+  'carlton',
+  'carroll',
+  'cedric',
+  'cesar',
+  'cha',
+  'charle',
+  // 'charli',
+  'chester',
+  'chri',
+  'christian',
+  'christopher',
+  'chuck',
+  'clarence',
+  'clark',
+  'claude',
+  'clay',
+  'clayton',
+  'damian',
+  'damien',
+  'damon',
+  'daniel',
+  'danny',
+  'darin',
+  'dariu',
+  'darwin',
+  'daryl',
+  'dav',
+  'davi',
+  'david',
+  'dean',
+  'delbert',
+  'deni',
+  'demetriu',
+  'denni',
+  'derek',
+  'derrick',
+  'desmond',
+  'deven',
+  'devin',
+  'dewayne',
+  'dewey',
+  'dever',
 ];
 
 let str = trieHard.pack(arr);
-debug(str);
+// debug(str);
 
 let trie = trieHard.unpack(str);
-console.log(trie);
+// console.log(trie);
 
 console.log('\n');
 for (let i = 0; i < arr.length; i++) {
@@ -28,4 +71,5 @@ for (let i = 0; i < arr.length; i++) {
     console.log(arr[i]);
   }
 }
-console.log(trie.isWord('cool hat'));
+console.log(trie.isWord('dejan'));
+console.log(trie.words('de'));

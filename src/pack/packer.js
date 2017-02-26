@@ -88,7 +88,6 @@ const pack = (self) => {
   let syms = {};
   let symCount;
   let pos = 0;
-
   // Make sure we've combined all the common suffixes
   self.optimize();
 
@@ -101,6 +100,7 @@ const pack = (self) => {
     }
 
     let props = self.nodeProps(node);
+    // console.log(props);
     for (let i = 0; i < props.length; i++) {
       let prop = props[i];
       if (typeof node[prop] === 'number') {
@@ -148,6 +148,7 @@ const pack = (self) => {
   nodeCount = nodes.length;
 
   self.prepDFS();
+  // console.log(self.isWord('dejan'));
   analyzeRefs(self, self.root, histAbs, histRel);
   symCount = symbolCount(histAbs, histRel, nodeCount);
   for (let sym = 0; sym < symCount; sym++) {
@@ -157,7 +158,6 @@ const pack = (self) => {
   for (let i = 0; i < nodeCount; i++) {
     nodes[i] = nodeLine(nodes[i]);
   }
-
   // Prepend symbols
   for (let sym = symCount - 1; sym >= 0; sym--) {
     nodes.unshift(fns.toAlphaCode(sym) + ':' +

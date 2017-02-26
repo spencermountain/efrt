@@ -39,6 +39,7 @@ class Trie {
     this.wordCount = 0;
     this.insertWords(words);
     this.vCur = 0;
+  // console.log(this.root.d);
   }
   // Insert words from one big string, or from an array.
   insertWords(words) {
