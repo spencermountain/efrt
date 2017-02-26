@@ -29,7 +29,6 @@ class PackedTrie {
       this.symCount++;
       this.nodes.shift();
     }
-    console.log(this.syms)
   }
 
   isWord(word) {
