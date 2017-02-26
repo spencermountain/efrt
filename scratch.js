@@ -1,7 +1,6 @@
 'use strict';
-const Trie = require('./src');
-let ptrie = require('./src/ptrie');
-let PackedTrie = ptrie.PackedTrie;
+const Trie = require('./src/build/trie');
+// let ptrie = require('./src/unpack/ptrie');
 
 let arr = [
   'cool',
@@ -16,11 +15,11 @@ let t = new Trie(arr);
 let compressed = t.pack();
 console.log(compressed);
 
-let p = new PackedTrie(compressed);
+// let p = new PackedTrie(compressed);
 // console.log(p);
 
 for (let i = 0; i < arr.length; i++) {
-  if (!p.isWord(arr[i])) {
+  if (!t.isWord(arr[i])) {
     console.log(arr[i]);
   }
 }

@@ -6,7 +6,7 @@
   "main": "./builds/trie-hard.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/nlp-compromise/college-trie.git"
+    "url": "git://github.com/nlp-compromise/trie-hard.git"
   },
   "scripts": {
     "test": "node ./scripts/test.js",
@@ -26,6 +26,7 @@
     "browserify": "13.0.1",
     "derequire": "^2.0.3",
     "eslint": "^3.1.1",
+    "gaze": "^1.1.2",
     "shelljs": "^0.7.2",
     "tap-spec": "4.1.1",
     "tape": "4.6.0",

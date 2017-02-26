@@ -1,10 +1,9 @@
 'use strict';
-
-let ptrie = require('./ptrie');
 let Histogram = require('./histogram');
-// let PackedTrie = ptrie.PackedTrie;
+const config = require('../config');
+const fns = require('../fns');
 /*
-  org.startpad.trie - A JavaScript implementation of a Trie search datastructure.
+ A JavaScript implementation of a Trie search datastructure.
 
   Usage:
 
@@ -101,7 +100,7 @@ class Trie {
   _insert(word, node) {
     // Do any existing props share a common prefix?
     let keys = Object.keys(node);
-    for(let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       let prop = keys[i];
       let prefix = commonPrefix(word, prop);
       if (prefix.length === 0) {
@@ -349,7 +348,7 @@ class Trie {
         sep = '';
 
       if (self.isTerminal(node)) {
-        line += ptrie.TERMINAL_PREFIX;
+        line += config.TERMINAL_PREFIX;
       }
 
       let props = self.nodeProps(node);
@@ -357,7 +356,7 @@ class Trie {
         let prop = props[i];
         if (typeof node[prop] === 'number') {
           line += sep + prop;
-          sep = ptrie.STRING_SEP;
+          sep = config.STRING_SEP;
           continue;
         }
         if (syms[node[prop]._n]) {
@@ -365,12 +364,12 @@ class Trie {
           sep = '';
           continue;
         }
-        let ref = ptrie.toAlphaCode(node._n - node[prop]._n - 1 + symCount);
+        let ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + symCount);
         // Large reference to smaller string suffix -> duplicate suffix
         if (node[prop]._g && ref.length >= node[prop]._g.length &&
           node[node[prop]._g] === 1) {
           ref = node[prop]._g;
-          sep = ptrie.STRING_SEP;
+          sep = config.STRING_SEP;
           continue;
         }
         line += sep + prop + ref;
@@ -405,24 +404,24 @@ class Trie {
         let prop = props[i];
         let ref = node._n - node[prop]._n - 1;
         // Count the number of single-character relative refs
-        if (ref < ptrie.BASE) {
+        if (ref < config.BASE) {
           histRel.add(ref);
         }
         // Count the number of characters saved by converting an absolute
         // reference to a one-character symbol.
-        histAbs.add(node[prop]._n, ptrie.toAlphaCode(ref).length - 1);
+        histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
         analyzeRefs(node[prop]);
       }
     }
 
     function symbolCount() {
-      histAbs = histAbs.highest(ptrie.BASE);
+      histAbs = histAbs.highest(config.BASE);
       let savings = [];
       savings[-1] = 0;
       let best = 0;
       let symbCount = 0;
-      let defSize = 3 + ptrie.toAlphaCode(nodeCount).length;
-      for (let sym = 0; sym < ptrie.BASE; sym++) {
+      let defSize = 3 + fns.toAlphaCode(nodeCount).length;
+      for (let sym = 0; sym < config.BASE; sym++) {
         if (histAbs[sym] === undefined) {
           break;
         }
@@ -431,12 +430,12 @@ class Trie {
         //   minus definition size
         //   minus relative size wrapping to 2 digits
         savings[sym] = histAbs[sym][1] - defSize -
-        histRel.countOf(ptrie.BASE - sym - 1) +
+        histRel.countOf(config.BASE - sym - 1) +
         savings[sym - 1];
         // console.log('savings[' + sym + '] ' + savings[sym] + ' = ' +
         //   savings[sym - 1] + ' +' +
         //   histAbs[sym][1] + ' - ' + defSize + ' - ' +
-        //   histRel.countOf(ptrie.BASE - sym - 1) + ')');
+        //   histRel.countOf(config.BASE - sym - 1) + ')');
         if (savings[sym] >= best) {
           best = savings[sym];
           symbCount = sym + 1;
@@ -452,7 +451,7 @@ class Trie {
     analyzeRefs(this.root);
     symCount = symbolCount();
     for (let sym = 0; sym < symCount; sym++) {
-      syms[histAbs[sym][0]] = ptrie.toAlphaCode(sym);
+      syms[histAbs[sym][0]] = fns.toAlphaCode(sym);
     }
 
     for (let i = 0; i < nodeCount; i++) {
@@ -461,11 +460,11 @@ class Trie {
 
     // Prepend symbols
     for (let sym = symCount - 1; sym >= 0; sym--) {
-      nodes.unshift(ptrie.toAlphaCode(sym) + ':' +
-        ptrie.toAlphaCode(nodeCount - histAbs[sym][0] - 1));
+      nodes.unshift(fns.toAlphaCode(sym) + ':' +
+        fns.toAlphaCode(nodeCount - histAbs[sym][0] - 1));
     }
 
-    return nodes.join(ptrie.NODE_SEP);
+    return nodes.join(config.NODE_SEP);
   }
 }
 

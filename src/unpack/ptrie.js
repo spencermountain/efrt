@@ -1,75 +1,26 @@
 'use strict';
+const config = require('../config');
+const fns = require('../fns');
+/*
+  PackedTrie - Trie traversla of the Trie packed-string representation.
 
-var NODE_SEP = ';',
-  STRING_SEP = ',',
-  TERMINAL_PREFIX = '!',
-  BASE = 36,
-  MAX_WORD = 'zzzzzzzzzz';
-  /*
-    PackedTrie - Trie traversla of the Trie packed-string representation.
+  Usage:
 
-    Usage:
+      ptrie = new PackedTrie(<string> compressed);
+      bool = ptrie.isWord(word);
+      longestWord = ptrie.match(string);
+      matchArray = ptrie.matches(string);
+      wordArray = ptrie.words(from, beyond, limit);
+      ptrie.enumerate(inode, prefix, context);
+*/
 
-        ptrie = new PackedTrie(<string> compressed);
-        bool = ptrie.isWord(word);
-        longestWord = ptrie.match(string);
-        matchArray = ptrie.matches(string);
-        wordArray = ptrie.words(from, beyond, limit);
-        ptrie.enumerate(inode, prefix, context);
-  */
-
-// 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
-const toAlphaCode = function(n) {
-  var places,
-    range,
-    s = '',
-    d;
-
-  for (places = 1, range = BASE;
-    n >= range;
-    n -= range, places++, range *= BASE) {
-  }
-
-  while (places--) {
-    d = n % BASE;
-    s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
-    n = (n - d) / BASE;
-  }
-  return s;
-};
-
-
-const fromAlphaCode = function(s) {
-  var n = 0,
-    places,
-    range,
-    pow,
-    i,
-    d;
-
-  for (places = 1, range = BASE;
-    places < s.length;
-    n += range, places++, range *= BASE) {
-  }
-
-  for (i = s.length - 1, pow = 1; i >= 0; i--, pow *= BASE) {
-    d = s.charCodeAt(i) - 48;
-    if (d > 10) {
-      d -= 7;
-    }
-    n += d * pow;
-  }
-  return n;
-};
-
-
-var reNodePart = new RegExp('([a-z ]+)(' + STRING_SEP + '|[0-9A-Z]+|$)', 'g');
+var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
 var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
 
 // Implement isWord given a packed representation of a Trie.
 class PackedTrie {
   constructor(pack) {
-    this.nodes = pack.split(NODE_SEP);
+    this.nodes = pack.split(config.NODE_SEP);
     this.syms = [];
     this.symCount = 0;
 
@@ -108,7 +59,7 @@ class PackedTrie {
 
   // Largest possible word in the dictionary - hard coded for now
   max() {
-    return MAX_WORD;
+    return config.MAX_WORD;
   }
 
   // words() - return all strings in dictionary - same as words('')
@@ -176,7 +127,7 @@ class PackedTrie {
       }
     }
 
-    if (node[0] === TERMINAL_PREFIX) {
+    if (node[0] === config.TERMINAL_PREFIX) {
       emit(prefix);
       if (ctx.abort) {
         return;
@@ -184,7 +135,7 @@ class PackedTrie {
       node = node.slice(1);
     }
 
-    node.replace(reNodePart, function (w, str, ref) {
+    node.replace(reNodePart, function(w, str, ref) {
       var match = prefix + str;
 
       // Done or no possible future match from str
@@ -194,7 +145,7 @@ class PackedTrie {
         return;
       }
 
-      var isTerminal = ref === STRING_SEP || ref === '';
+      var isTerminal = ref === config.STRING_SEP || ref === '';
 
       if (isTerminal) {
         emit(match);
@@ -225,12 +176,4 @@ class PackedTrie {
 
 }
 
-module.exports = {
-  'PackedTrie': PackedTrie,
-  'NODE_SEP': NODE_SEP,
-  'STRING_SEP': STRING_SEP,
-  'TERMINAL_PREFIX': TERMINAL_PREFIX,
-  'toAlphaCode': toAlphaCode,
-  'fromAlphaCode': fromAlphaCode,
-  'BASE': BASE
-};
+module.exports = PackedTrie
