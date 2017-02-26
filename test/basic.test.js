@@ -33,6 +33,6 @@ test('Ptrie has everything:', function(t) {
     var has = ptrie.lookup(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
   }
-  t.equal(ptrie.isWord('farmington'), false, 'no-false-positive');
+  t.equal(ptrie.lookup('farmington'), false, 'no-false-positive');
   t.end();
 });

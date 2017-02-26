@@ -2,7 +2,6 @@
 const config = require('./config');
 const W = config.W;
 
-
 /**
     Returns the decimal value of the given character unit.
  */

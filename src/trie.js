@@ -139,13 +139,13 @@ Trie.prototype = {
     // Write the data for each node, using 6 bits for node. 1 bit stores
     // the "final" indicator. The other 5 bits store one of the 26 letters
     // of the alphabet.
-    var a = ('a').charCodeAt(0);
+    var a = 'a'.charCodeAt(0);
     this.apply(function( node ) {
       var value = node.letter.charCodeAt(0) - a;
+      // console.log(node.letter + ' ' + node.letter.charCodeAt(0) + '  ' + value);
       if (node.final) {
         value |= 0x20;
       }
-
       bits.write(value, 6);
     });
 
