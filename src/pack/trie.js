@@ -1,6 +1,4 @@
 'use strict';
-const config = require('../config');
-const Histogram = require('./histogram');
 const fns = require('../fns');
 const pack = require('./packer');
 /*
@@ -277,7 +275,7 @@ class Trie {
   }
 
   pack() {
-    return pack(this)
+    return pack(this);
   }
 }
 

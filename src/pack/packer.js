@@ -165,5 +165,5 @@ const pack = (self) => {
   }
 
   return nodes.join(config.NODE_SEP);
-}
-module.exports = pack
+};
+module.exports = pack;

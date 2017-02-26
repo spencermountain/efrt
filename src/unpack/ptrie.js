@@ -3,7 +3,7 @@ const config = require('../config');
 const fns = require('../fns');
 const reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
 const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-const MAX_WORD = 'zzzzzzzzzz'
+const MAX_WORD = 'zzzzzzzzzz';
 /*
   PackedTrie - Trie traversal of the Trie packed-string representation.
   Usage:
@@ -172,4 +172,4 @@ class PackedTrie {
 
 }
 
-module.exports = PackedTrie
+module.exports = PackedTrie;
