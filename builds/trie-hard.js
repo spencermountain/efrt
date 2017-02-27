@@ -1,14 +1,16 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.trieHard = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-"use strict";
+'use strict';
 
 module.exports = {
-  L1: 32 * 32,
+  L1: 1024, //(32 * 32)
   L2: 32,
   /**
       The width of each unit of the encoding, in bits. Here we use 6, for base-64
       encoding.
    */
-  W: 6
+  W: 6,
+  //base-64
+  chars: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 };
 
 },{}],2:[function(_dereq_,module,exports){
@@ -65,11 +67,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = _dereq_('../config');
 var W = config.W;
+var BASE64 = config.chars;
 
 // Configure the bit writing and reading functions to work natively in BASE-64
 // encoding. That way, we don't have to convert back and forth to bytes.
 
-var BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 /**
     Returns the character unit that represents the given value. If this were
     binary data, we would simply return id.
@@ -168,7 +170,6 @@ module.exports = BitWriter;
 
 var Trie = _dereq_('./trie');
 var RankDirectory = _dereq_('../rankDirectory');
-var config = _dereq_('../config');
 var normalize = _dereq_('../normalize');
 
 //
@@ -182,12 +183,12 @@ var pack = function pack(words) {
   var trieData = trie.encode();
   // console.log(trie.root.children[0]);
   var nodes = trie.getNodeCount();
-  var directory = RankDirectory.Create(trieData, nodes * 2 + 1, config.L1, config.L2);
+  var directory = RankDirectory.Create(trieData, nodes * 2 + 1);
   return trieData + '|' + directory.getData() + '|' + nodes;
 };
 module.exports = pack;
 
-},{"../config":1,"../normalize":3,"../rankDirectory":7,"./trie":6}],6:[function(_dereq_,module,exports){
+},{"../normalize":3,"../rankDirectory":7,"./trie":6}],6:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -372,6 +373,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var BitString = _dereq_('./unpack/bitString');
 var BitWriter = _dereq_('./pack/bitWriter');
+var config = _dereq_('./config');
+var l1Size = 1024;
+var l2Size = 32;
+
 /**
     The rank directory allows you to build an index to quickly compute the
     rank() and select() functions. The index can itself be encoded as a binary
@@ -393,13 +398,11 @@ summarizes.
 */
 
 var RankDirectory = function () {
-  function RankDirectory(directoryData, bitData, numBits, l1Size, l2Size) {
+  function RankDirectory(directoryData, bitData, numBits) {
     _classCallCheck(this, RankDirectory);
 
     this.directory = new BitString(directoryData);
     this.data = new BitString(bitData);
-    this.l1Size = l1Size;
-    this.l2Size = l2Size;
     this.l1Bits = Math.ceil(Math.log(numBits) / Math.log(2));
     this.l2Bits = Math.ceil(Math.log(l1Size) / Math.log(2));
     this.sectionBits = (l1Size / l2Size - 1) * this.l2Bits + this.l1Bits;
@@ -434,18 +437,18 @@ var RankDirectory = function () {
       var o = x;
       var sectionPos = 0;
 
-      if (o >= this.l1Size) {
-        sectionPos = (o / this.l1Size | 0) * this.sectionBits;
+      if (o >= l1Size) {
+        sectionPos = (o / l1Size | 0) * this.sectionBits;
         rank = this.directory.get(sectionPos - this.l1Bits, this.l1Bits);
-        o = o % this.l1Size;
+        o = o % l1Size;
       }
 
-      if (o >= this.l2Size) {
-        sectionPos += (o / this.l2Size | 0) * this.l2Bits;
+      if (o >= l2Size) {
+        sectionPos += (o / l2Size | 0) * this.l2Bits;
         rank += this.directory.get(sectionPos - this.l2Bits, this.l2Bits);
       }
 
-      rank += this.data.count(x - x % this.l2Size, x % this.l2Size + 1);
+      rank += this.data.count(x - x % l2Size, x % l2Size + 1);
 
       return rank;
     }
@@ -488,7 +491,7 @@ var RankDirectory = function () {
 //static
 
 
-RankDirectory.Create = function (data, numBits, l1Size, l2Size) {
+RankDirectory.Create = function (data, numBits) {
   var bits = new BitString(data);
   var p = 0;
   var i = 0;
@@ -518,7 +521,7 @@ RankDirectory.Create = function (data, numBits, l1Size, l2Size) {
 
 module.exports = RankDirectory;
 
-},{"./pack/bitWriter":4,"./unpack/bitString":8}],8:[function(_dereq_,module,exports){
+},{"./config":1,"./pack/bitWriter":4,"./unpack/bitString":8}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -528,85 +531,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var config = _dereq_('../config');
 var W = config.W;
 
-/**
-    Returns the decimal value of the given character unit.
- */
-
-var BASE64_CACHE = {
-  'A': 0,
-  'B': 1,
-  'C': 2,
-  'D': 3,
-  'E': 4,
-  'F': 5,
-  'G': 6,
-  'H': 7,
-  'I': 8,
-  'J': 9,
-  'K': 10,
-  'L': 11,
-  'M': 12,
-  'N': 13,
-  'O': 14,
-  'P': 15,
-  'Q': 16,
-  'R': 17,
-  'S': 18,
-  'T': 19,
-  'U': 20,
-  'V': 21,
-  'W': 22,
-  'X': 23,
-  'Y': 24,
-  'Z': 25,
-  'a': 26,
-  'b': 27,
-  'c': 28,
-  'd': 29,
-  'e': 30,
-  'f': 31,
-  'g': 32,
-  'h': 33,
-  'i': 34,
-  'j': 35,
-  'k': 36,
-  'l': 37,
-  'm': 38,
-  'n': 39,
-  'o': 40,
-  'p': 41,
-  'q': 42,
-  'r': 43,
-  's': 44,
-  't': 45,
-  'u': 46,
-  'v': 47,
-  'w': 48,
-  'x': 49,
-  'y': 50,
-  'z': 51,
-  '0': 52,
-  '1': 53,
-  '2': 54,
-  '3': 55,
-  '4': 56,
-  '5': 57,
-  '6': 58,
-  '7': 59,
-  '8': 60,
-  '9': 61,
-  '-': 62,
-  '_': 63
-};
+//Returns the decimal value of the given character unit.
+var BASE64 = config.chars.split('').reduce(function (h, c, i) {
+  h[c] = i;
+  return h;
+}, {});
 
 var MaskTop = [0x3f, 0x1f, 0x0f, 0x07, 0x03, 0x01, 0x00];
 
 var BitsInByte = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8];
-
-function ORD(ch) {
-  // Used to be: return BASE64.indexOf(ch);
-  return BASE64_CACHE[ch];
-}
 
 /**
     Given a string of data (eg, in BASE-64), the BitString class supports
@@ -644,24 +577,24 @@ var BitString = function () {
 
       // case 1: bits lie within the given byte
       if (p % W + n <= W) {
-        return (ORD(this.bytes[p / W | 0]) & MaskTop[p % W]) >> W - p % W - n;
+        return (BASE64[this.bytes[p / W | 0]] & MaskTop[p % W]) >> W - p % W - n;
 
         // case 2: bits lie incompletely in the given byte
       } else {
-        var result = ORD(this.bytes[p / W | 0]) & MaskTop[p % W];
+        var result = BASE64[this.bytes[p / W | 0]] & MaskTop[p % W];
 
         var l = W - p % W;
         p += l;
         n -= l;
 
         while (n >= W) {
-          result = result << W | ORD(this.bytes[p / W | 0]);
+          result = result << W | BASE64[this.bytes[p / W | 0]];
           p += W;
           n -= W;
         }
 
         if (n > 0) {
-          result = result << n | ORD(this.bytes[p / W | 0]) >> W - n;
+          result = result << n | BASE64[this.bytes[p / W | 0]] >> W - n;
         }
 
         return result;
@@ -721,7 +654,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var BitString = _dereq_('./bitString');
 var RankDirectory = _dereq_('../rankDirectory');
 var normalize = _dereq_('../normalize');
-var config = _dereq_('../config');
 
 /**
   This class is used for traversing the succinctly encoded trie.
@@ -772,7 +704,7 @@ var FrozenTrie = function () {
     _classCallCheck(this, FrozenTrie);
 
     this.data = new BitString(data);
-    this.directory = new RankDirectory(directoryData, data, nodeCount * 2 + 1, config.L1, config.L2);
+    this.directory = new RankDirectory(directoryData, data, nodeCount * 2 + 1);
     // The position of the first bit of the data in 0th node. In non-root
     // nodes, this would contain 6-bit letters.
     this.letterStart = nodeCount * 2 + 1;
@@ -834,7 +766,7 @@ var FrozenTrie = function () {
 
 module.exports = FrozenTrie;
 
-},{"../config":1,"../normalize":3,"../rankDirectory":7,"./bitString":8}],10:[function(_dereq_,module,exports){
+},{"../normalize":3,"../rankDirectory":7,"./bitString":8}],10:[function(_dereq_,module,exports){
 'use strict';
 
 var FrozenTrie = _dereq_('./frozenTrie');
