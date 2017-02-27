@@ -1,11 +1,11 @@
 'use strict';
 const config = require('../config');
 const W = config.W;
+const BASE64 = config.chars;
 
 // Configure the bit writing and reading functions to work natively in BASE-64
 // encoding. That way, we don't have to convert back and forth to bytes.
 
-var BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 /**
     Returns the character unit that represents the given value. If this were
     binary data, we would simply return id.

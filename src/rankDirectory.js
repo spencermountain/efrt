@@ -1,6 +1,10 @@
 'use strict';
 const BitString = require('./unpack/bitString');
 const BitWriter = require('./pack/bitWriter');
+const config = require('./config');
+const l1Size = 1024;
+const l2Size = 32;
+
 /**
     The rank directory allows you to build an index to quickly compute the
     rank() and select() functions. The index can itself be encoded as a binary
@@ -21,11 +25,9 @@ summarizes. This should be a multiple of l2Size.
 summarizes.
 */
 class RankDirectory {
-  constructor( directoryData, bitData, numBits, l1Size, l2Size ) {
+  constructor( directoryData, bitData, numBits ) {
     this.directory = new BitString(directoryData);
     this.data = new BitString(bitData);
-    this.l1Size = l1Size;
-    this.l2Size = l2Size;
     this.l1Bits = Math.ceil(Math.log(numBits) / Math.log(2));
     this.l2Bits = Math.ceil(Math.log(l1Size) / Math.log(2));
     this.sectionBits = (l1Size / l2Size - 1) * this.l2Bits + this.l1Bits;
@@ -53,18 +55,18 @@ class RankDirectory {
     var o = x;
     var sectionPos = 0;
 
-    if (o >= this.l1Size) {
-      sectionPos = (o / this.l1Size | 0) * this.sectionBits;
+    if (o >= l1Size) {
+      sectionPos = (o / l1Size | 0) * this.sectionBits;
       rank = this.directory.get(sectionPos - this.l1Bits, this.l1Bits);
-      o = o % this.l1Size;
+      o = o % l1Size;
     }
 
-    if (o >= this.l2Size) {
-      sectionPos += (o / this.l2Size | 0) * this.l2Bits;
+    if (o >= l2Size) {
+      sectionPos += (o / l2Size | 0) * this.l2Bits;
       rank += this.directory.get(sectionPos - this.l2Bits, this.l2Bits);
     }
 
-    rank += this.data.count(x - x % this.l2Size, x % this.l2Size + 1);
+    rank += this.data.count(x - x % l2Size, x % l2Size + 1);
 
     return rank;
   }
@@ -99,7 +101,7 @@ class RankDirectory {
 }
 
 //static
-RankDirectory.Create = function( data, numBits, l1Size, l2Size ) {
+RankDirectory.Create = function( data, numBits ) {
   var bits = new BitString(data);
   var p = 0;
   var i = 0;

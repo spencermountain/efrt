@@ -55,7 +55,7 @@ cmd = lib.uglify + ' ' + path.unpack + ' --mangle --compress ';
 cmd += ' >> ' + path.unpackmin;
 exec(cmd);
 
-exec('rm ' + path.unpack);
+// exec('rm ' + path.unpack);
 
 var fileSize = function(src) {
   var stats = fs.statSync(src);
@@ -66,5 +66,6 @@ var fileSize = function(src) {
 console.log('\n');
 console.log('    es5 ' + fileSize(path.es5));
 console.log(' -  min ' + fileSize(path.es5min));
-console.log(' -  unpack ' + fileSize(path.unpackmin));
+console.log(' -  unpack ' + fileSize(path.unpack));
+console.log(' -  unpackmin ' + fileSize(path.unpackmin));
 console.log('\n');

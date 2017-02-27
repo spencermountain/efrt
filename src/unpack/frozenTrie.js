@@ -2,8 +2,6 @@
 const BitString = require('./bitString');
 const RankDirectory = require('../rankDirectory');
 const normalize = require('../normalize');
-const config = require('../config');
-
 
 /**
   This class is used for traversing the succinctly encoded trie.
@@ -42,7 +40,7 @@ class FrozenTrie {
   constructor( data, directoryData, nodeCount ) {
     this.data = new BitString(data);
     this.directory = new RankDirectory(directoryData, data,
-      nodeCount * 2 + 1, config.L1, config.L2);
+      nodeCount * 2 + 1);
     // The position of the first bit of the data in 0th node. In non-root
     // nodes, this would contain 6-bit letters.
     this.letterStart = nodeCount * 2 + 1;
