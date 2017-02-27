@@ -88,7 +88,7 @@ class FrozenTrie {
     Look-up a word in the trie. Returns true if and only if the word exists
     in the trie.
     */
-  lookup( word ) {
+  has( word ) {
     word = normalize(word);
     var node = this.getRoot();
     for (var i = 0; i < word.length; i++) {

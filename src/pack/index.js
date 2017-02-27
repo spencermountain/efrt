@@ -3,6 +3,7 @@ const Trie = require('./trie');
 const RankDirectory = require('../rankDirectory');
 const config = require('../config');
 const normalize = require('../normalize');
+
 //
 const pack = (words) => {
   var trie = new Trie();
@@ -15,10 +16,6 @@ const pack = (words) => {
   // console.log(trie.root.children[0]);
   var nodes = trie.getNodeCount();
   var directory = RankDirectory.Create(trieData, nodes * 2 + 1, config.L1, config.L2);
-  return {
-    data: trieData,
-    directory: directory.getData(),
-    nodes: nodes
-  };
+  return trieData + '|' + directory.getData() + '|' + nodes;
 };
 module.exports = pack;

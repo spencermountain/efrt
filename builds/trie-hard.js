@@ -15,36 +15,14 @@ module.exports = {
 'use strict';
 
 var unpack = _dereq_('./unpack');
-var Trie = _dereq_('./pack/trie');
-var RankDirectory = _dereq_('./rankDirectory');
-var config = _dereq_('./config');
-var normalize = _dereq_('./normalize');
-
-//
-var pack = function pack(words) {
-  var trie = new Trie();
-  words.sort();
-  words.forEach(function (str) {
-    str = normalize(str);
-    trie.insert(str);
-  });
-  var trieData = trie.encode();
-  // console.log(trie.root.children[0]);
-  var nodes = trie.getNodeCount();
-  var directory = RankDirectory.Create(trieData, nodes * 2 + 1, config.L1, config.L2);
-  return {
-    data: trieData,
-    directory: directory.getData(),
-    nodes: nodes
-  };
-};
+var pack = _dereq_('./pack');
 
 module.exports = {
   pack: pack,
   unpack: unpack
 };
 
-},{"./config":1,"./normalize":3,"./pack/trie":5,"./rankDirectory":6,"./unpack":9}],3:[function(_dereq_,module,exports){
+},{"./pack":5,"./unpack":10}],3:[function(_dereq_,module,exports){
 'use strict';
 //NOTHING TO SEE HERE, PLEASE LOOK AT THE FLOOR
 //really, nothing interesting in this file
@@ -188,6 +166,30 @@ module.exports = BitWriter;
 },{"../config":1}],5:[function(_dereq_,module,exports){
 'use strict';
 
+var Trie = _dereq_('./trie');
+var RankDirectory = _dereq_('../rankDirectory');
+var config = _dereq_('../config');
+var normalize = _dereq_('../normalize');
+
+//
+var pack = function pack(words) {
+  var trie = new Trie();
+  words.sort();
+  words.forEach(function (str) {
+    str = normalize(str);
+    trie.insert(str);
+  });
+  var trieData = trie.encode();
+  // console.log(trie.root.children[0]);
+  var nodes = trie.getNodeCount();
+  var directory = RankDirectory.Create(trieData, nodes * 2 + 1, config.L1, config.L2);
+  return trieData + '|' + directory.getData() + '|' + nodes;
+};
+module.exports = pack;
+
+},{"../config":1,"../normalize":3,"../rankDirectory":7,"./trie":6}],6:[function(_dereq_,module,exports){
+'use strict';
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -232,8 +234,8 @@ var BitWriter = _dereq_('./bitWriter');
 
  var frozenTrie = new FrozenTrie( Data.trie, Data.directory, Data.nodeCount);
 
- alert( frozenTrie.lookup( "hello" ) ); // outputs true
- alert( frozenTrie.lookup( "kwijibo" ) ); // outputs false
+ alert( frozenTrie.has( "hello" ) ); // outputs true
+ alert( frozenTrie.has( "kwijibo" ) ); // outputs false
 
 */
 
@@ -360,7 +362,7 @@ var Trie = function () {
 
 module.exports = Trie;
 
-},{"./bitWriter":4}],6:[function(_dereq_,module,exports){
+},{"./bitWriter":4}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -515,7 +517,7 @@ RankDirectory.Create = function (data, numBits, l1Size, l2Size) {
 
 module.exports = RankDirectory;
 
-},{"./pack/bitWriter":4,"./unpack/bitString":7}],7:[function(_dereq_,module,exports){
+},{"./pack/bitWriter":4,"./unpack/bitString":8}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -708,7 +710,7 @@ var BitString = function () {
 
 module.exports = BitString;
 
-},{"../config":1}],8:[function(_dereq_,module,exports){
+},{"../config":1}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -823,8 +825,8 @@ var FrozenTrie = function () {
       */
 
   }, {
-    key: 'lookup',
-    value: function lookup(word) {
+    key: 'has',
+    value: function has(word) {
       word = normalize(word);
       var node = this.getRoot();
       for (var i = 0; i < word.length; i++) {
@@ -852,16 +854,17 @@ var FrozenTrie = function () {
 
 module.exports = FrozenTrie;
 
-},{"../config":1,"../normalize":3,"../rankDirectory":6,"./bitString":7}],9:[function(_dereq_,module,exports){
+},{"../config":1,"../normalize":3,"../rankDirectory":7,"./bitString":8}],10:[function(_dereq_,module,exports){
 'use strict';
 
 var FrozenTrie = _dereq_('./frozenTrie');
 //
-var unpack = function unpack(o) {
-  var ftrie = new FrozenTrie(o.data, o.directory, o.nodes);
+var unpack = function unpack(str) {
+  var parts = str.split(/\|/g);
+  var ftrie = new FrozenTrie(parts[0], parts[1], parts[2]);
   return ftrie;
 };
 module.exports = unpack;
 
-},{"./frozenTrie":8}]},{},[2])(2)
+},{"./frozenTrie":9}]},{},[2])(2)
 });

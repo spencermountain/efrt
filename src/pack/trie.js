@@ -39,8 +39,8 @@ const BitWriter = require('./bitWriter');
 
  var frozenTrie = new FrozenTrie( Data.trie, Data.directory, Data.nodeCount);
 
- alert( frozenTrie.lookup( "hello" ) ); // outputs true
- alert( frozenTrie.lookup( "kwijibo" ) ); // outputs false
+ alert( frozenTrie.has( "hello" ) ); // outputs true
+ alert( frozenTrie.has( "kwijibo" ) ); // outputs false
 
 */
 

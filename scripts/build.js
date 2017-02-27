@@ -17,7 +17,7 @@ var lib = {
 var path = {
   es5: './builds/trie-hard.js',
   es5min: './builds/trie-hard.min.js',
-  unpack: './builds/unpack-trie.min.js'
+  unpack: './builds/trie-hard-unpack.min.js'
 };
 
 //cleanup. remove old builds

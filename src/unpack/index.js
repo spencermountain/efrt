@@ -1,8 +1,9 @@
 'use strict';
 const FrozenTrie = require('./frozenTrie');
 //
-const unpack = (o) => {
-  var ftrie = new FrozenTrie(o.data, o.directory, o.nodes);
+const unpack = (str) => {
+  let parts = str.split(/\|/g);
+  var ftrie = new FrozenTrie(parts[0], parts[1], parts[2]);
   return ftrie;
 };
 module.exports = unpack;

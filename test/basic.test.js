@@ -25,14 +25,14 @@ test('Ptrie has everything:', function(t) {
     'cool hat',
     'cooledomingo',
   ];
-  var obj = trieHard.pack(arr);
-  // t.equal(typeof str, 'string', 'packed-string');
+  var str = trieHard.pack(arr);
+  t.equal(typeof str, 'string', 'packed-string');
 
-  var ptrie = trieHard.unpack(obj);
+  var ptrie = trieHard.unpack(str);
   for (var i = 0; i < arr.length; i++) {
-    var has = ptrie.lookup(arr[i]);
+    var has = ptrie.has(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
   }
-  t.equal(ptrie.lookup('farmington'), false, 'no-false-positive');
+  t.equal(ptrie.has('farmington'), false, 'no-false-positive');
   t.end();
 });
