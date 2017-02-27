@@ -126,6 +126,7 @@ class Trie {
   encode() {
     // Write the unary encoding of the tree in level order.
     var bits = new BitWriter();
+    //'start' indicator
     bits.write(0x02, 2);
     this.apply(function( node ) {
       for(var i = 0; i < node.children.length; i++) {

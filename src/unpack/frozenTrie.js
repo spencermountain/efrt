@@ -18,15 +18,7 @@ class FrozenTrieNode {
     this.childCount = childCount;
   }
   /**
-    Returns the number of children.
-    */
-  getChildCount() {
-    return this.childCount;
-  }
-
-  /**
     Returns the FrozenTrieNode for the given child.
-
     @param index The 0-based index of the child of this node. For example, if
     the node has 5 children, and you wanted the 0th one, pass in 0.
   */
@@ -51,10 +43,11 @@ class FrozenTrie {
     this.data = new BitString(data);
     this.directory = new RankDirectory(directoryData, data,
       nodeCount * 2 + 1, config.L1, config.L2);
-
     // The position of the first bit of the data in 0th node. In non-root
     // nodes, this would contain 6-bit letters.
     this.letterStart = nodeCount * 2 + 1;
+    //cache this
+    this.root = this.getNodeByIndex(0);
   }
   /**
      Retrieve the FrozenTrieNode of the trie, given its index in level-order.
@@ -77,31 +70,22 @@ class FrozenTrie {
   }
 
   /**
-    Retrieve the root node. You can use this node to obtain all of the other
-    nodes in the trie.
-    */
-  getRoot() {
-    return this.getNodeByIndex(0);
-  }
-
-  /**
     Look-up a word in the trie. Returns true if and only if the word exists
     in the trie.
     */
   has( word ) {
     word = normalize(word);
-    var node = this.getRoot();
+    var node = this.root;
     for (var i = 0; i < word.length; i++) {
       var child;
       var j = 0;
-      for (; j < node.getChildCount(); j++) {
+      for (; j < node.childCount; j++) {
         child = node.getChild(j);
         if (child.letter === word[i]) {
           break;
         }
       }
-
-      if (j === node.getChildCount()) {
+      if (j === node.childCount) {
         return false;
       }
       node = child;

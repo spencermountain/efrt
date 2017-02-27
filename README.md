@@ -1,13 +1,14 @@
 # trie-hard
-work-in-progress prefix/suffix [trie data-structure](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words
+work-in-progress prefix/suffix [trie-based](https://en.wikipedia.org/wiki/Trie) data-structure optimised for compression of english words
 
 based on [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov) and [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
 
-intended to compress a wordlist/dictionary into a very compact form, so that filesize/http-bandwidth is low.
+it can compress a wordlist/dictionary into a very compact form, so that filesize/http-bandwidth is low.
 
-the client though, can easily pull-apart the compressed form and query it without any too-fancy unpacking.
+the clients though, can pull-apart the compressed form without being too-fancy or laborious
 
 ```js
+var trieHard=require('trie-hard')//(not yet published)
 var words = [
   'calvin coolridge', //must boring, lowercase, non-unicode
   'cool',
@@ -15,16 +16,17 @@ var words = [
 ];
 //pack these words as tightly as possible
 var compressed = trieHard.pack(arr);
+//(some insanely-small string of letters+numbers)
 
-//pull it out to query it
+//pull it apart into a lookup-trie
 var trie = trieHard.unpack(compressed);
 
-//hit it
+//hit it!
 console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
-if you're doing the second step in the browser, you can just load the unpack bit:
+if you're doing the second step in the browser, you can just load the unpack bit (7k):
 ```html
 <script src="./builds/trie-hard-unpack.min.js"></script>
 <script>
@@ -34,3 +36,5 @@ if you're doing the second step in the browser, you can just load the unpack bit
   })
 </script>
 ```
+
+the words you input need to be heavily normalized before-hand. Unicode will make it die.

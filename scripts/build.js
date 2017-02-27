@@ -17,7 +17,8 @@ var lib = {
 var path = {
   es5: './builds/trie-hard.js',
   es5min: './builds/trie-hard.min.js',
-  unpack: './builds/trie-hard-unpack.min.js'
+  unpack: './builds/trie-hard-unpack.js',
+  unpackmin: './builds/trie-hard-unpack.min.js'
 };
 
 //cleanup. remove old builds
@@ -27,6 +28,7 @@ exec('rm -rf ./builds && mkdir builds');
 exec('echo ' + banner + ' > ' + path.es5);
 exec('echo ' + banner + ' > ' + path.es5min);
 exec('echo ' + banner + ' > ' + path.unpack);
+exec('echo ' + banner + ' > ' + path.unpackmin);
 
 //es5 main (browserify + derequire)
 cmd = lib.browserify + ' "./src/index.js" --standalone trieHard';
@@ -35,17 +37,25 @@ cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.es5;
 exec(cmd);
 
+//es5 min (uglify)
+cmd = lib.uglify + ' ' + path.es5 + ' --mangle --compress ';
+cmd += ' >> ' + path.es5min;
+exec(cmd);
+
+
+//--do just half of the library now
 //unpacker es5 (browserify + derequire)
 cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
 cmd += ' -t [ babelify --presets [ es2015 stage-2 ] --plugins [transform-es3-property-literals transform-es3-member-expression-literals] ]';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.unpack;
 exec(cmd);
-
-//es5 min (uglify)
-cmd = lib.uglify + ' ' + path.es5 + ' --mangle --compress ';
-cmd += ' >> ' + path.es5min;
+//unpacker min (uglify)
+cmd = lib.uglify + ' ' + path.unpack + ' --mangle --compress ';
+cmd += ' >> ' + path.unpackmin;
 exec(cmd);
+
+exec('rm ' + path.unpack);
 
 var fileSize = function(src) {
   var stats = fs.statSync(src);
@@ -56,5 +66,5 @@ var fileSize = function(src) {
 console.log('\n');
 console.log('    es5 ' + fileSize(path.es5));
 console.log(' -  min ' + fileSize(path.es5min));
-console.log(' -  unpack ' + fileSize(path.unpack));
+console.log(' -  unpack ' + fileSize(path.unpackmin));
 console.log('\n');
