@@ -24,7 +24,7 @@ console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
-if you're doing the second step in the browser, you can just load that part of it:
+if you're doing the second step in the browser, you can just load the unpack bit:
 ```html
 <script src="./builds/trie-hard-unpack.min.js"></script>
 <script>
