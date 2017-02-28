@@ -2,7 +2,7 @@
 const config = require('../config');
 const fns = require('../fns');
 
-const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
+// const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
 
 //are we on the right path with this string?
 const isPrefix = function(str, want) {
@@ -51,40 +51,44 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(want) {
-    let found = false;
-
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
-      console.log(node);
+      // console.log(node);
       //the '!' means it includes a prefix
       if (node[0] === '!') {
         node = node.slice(1); //remove it
       }
       if (node === want) {
-        found = true;
-        return;
+        return true;
       }
-      node.replace(reNodePart, (_, str, ref) => {
+
+      let matches = node.split(/([A-Z0-9,]+)/g);
+      // console.log(matches);
+      for (let i = 0; i < matches.length; i += 2) {
+        let str = matches[i];
+        let ref = matches[i + 1];
         let have = prefix + str;
         if (have === want) {
-          found = true;
-          return;
+          return true;
         }
         // Done or no possible future match from str
         if (!isPrefix(have, want)) {
-          return;
+          continue;
         }
         //we're at the end of this branch
-        if (ref === ',' || ref === '') {
-          return;
+        if (ref === ',' || ref === undefined) {
+          return false;
         }
         //otherwise, do the next one
         inode = this.inodeFromRef(ref, inode);
-        crawl(inode, have);
-      });
+        return crawl(inode, have);
+      }
+      return false;
+
+
     };
-    crawl(0, '');
-    return found;
+    return crawl(0, '');
+  // return found;
   }
 
   // References are either absolute (symbol) or relative (1 - based)

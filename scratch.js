@@ -24,7 +24,7 @@ arr = [
 ];
 // console.time('pack');
 let str = trieHard.pack(arr);
-console.log(str.split(/;/g));
+// console.log(str.split(/;/g));
 // console.timeEnd('pack');
 
 console.log('\n\n');
@@ -33,7 +33,7 @@ console.log('\n\n');
 let trie = trieHard.unpack(str);
 
 // console.log(trie.has('cool hat'));
-// console.log(trie.has('fungho'));
+console.log(trie.has('fungho'));
 // arr.forEach((str) => {
 //   let bool = trie.has(str);
 //   if (!bool) {
