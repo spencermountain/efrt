@@ -12,15 +12,15 @@ let str = trieHard.pack(arr);
 console.log(str);
 console.timeEnd('pack');
 
-console.time('unpack');
+console.log('\n\n');
+
+console.time('bench');
 let trie = trieHard.unpack(str);
-console.timeEnd('unpack');
 
-
-console.time('query');
-console.log(trie.has('darius'));
-console.timeEnd('query');
-
-console.time('query2');
-console.log(trie.has('cool hat'));
-console.timeEnd('query2');
+arr.forEach((str) => {
+  let bool = trie.has(str);
+  if (!bool) {
+    console.log(str);
+  }
+});
+console.timeEnd('bench');
