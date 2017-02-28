@@ -26,6 +26,8 @@ console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
+## [Demo](https://rawgit.com/nlp-compromise/gentrie/master/demo/index.html)
+
 if you're doing the second step in the browser, you can just load the unpack bit (~3k):
 ```html
 <script src="./builds/gentrie-unpack.min.js"></script>
@@ -37,4 +39,4 @@ if you're doing the second step in the browser, you can just load the unpack bit
 </script>
 ```
 
-the words you input need to be heavily normalized before-hand. Unicode will make it die.
+the words you input should be pretty-heavily normalized. Number-characters are not yet supported. Spaces and unicode are good.
