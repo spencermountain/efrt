@@ -4,15 +4,12 @@ const fns = require('../fns');
 
 const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
 
-//are we on the right path with this prefex?
+//are we on the right path with this string?
 const isPrefix = function(str, want) {
-  if (str === want) {
-    return true;
-  }
-  if (str.length >= want.length) {
+  let len = str.length;
+  if (len >= want.length) {
     return false;
   }
-  let len = str.length;
   if (len === 1) {
     return str === want[0];
   }
@@ -58,6 +55,7 @@ class PackedTrie {
 
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
+      console.log(node);
       //the '!' means it includes a prefix
       if (node[0] === '!') {
         node = node.slice(1); //remove it

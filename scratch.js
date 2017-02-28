@@ -12,17 +12,19 @@ const trieHard = require('./src');
 // ];
 
 arr = [
-  'co',
-  'coo',
   'cool',
   'cool dude',
   'cool hat',
+  'cool farm',
   'fun',
-  'fungi',
+  'funghi',
+  'fungho',
+  'funzilla',
+  'funzillo'
 ];
 // console.time('pack');
 let str = trieHard.pack(arr);
-// console.log(str);
+console.log(str.split(/;/g));
 // console.timeEnd('pack');
 
 console.log('\n\n');
@@ -30,7 +32,8 @@ console.log('\n\n');
 // console.time('bench');
 let trie = trieHard.unpack(str);
 
-console.log(trie.has('cool'));
+// console.log(trie.has('cool hat'));
+// console.log(trie.has('fungho'));
 // arr.forEach((str) => {
 //   let bool = trie.has(str);
 //   if (!bool) {
