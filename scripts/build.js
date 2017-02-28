@@ -3,7 +3,7 @@ config.silent = true;
 var fs = require('fs');
 
 var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-var banner = '/* trie-hard v' + pkg.version + '\n   github.com/nlp-compromise/trie-hard\n   MIT\n*/\n';
+var banner = '/* gentrie v' + pkg.version + '\n   github.com/nlp-compromise/gentrie\n   MIT\n*/\n';
 
 //use paths, so libs don't need a -g
 var lib = {
@@ -15,10 +15,10 @@ var lib = {
 
 //final build locations
 var path = {
-  es5: './builds/trie-hard.js',
-  es5min: './builds/trie-hard.min.js',
-  unpack: './builds/trie-hard-unpack.js',
-  unpackmin: './builds/trie-hard-unpack.min.js'
+  es5: './builds/gentrie.js',
+  es5min: './builds/gentrie.min.js',
+  unpack: './builds/gentrie-unpack.js',
+  unpackmin: './builds/gentrie-unpack.min.js'
 };
 
 //cleanup. remove old builds
@@ -31,7 +31,7 @@ exec('echo ' + banner + ' > ' + path.unpack);
 exec('echo ' + banner + ' > ' + path.unpackmin);
 
 //es5 main (browserify + derequire)
-cmd = lib.browserify + ' "./src/index.js" --standalone trieHard';
+cmd = lib.browserify + ' "./src/index.js" --standalone gentrie';
 cmd += ' -t [ babelify --presets [ es2015 stage-2 ] --plugins [transform-es3-property-literals transform-es3-member-expression-literals] ]';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.es5;

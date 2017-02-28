@@ -2,8 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>trie-hard Demo</title>
-    <script type="text/javascript" src="../builds/trie-hard.min.js"></script>
+    <title>gentrie Demo</title>
+    <script type="text/javascript" src="../builds/gentrie.min.js"></script>
     <!-- <script type="text/javascript" src="https://unpkg.com/compromise@latest/builds/trie-hard.min.js"></script> -->
     <style>
       #words {
@@ -47,7 +47,7 @@
   </head>
   <body style="position:relative; width:100%; height:100%; ">
     <div id="logo">
-      demo of <a style='text-decoration:none; color:steelblue' href="https://github.com/nlp-compromise/trie-hard">trie-hard</a>
+      demo of <a style='text-decoration:none; color:steelblue' href="https://github.com/nlp-compromise/gentrie">gentrie</a>
       <div style='color:lightgrey; font-size:12px;'>trie-based compression of a word list</div>
     </div>
     <div id="">
@@ -105,7 +105,7 @@ Sioux City, Cedar City, Dodge City, what a pity.
         str=str.toLowerCase().replace(/'/,'')
 
         var start = new Date();
-        var trie=trieHard.unpack(window.compressed||'')
+        var trie=gentrie.unpack(window.compressed||'')
         var end=new Date()
         var ms = (end.getTime() - start.getTime())
 
@@ -119,7 +119,7 @@ Sioux City, Cedar City, Dodge City, what a pity.
         var words=str.split(/,?\W+/g)
 
         var start = new Date();
-        window.compressed=trieHard.pack(words)
+        window.compressed=gentrie.pack(words)
         var end=new Date()
         var ms = (end.getTime() - start.getTime())
 
