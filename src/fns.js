@@ -1,20 +1,26 @@
 'use strict';
 const config = require('./config');
 
+const seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const cache = seq.split('').reduce((h, c, i) => {
+  h[c] = i;
+  return h;
+}, {});
+// console.log(cache);
+
 // 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
 const toAlphaCode = function(n) {
-  var places,
-    range,
-    s = '',
-    d;
-
-  for (places = 1, range = config.BASE;
-    n >= range;
-    n -= range, places++, range *= config.BASE) {
+  if (seq[n] !== undefined) {
+    return seq[n];
   }
+  let places = 1;
+  let range = config.BASE;
+  let s = '';
 
+  for (; n >= range; n -= range, places++, range *= config.BASE) {
+  }
   while (places--) {
-    d = n % config.BASE;
+    let d = n % config.BASE;
     s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
     n = (n - d) / config.BASE;
   }
@@ -23,20 +29,18 @@ const toAlphaCode = function(n) {
 
 
 const fromAlphaCode = function(s) {
-  var n = 0,
-    places,
-    range,
-    pow,
-    i,
-    d;
-
-  for (places = 1, range = config.BASE;
-    places < s.length;
-    n += range, places++, range *= config.BASE) {
+  if (cache[s] !== undefined) {
+    return cache[s];
   }
+  let n = 0;
+  let places = 1;
+  let range = config.BASE;
+  let pow = 1;
 
-  for (i = s.length - 1, pow = 1; i >= 0; i--, pow *= config.BASE) {
-    d = s.charCodeAt(i) - 48;
+  for (; places < s.length; n += range, places++, range *= config.BASE) {
+  }
+  for (let i = s.length - 1; i >= 0; i--, pow *= config.BASE) {
+    let d = s.charCodeAt(i) - 48;
     if (d > 10) {
       d -= 7;
     }
@@ -74,3 +78,8 @@ module.exports = {
   unique: unique,
   commonPrefix: commonPrefix
 };
+
+// let out = fromAlphaCode('A');
+// console.log(out);
+// console.log(fromAlphaCode(out));
+// console.log(fromAlphaCode('R'));

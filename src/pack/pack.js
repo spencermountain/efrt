@@ -89,7 +89,6 @@ const analyzeRefs = function(self, node) {
   }
 };
 
-
 const symbolCount = function(self) {
   self.histAbs = self.histAbs.highest(config.BASE);
   let savings = [];
@@ -112,35 +111,32 @@ const symbolCount = function(self) {
   return sCount;
 };
 
+const numberNodes = function(self, node) { // Topological sort into nodes array
+  if (node._n !== undefined) {
+    return;
+  }
+  let props = self.nodeProps(node, true);
+  for (let i = 0; i < props.length; i++) {
+    numberNodes(self, node[props[i]]); //recursive
+  }
+  node._n = self.pos++;
+  self.nodes.unshift(node);
+};
+
 const pack = function(self) {
-  let nodes = [];
+  self.nodes = [];
   self.nodeCount = 0;
   self.syms = {};
   self.symCount = 0;
-  let pos = 0;
-
+  self.pos = 0;
   // Make sure we've combined all the common suffixes
   self.optimize();
-
-
-  // Topological sort into nodes array
-  function numberNodes(node) {
-    if (node._n !== undefined) {
-      return;
-    }
-    let props = self.nodeProps(node, true);
-    for (let i = 0; i < props.length; i++) {
-      numberNodes(node[props[i]]);
-    }
-    node._n = pos++;
-    nodes.unshift(node);
-  }
 
   self.histAbs = new Histogram();
   self.histRel = new Histogram();
 
-  numberNodes(self.root, 0);
-  self.nodeCount = nodes.length;
+  numberNodes(self, self.root);
+  self.nodeCount = self.nodes.length;
 
   self.prepDFS();
   analyzeRefs(self, self.root);
@@ -149,15 +145,15 @@ const pack = function(self) {
     self.syms[self.histAbs[sym][0]] = fns.toAlphaCode(sym);
   }
   for (let i = 0; i < self.nodeCount; i++) {
-    nodes[i] = nodeLine(self, nodes[i]);
+    self.nodes[i] = nodeLine(self, self.nodes[i]);
   }
   // Prepend symbols
   for (let sym = self.symCount - 1; sym >= 0; sym--) {
-    nodes.unshift(fns.toAlphaCode(sym) + ':' +
+    self.nodes.unshift(fns.toAlphaCode(sym) + ':' +
       fns.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1));
   }
 
-  return nodes.join(config.NODE_SEP);
+  return self.nodes.join(config.NODE_SEP);
 };
 
 module.exports = pack;

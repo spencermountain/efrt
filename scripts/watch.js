@@ -40,7 +40,7 @@ var run = function() {
 
 run();
 
-gaze(['./scripts/watch.js', './lookup/**/*.js', './scratch.js'], options, function(err) {
+gaze(['./scripts/watch.js', './src/**/*.js', './scratch.js'], options, function(err) {
   if (err) {
     console.log(err);
   }

@@ -30,7 +30,12 @@ test('very-compressable-array', function(t) {
     'aaab',
     'a',
     'aaaa',
+    'aö',
+    'a a',
+    'aA',
+    'a\'s',
     'b',
+    'proto neo antidisistablishmentarianism'
   // 'b22',
   // '35',
   // '1234e',
