@@ -54,39 +54,22 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(word) {
-    let matches = this.words(word);
-    if (matches.length === 0) {
-      return false;
-    }
-    return matches[matches.length - 1] === word;
-  }
+    let found = false;
 
-  // words() - return all strings in dictionary - same as words('')
-  // words(string) - return all words with prefix
-  // words(string, limit) - limited number of words
-  // words(string, beyond) - max (alphabetical) word
-  // words(string, beyond, limit)
-  words(word) {
-    let words = [];
-    let beyond = word + 'a';
-    let limit = 8;
-
-    function catchWords(w) {
-      if (words.length >= limit) {
-        this.abort = true;
-        return;
+    function fn(w) {
+      if (w === word) {
+        found = true;
       }
-      words.push(w);
     }
 
     let context = {
       want: word,
-      beyond: beyond,
-      fn: catchWords,
-      found: false
+      beyond: word + 'a',
+      fn: fn,
+      found: found
     };
     this.enumerate(0, '', context);
-    return words;
+    return found;
   }
 
   // Enumerate words in dictionary.  Two modes:
@@ -101,13 +84,11 @@ class PackedTrie {
   enumerate(inode, prefix, ctx) {
     let node = this.nodes[inode];
     let self = this;
-    if (ctx.abort) {
-      return;
-    }
 
     function emit(word) {
       if (isPrefix(word, ctx.want)) {
         ctx.fn(word);
+        ctx.found = true;
       }
     }
 
@@ -122,14 +103,12 @@ class PackedTrie {
       let match = prefix + str;
 
       // Done or no possible future match from str
-      if (match >= ctx.beyond || match < ctx.want.slice(0, match.length)) {
+      if (!isPrefix(match, ctx.want)) {
         return;
       }
 
-      let isTerminal = ref === config.STRING_SEP || ref === '';
-
-      if (isTerminal) {
-        // console.log('::terminal' + str + '\n');
+      //we're at the end of this branch
+      if (ref === ',' || ref === '') {
         emit(match);
         return;
       }
