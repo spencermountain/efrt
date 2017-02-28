@@ -13,17 +13,25 @@ module.exports = {
 
 var config = _dereq_('./config');
 
+var seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var cache = seq.split('').reduce(function (h, c, i) {
+  h[c] = i;
+  return h;
+}, {});
+// console.log(cache);
+
 // 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
 var toAlphaCode = function toAlphaCode(n) {
-  var places,
-      range,
-      s = '',
-      d;
+  if (seq[n] !== undefined) {
+    return seq[n];
+  }
+  var places = 1;
+  var range = config.BASE;
+  var s = '';
 
-  for (places = 1, range = config.BASE; n >= range; n -= range, places++, range *= config.BASE) {}
-
+  for (; n >= range; n -= range, places++, range *= config.BASE) {}
   while (places--) {
-    d = n % config.BASE;
+    var d = n % config.BASE;
     s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
     n = (n - d) / config.BASE;
   }
@@ -31,17 +39,17 @@ var toAlphaCode = function toAlphaCode(n) {
 };
 
 var fromAlphaCode = function fromAlphaCode(s) {
-  var n = 0,
-      places,
-      range,
-      pow,
-      i,
-      d;
+  if (cache[s] !== undefined) {
+    return cache[s];
+  }
+  var n = 0;
+  var places = 1;
+  var range = config.BASE;
+  var pow = 1;
 
-  for (places = 1, range = config.BASE; places < s.length; n += range, places++, range *= config.BASE) {}
-
-  for (i = s.length - 1, pow = 1; i >= 0; i--, pow *= config.BASE) {
-    d = s.charCodeAt(i) - 48;
+  for (; places < s.length; n += range, places++, range *= config.BASE) {}
+  for (var i = s.length - 1; i >= 0; i--, pow *= config.BASE) {
+    var d = s.charCodeAt(i) - 48;
     if (d > 10) {
       d -= 7;
     }
@@ -79,6 +87,11 @@ module.exports = {
   commonPrefix: commonPrefix
 };
 
+// let out = fromAlphaCode('A');
+// console.log(out);
+// console.log(fromAlphaCode(out));
+// console.log(fromAlphaCode('R'));
+
 },{"./config":1}],3:[function(_dereq_,module,exports){
 'use strict';
 
@@ -98,172 +111,102 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = _dereq_('../config');
 var fns = _dereq_('../fns');
-var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
-var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-var MAX_WORD = 'zzzzzzzzzz';
+
+// const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
+
+//are we on the right path with this string?
+var isPrefix = function isPrefix(str, want) {
+  var len = str.length;
+  if (len >= want.length) {
+    return false;
+  }
+  if (len === 1) {
+    return str === want[0];
+  }
+  return want.slice(0, len) === str;
+};
+// console.log(isPrefix('harvar', 'harvard'));
+
 /*
   PackedTrie - Trie traversal of the Trie packed-string representation.
-  Usage:
-      ptrie = new PackedTrie(<string> compressed);
-      bool = ptrie.isWord(word);
-      longestWord = ptrie.match(string);
-      matchArray = ptrie.matches(string);
-      wordArray = ptrie.words(from, beyond, limit);
-      ptrie.enumerate(inode, prefix, context);
 */
 
 // Implement isWord given a packed representation of a Trie.
 
 var PackedTrie = function () {
-  function PackedTrie(pack) {
+  function PackedTrie(str) {
     _classCallCheck(this, PackedTrie);
 
-    this.nodes = pack.split(config.NODE_SEP);
+    this.nodes = str.split(config.NODE_SEP);
     this.syms = [];
     this.symCount = 0;
-    while (true) {
-      var m = reSymbol.exec(this.nodes[0]);
-      if (!m) {
-        break;
-      }
-      this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
-      this.symCount++;
-      this.nodes.shift();
+    //some tries dont even have symbols
+    if (str.match(':')) {
+      this.initSymbols();
     }
   }
 
   _createClass(PackedTrie, [{
-    key: 'has',
-    value: function has(word) {
-      if (word === '') {
-        return false;
+    key: 'initSymbols',
+    value: function initSymbols() {
+      //the symbols are at the top of the array.
+      //... process these lines, if they exist
+      var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+      for (var i = 0; i < this.nodes.length; i++) {
+        var m = reSymbol.exec(this.nodes[i]);
+        if (!m) {
+          this.symCount = i;
+          break;
+        }
+        this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
       }
-      return this.match(word) === word;
+      //remove from main node list
+      this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
     }
 
     // Return largest matching string in the dictionary (or '')
 
   }, {
-    key: 'match',
-    value: function match(word) {
-      var matches = this.matches(word);
-      if (matches.length === 0) {
-        return '';
-      }
-      return matches[matches.length - 1];
-    }
+    key: 'has',
+    value: function has(want) {
+      var _this = this;
 
-    // Return array of all the prefix matches in the dictionary
-
-  }, {
-    key: 'matches',
-    value: function matches(word) {
-      return this.words(word, word + 'a');
-    }
-
-    // Largest possible word in the dictionary - hard coded for now
-
-  }, {
-    key: 'max',
-    value: function max() {
-      return MAX_WORD;
-    }
-
-    // words() - return all strings in dictionary - same as words('')
-    // words(string) - return all words with prefix
-    // words(string, limit) - limited number of words
-    // words(string, beyond) - max (alphabetical) word
-    // words(string, beyond, limit)
-
-  }, {
-    key: 'words',
-    value: function words(from, beyond, limit) {
-      var words = [];
-
-      if (from === undefined) {
-        from = '';
-      }
-
-      if (typeof beyond === 'number') {
-        limit = beyond;
-        beyond = undefined;
-      }
-
-      // By default list all words with 'from' as prefix
-      if (beyond === undefined) {
-        beyond = this.beyond(from);
-      }
-
-      function catchWords(word) {
-        if (words.length >= limit) {
-          this.abort = true;
-          return;
+      var crawl = function crawl(inode, prefix) {
+        var node = _this.nodes[inode];
+        // console.log(node);
+        //the '!' means it includes a prefix
+        if (node[0] === '!') {
+          node = node.slice(1); //remove it
         }
-        words.push(word);
-      }
+        if (node === want) {
+          return true;
+        }
 
-      this.enumerate(0, '', {
-        from: from,
-        beyond: beyond,
-        fn: catchWords,
-        prefixes: from + 'a' === beyond
-      });
-      return words;
-    }
-
-    // Enumerate words in dictionary.  Two modes:
-    //
-    // ctx.prefixes: Just enumerate terminal strings that are
-    // prefixes of 'from'.
-    //
-    // !ctx.prefixes: Enumerate all words s.t.:
-    //
-    //    ctx.from <= word < ctx.beyond
-    //
-
-  }, {
-    key: 'enumerate',
-    value: function enumerate(inode, prefix, ctx) {
-      var node = this.nodes[inode];
-      var self = this;
-
-      function emit(word) {
-        if (ctx.prefixes) {
-          if (word === ctx.from.slice(0, word.length)) {
-            ctx.fn(word);
+        var matches = node.split(/([A-Z0-9,]+)/g);
+        // console.log(matches);
+        for (var i = 0; i < matches.length; i += 2) {
+          var str = matches[i];
+          var ref = matches[i + 1];
+          var have = prefix + str;
+          if (have === want) {
+            return true;
           }
-          return;
+          // Done or no possible future match from str
+          if (!isPrefix(have, want)) {
+            continue;
+          }
+          //we're at the end of this branch
+          if (ref === ',' || ref === undefined) {
+            return false;
+          }
+          //otherwise, do the next one
+          inode = _this.inodeFromRef(ref, inode);
+          return crawl(inode, have);
         }
-        if (ctx.from <= word && word < ctx.beyond) {
-          ctx.fn(word);
-        }
-      }
-
-      if (node[0] === config.TERMINAL_PREFIX) {
-        emit(prefix);
-        if (ctx.abort) {
-          return;
-        }
-        node = node.slice(1);
-      }
-
-      node.replace(reNodePart, function (w, str, ref) {
-        var match = prefix + str;
-
-        // Done or no possible future match from str
-        if (ctx.abort || match >= ctx.beyond || match < ctx.from.slice(0, match.length)) {
-          return;
-        }
-
-        var isTerminal = ref === config.STRING_SEP || ref === '';
-
-        if (isTerminal) {
-          emit(match);
-          return;
-        }
-
-        self.enumerate(self.inodeFromRef(ref, inode), match, ctx);
-      });
+        return false;
+      };
+      return crawl(0, '');
+      // return found;
     }
 
     // References are either absolute (symbol) or relative (1 - based)
@@ -276,18 +219,6 @@ var PackedTrie = function () {
         return this.syms[dnode];
       }
       return inode + dnode + 1 - this.symCount;
-    }
-
-    // Increment a string one beyond any string with the current prefix
-
-  }, {
-    key: 'beyond',
-    value: function beyond(s) {
-      if (s.length === 0) {
-        return this.max();
-      }
-      var asc = s.charCodeAt(s.length - 1);
-      return s.slice(0, -1) + String.fromCharCode(asc + 1);
     }
   }]);
 

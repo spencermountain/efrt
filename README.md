@@ -1,11 +1,11 @@
 # trie-hard
 work-in-progress prefix/suffix [trie-based](https://en.wikipedia.org/wiki/Trie) data-structure optimised for compression of english words
 
-based on [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov) and [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
-
+based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
+ and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 it can compress a wordlist/dictionary into a very compact form, so that filesize/http/bandwidth is low.
 
-the clients though, can build-up from the compressed form without being too-fancy.
+the clients though, can query from the compressed form simply and quickly.
 
 ```js
 var trieHard=require('trie-hard')//(not yet published)
@@ -26,13 +26,13 @@ console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
-if you're doing the second step in the browser, you can just load the unpack bit (~6k):
+if you're doing the second step in the browser, you can just load the unpack bit (~3k):
 ```html
 <script src="./builds/trie-hard-unpack.min.js"></script>
 <script>
-  $.get('./compressedStuff.txt',(str)=>{
-    var trie=unpack(str)
-    console.log(trie.has('miles davis'));//false
+  $.get('./compressedStuff.txt', (str)=>{
+    var trie=unpack(str);
+    trie.has('miles davis');
   })
 </script>
 ```

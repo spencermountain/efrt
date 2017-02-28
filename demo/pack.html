@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>trie-hard Demo</title>
+    <script type="text/javascript" src="../builds/trie-hard.min.js"></script>
+    <!-- <script type="text/javascript" src="https://unpkg.com/compromise@latest/builds/trie-hard.min.js"></script> -->
+    <style>
+      #words {
+        font-size: 15px;
+        height: 200px;
+        width: 60%;
+        color: 'grey';
+        margin-left:20%;
+        margin-top:10%;
+      }
+      #word{
+        font-size: 25px;
+        color: 'grey';
+      }
+      #result {
+        position:relative;
+        color: silver;
+        font-size: 15px;
+        display:inline-block;
+        padding:20px;
+        margin:20px;
+        border:1px solid lightgrey;
+      }
+      #nothing{
+        color:darkred
+      }
+      #found{
+        font-size:50px;
+        margin-left:25px;
+        color:steelblue;
+      }
+      #logo{
+        position:absolute;
+        top:50px;
+        left:50px;
+      }
+      h3 {
+        color: grey;
+      }
+    </style>
+  </head>
+  <body style="position:relative; width:100%; height:100%; ">
+    <div id="logo">
+      demo of <a style='text-decoration:none; color:steelblue' href="https://github.com/nlp-compromise/trie-hard">trie-hard</a>
+      <div style='color:lightgrey; font-size:12px;'>trie-based compression of a word list</div>
+    </div>
+    <div id="">
+      <h3>(english, ASCII) words to compress:</h3>
+      <textarea type="text" id="words" onKeyPress="compress()" onKeyUp="compress()" >
+I've been to
+Reno, Chicago, Fargo, Minnesota,
+Buffalo, Toronto, Winslow, Sarasota,
+Wichita, Tulsa, Ottawa, Oklahoma,
+Tampa, Panama, Mattawa, La Paloma,
+Bangor, Baltimore, Salvador, Amarillo,
+Tocapillo, Baranquilla, and Perdilla, I'm a killer.
+
+Boston, Charleston, Dayton, Louisiana,
+Washington, Houston, Kingston, Texarkana,
+Monterey, Faraday, Santa Fe, Tallapoosa,
+Glen Rock, Black Rock, Little Rock, Oskaloosa,
+Tennessee to Tennesse Chicopee, Spirit Lake,
+Grand Lake, Devils Lake, Crater Lake, for Pete's sake.
+
+I've been to
+Louisville, Nashville, Knoxville, Ombabika,
+Schefferville, Jacksonville, Waterville, Costa Rica,
+Pittsfield, Springfield, Bakersfield, Shreveport,
+Hackensack, Cadillac, Fond du Lac, Davenport,
+Idaho, Jellico, Argentina, Diamantina,
+Pasadena, Catalina, see what I mean-a.
+
+I've been to
+Pittsburgh, Parkersburg, Gravelbourg, Colorado,
+Ellensburg, Rexburg, Vicksburg, Eldorado,
+Larimore, Atmore, Haverstraw, Chatanika,
+Chaska, Nebraska, Alaska, Opelika,
+Baraboo, Waterloo, Kalamazoo, Kansas City,
+Sioux City, Cedar City, Dodge City, what a pity.
+      </textarea>
+      <div>compressed form:</div>
+      <div id="result"></div>
+      <div id="length"></div>
+    <p>
+    </p>
+    <div style='margin:75px;'>
+      lookup:
+        <input type="text" id="word" onKeyPress="findWord()" onKeyUp="findWord()" value="parkersburg"/>
+        <div id="found"></div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript" language="javascript">
+      var trieHard = window.trieHard;
+      window.compressed=''
+
+      function findWord(){
+        var str = document.getElementById('word').value || '';
+        str=str.toLowerCase().replace(/'/,'')
+
+        var start = new Date();
+        var trie=trieHard.unpack(window.compressed||'')
+        var end=new Date()
+        var ms = (end.getTime() - start.getTime())
+
+        document.getElementById('found').innerText = trie.has(str)+ '  - '+ms+'ms'
+      }
+      function compress() {
+
+        var str = document.getElementById('words').value || '';
+        //normalize it a bit
+        str=str.toLowerCase().replace(/'/,'')
+        var words=str.split(/,?\W+/g)
+
+        var start = new Date();
+        window.compressed=trieHard.pack(words)
+        var end=new Date()
+        var ms = (end.getTime() - start.getTime())
+
+        document.getElementById('result').innerText = compressed;
+        document.getElementById('length').innerText = str.length +' chars to '+compressed.length +' in '+ms +'ms'
+        findWord()
+      }
+      compress();//fire!
+  </script>
+</html>

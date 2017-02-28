@@ -13,17 +13,25 @@ module.exports = {
 
 var config = _dereq_('./config');
 
+var seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var cache = seq.split('').reduce(function (h, c, i) {
+  h[c] = i;
+  return h;
+}, {});
+// console.log(cache);
+
 // 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
 var toAlphaCode = function toAlphaCode(n) {
-  var places,
-      range,
-      s = '',
-      d;
+  if (seq[n] !== undefined) {
+    return seq[n];
+  }
+  var places = 1;
+  var range = config.BASE;
+  var s = '';
 
-  for (places = 1, range = config.BASE; n >= range; n -= range, places++, range *= config.BASE) {}
-
+  for (; n >= range; n -= range, places++, range *= config.BASE) {}
   while (places--) {
-    d = n % config.BASE;
+    var d = n % config.BASE;
     s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
     n = (n - d) / config.BASE;
   }
@@ -31,17 +39,17 @@ var toAlphaCode = function toAlphaCode(n) {
 };
 
 var fromAlphaCode = function fromAlphaCode(s) {
-  var n = 0,
-      places,
-      range,
-      pow,
-      i,
-      d;
+  if (cache[s] !== undefined) {
+    return cache[s];
+  }
+  var n = 0;
+  var places = 1;
+  var range = config.BASE;
+  var pow = 1;
 
-  for (places = 1, range = config.BASE; places < s.length; n += range, places++, range *= config.BASE) {}
-
-  for (i = s.length - 1, pow = 1; i >= 0; i--, pow *= config.BASE) {
-    d = s.charCodeAt(i) - 48;
+  for (; places < s.length; n += range, places++, range *= config.BASE) {}
+  for (var i = s.length - 1; i >= 0; i--, pow *= config.BASE) {
+    var d = s.charCodeAt(i) - 48;
     if (d > 10) {
       d -= 7;
     }
@@ -79,6 +87,11 @@ module.exports = {
   commonPrefix: commonPrefix
 };
 
+// let out = fromAlphaCode('A');
+// console.log(out);
+// console.log(fromAlphaCode(out));
+// console.log(fromAlphaCode('R'));
+
 },{"./config":1}],3:[function(_dereq_,module,exports){
 'use strict';
 
@@ -87,7 +100,7 @@ module.exports = {
   unpack: _dereq_('./unpack/index')
 };
 
-},{"./pack/index":5,"./unpack/index":7}],4:[function(_dereq_,module,exports){
+},{"./pack/index":5,"./unpack/index":8}],4:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -168,7 +181,166 @@ var pack = function pack(arr) {
 };
 module.exports = pack;
 
-},{"./trie":6}],6:[function(_dereq_,module,exports){
+},{"./trie":7}],6:[function(_dereq_,module,exports){
+'use strict';
+
+var Histogram = _dereq_('./histogram');
+var config = _dereq_('../config');
+var fns = _dereq_('../fns');
+// Return packed representation of Trie as a string.
+
+// Return packed representation of Trie as a string.
+//
+// Each node of the Trie is output on a single line.
+//
+// For example Trie("the them there thesis this"):
+// {
+//    "th": {
+//      "is": 1,
+//      "e": {
+//        "": 1,
+//        "m": 1,
+//        "re": 1,
+//        "sis": 1
+//      }
+//    }
+//  }
+//
+// Would be reperesented as:
+//
+// th0
+// e0is
+// !m,re,sis
+//
+// The line begins with a '!' iff it is a terminal node of the Trie.
+// For each string property in a node, the string is listed, along
+// with a (relative!) line number of the node that string references.
+// Terminal strings (those without child node references) are
+// separated by ',' characters.
+
+
+var nodeLine = function nodeLine(self, node) {
+  var line = '',
+      sep = '';
+
+  if (self.isTerminal(node)) {
+    line += config.TERMINAL_PREFIX;
+  }
+
+  var props = self.nodeProps(node);
+  for (var i = 0; i < props.length; i++) {
+    var prop = props[i];
+    if (typeof node[prop] === 'number') {
+      line += sep + prop;
+      sep = config.STRING_SEP;
+      continue;
+    }
+    if (self.syms[node[prop]._n]) {
+      line += sep + prop + self.syms[node[prop]._n];
+      sep = '';
+      continue;
+    }
+    var ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
+    // Large reference to smaller string suffix -> duplicate suffix
+    if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
+      ref = node[prop]._g;
+      line += sep + prop + ref;
+      sep = config.STRING_SEP;
+      continue;
+    }
+    line += sep + prop + ref;
+    sep = '';
+  }
+  return line;
+};
+
+var analyzeRefs = function analyzeRefs(self, node) {
+  if (self.visited(node)) {
+    return;
+  }
+  var props = self.nodeProps(node, true);
+  for (var i = 0; i < props.length; i++) {
+    var prop = props[i];
+    var ref = node._n - node[prop]._n - 1;
+    // Count the number of single-character relative refs
+    if (ref < config.BASE) {
+      self.histRel.add(ref);
+    }
+    // Count the number of characters saved by converting an absolute
+    // reference to a one-character symbol.
+    self.histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
+    analyzeRefs(self, node[prop]);
+  }
+};
+
+var symbolCount = function symbolCount(self) {
+  self.histAbs = self.histAbs.highest(config.BASE);
+  var savings = [];
+  savings[-1] = 0;
+  var best = 0,
+      sCount = 0;
+  var defSize = 3 + fns.toAlphaCode(self.nodeCount).length;
+  for (var sym = 0; sym < config.BASE; sym++) {
+    if (self.histAbs[sym] === undefined) {
+      break;
+    }
+    savings[sym] = self.histAbs[sym][1] - defSize - self.histRel.countOf(config.BASE - sym - 1) + savings[sym - 1];
+    if (savings[sym] >= best) {
+      best = savings[sym];
+      sCount = sym + 1;
+    }
+  }
+  return sCount;
+};
+
+var numberNodes = function numberNodes(self, node) {
+  // Topological sort into nodes array
+  if (node._n !== undefined) {
+    return;
+  }
+  var props = self.nodeProps(node, true);
+  for (var i = 0; i < props.length; i++) {
+    numberNodes(self, node[props[i]]); //recursive
+  }
+  node._n = self.pos++;
+  self.nodes.unshift(node);
+};
+
+var pack = function pack(self) {
+  self.nodes = [];
+  self.nodeCount = 0;
+  self.syms = {};
+  self.symCount = 0;
+  self.pos = 0;
+  // Make sure we've combined all the common suffixes
+  self.optimize();
+
+  self.histAbs = new Histogram();
+  self.histRel = new Histogram();
+
+  numberNodes(self, self.root);
+  self.nodeCount = self.nodes.length;
+
+  self.prepDFS();
+  analyzeRefs(self, self.root);
+  self.symCount = symbolCount(self);
+  for (var sym = 0; sym < self.symCount; sym++) {
+    self.syms[self.histAbs[sym][0]] = fns.toAlphaCode(sym);
+  }
+  for (var i = 0; i < self.nodeCount; i++) {
+    self.nodes[i] = nodeLine(self, self.nodes[i]);
+  }
+  // Prepend symbols
+  for (var _sym = self.symCount - 1; _sym >= 0; _sym--) {
+    self.nodes.unshift(fns.toAlphaCode(_sym) + ':' + fns.toAlphaCode(self.nodeCount - self.histAbs[_sym][0] - 1));
+  }
+
+  return self.nodes.join(config.NODE_SEP);
+};
+
+module.exports = pack;
+
+},{"../config":1,"../fns":2,"./histogram":4}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -178,8 +350,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var fns = _dereq_('../fns');
-var config = _dereq_('../config');
-var Histogram = _dereq_('./histogram');
+var _pack = _dereq_('./pack');
 // const pack = require('./packer');
 /*
   org.startpad.trie - A JavaScript implementation of a Trie search datastructure.
@@ -512,157 +683,10 @@ var Trie = function () {
       }
       return undefined;
     }
-
-    // Return packed representation of Trie as a string.
-    //
-    // Each node of the Trie is output on a single line.
-    //
-    // For example Trie("the them there thesis this"):
-    // {
-    //    "th": {
-    //      "is": 1,
-    //      "e": {
-    //        "": 1,
-    //        "m": 1,
-    //        "re": 1,
-    //        "sis": 1
-    //      }
-    //    }
-    //  }
-    //
-    // Would be reperesented as:
-    //
-    // th0
-    // e0is
-    // !m,re,sis
-    //
-    // The line begins with a '!' iff it is a terminal node of the Trie.
-    // For each string property in a node, the string is listed, along
-    // with a (relative!) line number of the node that string references.
-    // Terminal strings (those without child node references) are
-    // separated by ',' characters.
-
   }, {
     key: 'pack',
     value: function pack() {
-      var self = this;
-      var nodes = [];
-      var nodeCount = void 0;
-      var syms = {};
-      var symCount = void 0;
-      var pos = 0;
-
-      // Make sure we've combined all the common suffixes
-      this.optimize();
-
-      function nodeLine(node) {
-        var line = '',
-            sep = '';
-
-        if (self.isTerminal(node)) {
-          line += config.TERMINAL_PREFIX;
-        }
-
-        var props = self.nodeProps(node);
-        for (var i = 0; i < props.length; i++) {
-          var prop = props[i];
-          if (typeof node[prop] === 'number') {
-            line += sep + prop;
-            sep = config.STRING_SEP;
-            continue;
-          }
-          if (syms[node[prop]._n]) {
-            line += sep + prop + syms[node[prop]._n];
-            sep = '';
-            continue;
-          }
-          var ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + symCount);
-          // Large reference to smaller string suffix -> duplicate suffix
-          if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
-            ref = node[prop]._g;
-            line += sep + prop + ref;
-            sep = config.STRING_SEP;
-            continue;
-          }
-          line += sep + prop + ref;
-          sep = '';
-        }
-        return line;
-      }
-
-      // Topological sort into nodes array
-      function numberNodes(node) {
-        if (node._n !== undefined) {
-          return;
-        }
-        var props = self.nodeProps(node, true);
-        for (var i = 0; i < props.length; i++) {
-          numberNodes(node[props[i]]);
-        }
-        node._n = pos++;
-        nodes.unshift(node);
-      }
-
-      var histAbs = new Histogram();
-      var histRel = new Histogram();
-
-      function analyzeRefs(node) {
-        if (self.visited(node)) {
-          return;
-        }
-        var props = self.nodeProps(node, true);
-        for (var i = 0; i < props.length; i++) {
-          var prop = props[i];
-          var ref = node._n - node[prop]._n - 1;
-          // Count the number of single-character relative refs
-          if (ref < config.BASE) {
-            histRel.add(ref);
-          }
-          // Count the number of characters saved by converting an absolute
-          // reference to a one-character symbol.
-          histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
-          analyzeRefs(node[prop]);
-        }
-      }
-
-      function symbolCount() {
-        histAbs = histAbs.highest(config.BASE);
-        var savings = [];
-        savings[-1] = 0;
-        var best = 0,
-            sCount = 0;
-        var defSize = 3 + fns.toAlphaCode(nodeCount).length;
-        for (var sym = 0; sym < config.BASE; sym++) {
-          if (histAbs[sym] === undefined) {
-            break;
-          }
-          savings[sym] = histAbs[sym][1] - defSize - histRel.countOf(config.BASE - sym - 1) + savings[sym - 1];
-          if (savings[sym] >= best) {
-            best = savings[sym];
-            sCount = sym + 1;
-          }
-        }
-        return sCount;
-      }
-
-      numberNodes(this.root, 0);
-      nodeCount = nodes.length;
-
-      this.prepDFS();
-      analyzeRefs(this.root);
-      symCount = symbolCount();
-      for (var sym = 0; sym < symCount; sym++) {
-        syms[histAbs[sym][0]] = fns.toAlphaCode(sym);
-      }
-      for (var i = 0; i < nodeCount; i++) {
-        nodes[i] = nodeLine(nodes[i]);
-      }
-      // Prepend symbols
-      for (var _sym = symCount - 1; _sym >= 0; _sym--) {
-        nodes.unshift(fns.toAlphaCode(_sym) + ':' + fns.toAlphaCode(nodeCount - histAbs[_sym][0] - 1));
-      }
-
-      return nodes.join(config.NODE_SEP);
+      return _pack(this);
     }
   }]);
 
@@ -671,7 +695,7 @@ var Trie = function () {
 
 module.exports = Trie;
 
-},{"../config":1,"../fns":2,"./histogram":4}],7:[function(_dereq_,module,exports){
+},{"../fns":2,"./pack":6}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var Ptrie = _dereq_('./ptrie');
@@ -681,7 +705,7 @@ var unpack = function unpack(str) {
 };
 module.exports = unpack;
 
-},{"./ptrie":8}],8:[function(_dereq_,module,exports){
+},{"./ptrie":9}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -690,172 +714,102 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = _dereq_('../config');
 var fns = _dereq_('../fns');
-var reNodePart = new RegExp('([a-z ]+)(' + config.STRING_SEP + '|[0-9A-Z]+|$)', 'g');
-var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-var MAX_WORD = 'zzzzzzzzzz';
+
+// const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
+
+//are we on the right path with this string?
+var isPrefix = function isPrefix(str, want) {
+  var len = str.length;
+  if (len >= want.length) {
+    return false;
+  }
+  if (len === 1) {
+    return str === want[0];
+  }
+  return want.slice(0, len) === str;
+};
+// console.log(isPrefix('harvar', 'harvard'));
+
 /*
   PackedTrie - Trie traversal of the Trie packed-string representation.
-  Usage:
-      ptrie = new PackedTrie(<string> compressed);
-      bool = ptrie.isWord(word);
-      longestWord = ptrie.match(string);
-      matchArray = ptrie.matches(string);
-      wordArray = ptrie.words(from, beyond, limit);
-      ptrie.enumerate(inode, prefix, context);
 */
 
 // Implement isWord given a packed representation of a Trie.
 
 var PackedTrie = function () {
-  function PackedTrie(pack) {
+  function PackedTrie(str) {
     _classCallCheck(this, PackedTrie);
 
-    this.nodes = pack.split(config.NODE_SEP);
+    this.nodes = str.split(config.NODE_SEP);
     this.syms = [];
     this.symCount = 0;
-    while (true) {
-      var m = reSymbol.exec(this.nodes[0]);
-      if (!m) {
-        break;
-      }
-      this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
-      this.symCount++;
-      this.nodes.shift();
+    //some tries dont even have symbols
+    if (str.match(':')) {
+      this.initSymbols();
     }
   }
 
   _createClass(PackedTrie, [{
-    key: 'has',
-    value: function has(word) {
-      if (word === '') {
-        return false;
+    key: 'initSymbols',
+    value: function initSymbols() {
+      //the symbols are at the top of the array.
+      //... process these lines, if they exist
+      var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+      for (var i = 0; i < this.nodes.length; i++) {
+        var m = reSymbol.exec(this.nodes[i]);
+        if (!m) {
+          this.symCount = i;
+          break;
+        }
+        this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
       }
-      return this.match(word) === word;
+      //remove from main node list
+      this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
     }
 
     // Return largest matching string in the dictionary (or '')
 
   }, {
-    key: 'match',
-    value: function match(word) {
-      var matches = this.matches(word);
-      if (matches.length === 0) {
-        return '';
-      }
-      return matches[matches.length - 1];
-    }
+    key: 'has',
+    value: function has(want) {
+      var _this = this;
 
-    // Return array of all the prefix matches in the dictionary
-
-  }, {
-    key: 'matches',
-    value: function matches(word) {
-      return this.words(word, word + 'a');
-    }
-
-    // Largest possible word in the dictionary - hard coded for now
-
-  }, {
-    key: 'max',
-    value: function max() {
-      return MAX_WORD;
-    }
-
-    // words() - return all strings in dictionary - same as words('')
-    // words(string) - return all words with prefix
-    // words(string, limit) - limited number of words
-    // words(string, beyond) - max (alphabetical) word
-    // words(string, beyond, limit)
-
-  }, {
-    key: 'words',
-    value: function words(from, beyond, limit) {
-      var words = [];
-
-      if (from === undefined) {
-        from = '';
-      }
-
-      if (typeof beyond === 'number') {
-        limit = beyond;
-        beyond = undefined;
-      }
-
-      // By default list all words with 'from' as prefix
-      if (beyond === undefined) {
-        beyond = this.beyond(from);
-      }
-
-      function catchWords(word) {
-        if (words.length >= limit) {
-          this.abort = true;
-          return;
+      var crawl = function crawl(inode, prefix) {
+        var node = _this.nodes[inode];
+        // console.log(node);
+        //the '!' means it includes a prefix
+        if (node[0] === '!') {
+          node = node.slice(1); //remove it
         }
-        words.push(word);
-      }
+        if (node === want) {
+          return true;
+        }
 
-      this.enumerate(0, '', {
-        from: from,
-        beyond: beyond,
-        fn: catchWords,
-        prefixes: from + 'a' === beyond
-      });
-      return words;
-    }
-
-    // Enumerate words in dictionary.  Two modes:
-    //
-    // ctx.prefixes: Just enumerate terminal strings that are
-    // prefixes of 'from'.
-    //
-    // !ctx.prefixes: Enumerate all words s.t.:
-    //
-    //    ctx.from <= word < ctx.beyond
-    //
-
-  }, {
-    key: 'enumerate',
-    value: function enumerate(inode, prefix, ctx) {
-      var node = this.nodes[inode];
-      var self = this;
-
-      function emit(word) {
-        if (ctx.prefixes) {
-          if (word === ctx.from.slice(0, word.length)) {
-            ctx.fn(word);
+        var matches = node.split(/([A-Z0-9,]+)/g);
+        // console.log(matches);
+        for (var i = 0; i < matches.length; i += 2) {
+          var str = matches[i];
+          var ref = matches[i + 1];
+          var have = prefix + str;
+          if (have === want) {
+            return true;
           }
-          return;
+          // Done or no possible future match from str
+          if (!isPrefix(have, want)) {
+            continue;
+          }
+          //we're at the end of this branch
+          if (ref === ',' || ref === undefined) {
+            return false;
+          }
+          //otherwise, do the next one
+          inode = _this.inodeFromRef(ref, inode);
+          return crawl(inode, have);
         }
-        if (ctx.from <= word && word < ctx.beyond) {
-          ctx.fn(word);
-        }
-      }
-
-      if (node[0] === config.TERMINAL_PREFIX) {
-        emit(prefix);
-        if (ctx.abort) {
-          return;
-        }
-        node = node.slice(1);
-      }
-
-      node.replace(reNodePart, function (w, str, ref) {
-        var match = prefix + str;
-
-        // Done or no possible future match from str
-        if (ctx.abort || match >= ctx.beyond || match < ctx.from.slice(0, match.length)) {
-          return;
-        }
-
-        var isTerminal = ref === config.STRING_SEP || ref === '';
-
-        if (isTerminal) {
-          emit(match);
-          return;
-        }
-
-        self.enumerate(self.inodeFromRef(ref, inode), match, ctx);
-      });
+        return false;
+      };
+      return crawl(0, '');
+      // return found;
     }
 
     // References are either absolute (symbol) or relative (1 - based)
@@ -868,18 +822,6 @@ var PackedTrie = function () {
         return this.syms[dnode];
       }
       return inode + dnode + 1 - this.symCount;
-    }
-
-    // Increment a string one beyond any string with the current prefix
-
-  }, {
-    key: 'beyond',
-    value: function beyond(s) {
-      if (s.length === 0) {
-        return this.max();
-      }
-      var asc = s.charCodeAt(s.length - 1);
-      return s.slice(0, -1) + String.fromCharCode(asc + 1);
     }
   }]);
 
