@@ -35,7 +35,7 @@ const Histogram = require('./histogram');
       '_v': Visited in DFS.
       '_g': For singleton nodes, the name of it's single property.
  */
-// var ptrie = namespace.lookup('org.startpad.trie.packed');
+// let ptrie = namespace.lookup('org.startpad.trie.packed');
 //
 // ns.extend({
 //   'Trie': Trie,
@@ -58,43 +58,40 @@ class Trie {
 
   // Insert words from one big string, or from an array.
   insertWords(words) {
-    var i;
-
     if (words === undefined) {
       return;
     }
     if (typeof words === 'string') {
       words = words.split(/[^a-zA-Z]+/);
     }
-    for (i = 0; i < words.length; i++) {
+    for (let i = 0; i < words.length; i++) {
       words[i] = words[i].toLowerCase();
     }
-    unique(words);
-    for (i = 0; i < words.length; i++) {
+    fns.unique(words);
+    for (let i = 0; i < words.length; i++) {
       this.insert(words[i]);
     }
   }
 
   insert(word) {
     this._insert(word, this.root);
-    var lastWord = this.lastWord;
+    let lastWord = this.lastWord;
     this.lastWord = word;
 
-    var prefix = commonPrefix(word, lastWord);
+    let prefix = fns.commonPrefix(word, lastWord);
     if (prefix === lastWord) {
       return;
     }
 
-    var freeze = this.uniqueNode(lastWord, word, this.root);
+    let freeze = this.uniqueNode(lastWord, word, this.root);
     if (freeze) {
       this.combineSuffixNode(freeze);
     }
   }
 
   _insert(word, node) {
-    var prefix,
-      next,
-      prop;
+    let prefix,
+      next;
 
     // Duplicate word entry - ignore
     if (word.length === 0) {
@@ -102,8 +99,10 @@ class Trie {
     }
 
     // Do any existing props share a common prefix?
-    for (prop in node) {
-      prefix = commonPrefix(word, prop);
+    let keys = Object.keys(node);
+    for(let i = 0; i < keys.length; i++) {
+      let prop = keys[i];
+      prefix = fns.commonPrefix(word, prop);
       if (prefix.length === 0) {
         continue;
       }
@@ -141,7 +140,7 @@ class Trie {
       node[prop] = 1;
       return;
     }
-    var next = {};
+    let next = {};
     node[prop[0]] = next;
     this.addTerminal(next, prop.slice(1));
   }
@@ -150,8 +149,8 @@ class Trie {
   // Use nodesOnly==true to return only properties of child nodes (not
   // terminal strings.
   nodeProps(node, nodesOnly) {
-    var props = [];
-    for (var prop in node) {
+    let props = [];
+    for (let prop in node) {
       if (prop !== '' && prop[0] !== '_') {
         if (!nodesOnly || typeof node[prop] === 'object') {
           props.push(prop);
@@ -178,13 +177,13 @@ class Trie {
     }
     // Make sure all children are combined and generate unique node
     // signature for this node.
-    var sig = [];
+    let sig = [];
     if (this.isTerminal(node)) {
       sig.push('!');
     }
-    var props = this.nodeProps(node);
-    for (var i = 0; i < props.length; i++) {
-      var prop = props[i];
+    let props = this.nodeProps(node);
+    for (let i = 0; i < props.length; i++) {
+      let prop = props[i];
       if (typeof node[prop] === 'object') {
         node[prop] = this.combineSuffixNode(node[prop]);
         sig.push(prop);
@@ -195,7 +194,7 @@ class Trie {
     }
     sig = sig.join('-');
 
-    var shared = this.suffixes[sig];
+    let shared = this.suffixes[sig];
     if (shared) {
       return shared;
     }
@@ -213,6 +212,7 @@ class Trie {
       return true;
     }
     node._v = this.vCur;
+    return false;
   }
 
   countDegree(node) {
@@ -223,15 +223,15 @@ class Trie {
     if (this.visited(node)) {
       return;
     }
-    var props = this.nodeProps(node, true);
-    for (var i = 0; i < props.length; i++) {
+    let props = this.nodeProps(node, true);
+    for (let i = 0; i < props.length; i++) {
       this.countDegree(node[props[i]]);
     }
   }
 
   // Remove intermediate singleton nodes by hoisting into their parent
   collapseChains(node) {
-    var prop,
+    let prop,
       props,
       child,
       i;
@@ -277,9 +277,9 @@ class Trie {
     }
 
     // Find a prefix of word reference to a child
-    var props = this.nodeProps(node, true);
-    for (var i = 0; i < props.length; i++) {
-      var prop = props[i];
+    let props = this.nodeProps(node, true);
+    for (let i = 0; i < props.length; i++) {
+      let prop = props[i];
       if (prop === word.slice(0, prop.length)) {
         return this.isFragment(word.slice(prop.length), node[prop]);
       }
@@ -291,9 +291,9 @@ class Trie {
   // Find highest node in Trie that is on the path to word
   // and that is NOT on the path to other.
   uniqueNode(word, other, node) {
-    var props = this.nodeProps(node, true);
-    for (var i = 0; i < props.length; i++) {
-      var prop = props[i];
+    let props = this.nodeProps(node, true);
+    for (let i = 0; i < props.length; i++) {
+      let prop = props[i];
       if (prop === word.slice(0, prop.length)) {
         if (prop !== other.slice(0, prop.length)) {
           return node[prop];
@@ -335,27 +335,27 @@ class Trie {
   // Terminal strings (those without child node references) are
   // separated by ',' characters.
   pack() {
-    var self = this;
-    var nodes = [];
-    var nodeCount;
-    var syms = {};
-    var symCount;
-    var pos = 0;
+    let self = this;
+    let nodes = [];
+    let nodeCount;
+    let syms = {};
+    let symCount;
+    let pos = 0;
 
     // Make sure we've combined all the common suffixes
     this.optimize();
 
     function nodeLine(node) {
-      var line = '',
+      let line = '',
         sep = '';
 
       if (self.isTerminal(node)) {
         line += config.TERMINAL_PREFIX;
       }
 
-      var props = self.nodeProps(node);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
+      let props = self.nodeProps(node);
+      for (let i = 0; i < props.length; i++) {
+        let prop = props[i];
         if (typeof node[prop] === 'number') {
           line += sep + prop;
           sep = config.STRING_SEP;
@@ -366,7 +366,7 @@ class Trie {
           sep = '';
           continue;
         }
-        var ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + symCount);
+        let ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + symCount);
         // Large reference to smaller string suffix -> duplicate suffix
         if (node[prop]._g && ref.length >= node[prop]._g.length &&
           node[node[prop]._g] === 1) {
@@ -378,7 +378,6 @@ class Trie {
         line += sep + prop + ref;
         sep = '';
       }
-
       return line;
     }
 
@@ -387,25 +386,25 @@ class Trie {
       if (node._n !== undefined) {
         return;
       }
-      var props = self.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
+      let props = self.nodeProps(node, true);
+      for (let i = 0; i < props.length; i++) {
         numberNodes(node[props[i]]);
       }
       node._n = pos++;
       nodes.unshift(node);
     }
 
-    var histAbs = new Histogram();
-    var histRel = new Histogram();
+    let histAbs = new Histogram();
+    let histRel = new Histogram();
 
     function analyzeRefs(node) {
       if (self.visited(node)) {
         return;
       }
-      var props = self.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        var ref = node._n - node[prop]._n - 1;
+      let props = self.nodeProps(node, true);
+      for (let i = 0; i < props.length; i++) {
+        let prop = props[i];
+        let ref = node._n - node[prop]._n - 1;
         // Count the number of single-character relative refs
         if (ref < config.BASE) {
           histRel.add(ref);
@@ -419,32 +418,24 @@ class Trie {
 
     function symbolCount() {
       histAbs = histAbs.highest(config.BASE);
-      var savings = [];
+      let savings = [];
       savings[-1] = 0;
-      var best = 0,
-        symCount = 0;
-      var defSize = 3 + fns.toAlphaCode(nodeCount).length;
-      for (var sym = 0; sym < config.BASE; sym++) {
+      let best = 0,
+        sCount = 0;
+      let defSize = 3 + fns.toAlphaCode(nodeCount).length;
+      for (let sym = 0; sym < config.BASE; sym++) {
         if (histAbs[sym] === undefined) {
           break;
         }
-        // Cumulative savings of:
-        //   saved characters in refs
-        //   minus definition size
-        //   minus relative size wrapping to 2 digits
         savings[sym] = histAbs[sym][1] - defSize -
         histRel.countOf(config.BASE - sym - 1) +
         savings[sym - 1];
-        console.log('savings[' + sym + '] ' + savings[sym] + ' = ' +
-          savings[sym - 1] + ' +' +
-          histAbs[sym][1] + ' - ' + defSize + ' - ' +
-          histRel.countOf(config.BASE - sym - 1) + ')');
         if (savings[sym] >= best) {
           best = savings[sym];
-          symCount = sym + 1;
+          sCount = sym + 1;
         }
       }
-      return symCount;
+      return sCount;
     }
 
     numberNodes(this.root, 0);
@@ -453,40 +444,19 @@ class Trie {
     this.prepDFS();
     analyzeRefs(this.root);
     symCount = symbolCount();
-    var symDefs = [];
-    for (var sym = 0; sym < symCount; sym++) {
+    for (let sym = 0; sym < symCount; sym++) {
       syms[histAbs[sym][0]] = fns.toAlphaCode(sym);
     }
-
-    for (var i = 0; i < nodeCount; i++) {
+    for (let i = 0; i < nodeCount; i++) {
       nodes[i] = nodeLine(nodes[i]);
     }
-
     // Prepend symbols
-    for (sym = symCount - 1; sym >= 0; sym--) {
+    for (let sym = symCount - 1; sym >= 0; sym--) {
       nodes.unshift(fns.toAlphaCode(sym) + ':' +
         fns.toAlphaCode(nodeCount - histAbs[sym][0] - 1));
     }
 
     return nodes.join(config.NODE_SEP);
-  }
-}
-
-function commonPrefix(w1, w2) {
-  var maxlen = Math.min(w1.length, w2.length);
-  for (var i = 0; i < maxlen && w1[i] === w2[i]; i++) {
-  }
-  return w1.slice(0, i);
-}
-
-
-/* Sort elements and remove duplicates from array (modified in place) */
-function unique(a) {
-  a.sort();
-  for (var i = 1; i < a.length; i++) {
-    if (a[i - 1] === a[i]) {
-      a.splice(i, 1);
-    }
   }
 }
 
