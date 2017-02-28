@@ -1,7 +1,24 @@
 'use strict';
-const arr = require('./test/maleNames');
+// const arr = require('./test/maleNames');
 // const trieHard = require('./bits');
-const trieHard = require('./lookup');
+const trieHard = require('./src');
+
+var arr = [
+  'aaa',
+  'aa',
+  'aaa',
+  'aaa',
+  'aaab',
+  'a',
+  'aaaa',
+  'b',
+  'b22',
+// '35',
+// '1234e',
+// '567890',
+// 'fe567890',
+// 'workin\'',
+];
 
 // var words = [
 //   'cool',
