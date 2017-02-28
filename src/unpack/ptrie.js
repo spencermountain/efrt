@@ -4,6 +4,22 @@ const fns = require('../fns');
 
 const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
 
+//are we on the right path with this prefex?
+const isPrefix = function(str, want) {
+  if (str === want) {
+    return true;
+  }
+  if (str.length >= want.length) {
+    return false;
+  }
+  let len = str.length;
+  if (len === 1) {
+    return str === want[0];
+  }
+  return want.slice(0, len) === str;
+};
+// console.log(isPrefix('harvar', 'harvard'));
+
 /*
   PackedTrie - Trie traversal of the Trie packed-string representation.
 */
@@ -64,10 +80,10 @@ class PackedTrie {
     }
 
     let context = {
-      from: word,
+      want: word,
       beyond: beyond,
       fn: catchWords,
-      prefixes: word + 'a' === beyond
+      found: false
     };
     this.enumerate(0, '', context);
     return words;
@@ -85,25 +101,20 @@ class PackedTrie {
   enumerate(inode, prefix, ctx) {
     let node = this.nodes[inode];
     let self = this;
+    if (ctx.abort) {
+      return;
+    }
 
     function emit(word) {
-      if (ctx.prefixes) {
-        if (word === ctx.from.slice(0, word.length)) {
-          ctx.fn(word);
-        }
-        return;
-      }
-      if (ctx.from <= word && word < ctx.beyond) {
+      if (isPrefix(word, ctx.want)) {
         ctx.fn(word);
       }
     }
 
-    if (node[0] === config.TERMINAL_PREFIX) {
+    //the '!' means it includes a prefix
+    if (node[0] === '!') {
       emit(prefix);
-      if (ctx.abort) {
-        return;
-      }
-      node = node.slice(1);
+      node = node.slice(1); //remove it
     }
 
     //not a replace, but a loop through matches
@@ -111,9 +122,7 @@ class PackedTrie {
       let match = prefix + str;
 
       // Done or no possible future match from str
-      if (ctx.abort ||
-        match >= ctx.beyond ||
-        match < ctx.from.slice(0, match.length)) {
+      if (match >= ctx.beyond || match < ctx.want.slice(0, match.length)) {
         return;
       }
 
