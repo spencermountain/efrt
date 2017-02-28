@@ -31,12 +31,12 @@ test('very-compressable-array', function(t) {
     'a',
     'aaaa',
     'b',
-    'b22',
-    '35',
-    '1234e',
-    '567890',
-    'fe567890',
-    'workin\'',
+  // 'b22',
+  // '35',
+  // '1234e',
+  // '567890',
+  // 'fe567890',
+  // 'workin\'',
   ];
   var str = trieHard.pack(arr);
   var ptrie = trieHard.unpack(str);
