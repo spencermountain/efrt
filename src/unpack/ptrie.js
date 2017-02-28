@@ -53,69 +53,40 @@ class PackedTrie {
   }
 
   // Return largest matching string in the dictionary (or '')
-  has(word) {
+  has(want) {
     let found = false;
 
-    function fn(w) {
-      if (w === word) {
+    const crawl = (inode, prefix) => {
+      let node = this.nodes[inode];
+      //the '!' means it includes a prefix
+      if (node[0] === '!') {
+        node = node.slice(1); //remove it
+      }
+      if (node === want) {
         found = true;
+        return;
       }
-    }
-
-    let context = {
-      want: word,
-      beyond: word + 'a',
-      fn: fn,
-      found: found
+      node.replace(reNodePart, (_, str, ref) => {
+        let have = prefix + str;
+        if (have === want) {
+          found = true;
+          return;
+        }
+        // Done or no possible future match from str
+        if (!isPrefix(have, want)) {
+          return;
+        }
+        //we're at the end of this branch
+        if (ref === ',' || ref === '') {
+          return;
+        }
+        //otherwise, do the next one
+        inode = this.inodeFromRef(ref, inode);
+        crawl(inode, have);
+      });
     };
-    this.enumerate(0, '', context);
+    crawl(0, '');
     return found;
-  }
-
-  // Enumerate words in dictionary.  Two modes:
-  //
-  // ctx.prefixes: Just enumerate terminal strings that are
-  // prefixes of 'from'.
-  //
-  // !ctx.prefixes: Enumerate all words s.t.:
-  //
-  //    ctx.from <= word < ctx.beyond
-  //
-  enumerate(inode, prefix, ctx) {
-    let node = this.nodes[inode];
-    let self = this;
-
-    function emit(word) {
-      if (isPrefix(word, ctx.want)) {
-        ctx.fn(word);
-        ctx.found = true;
-      }
-    }
-
-    //the '!' means it includes a prefix
-    if (node[0] === '!') {
-      emit(prefix);
-      node = node.slice(1); //remove it
-    }
-
-    //not a replace, but a loop through matches
-    node.replace(reNodePart, function(_, str, ref) {
-      let match = prefix + str;
-
-      // Done or no possible future match from str
-      if (!isPrefix(match, ctx.want)) {
-        return;
-      }
-
-      //we're at the end of this branch
-      if (ref === ',' || ref === '') {
-        emit(match);
-        return;
-      }
-      //do the next one
-      self.enumerate(self.inodeFromRef(ref, inode), match, ctx);
-    });
-  // console.log(tmp === node);
   }
 
   // References are either absolute (symbol) or relative (1 - based)

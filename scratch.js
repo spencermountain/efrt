@@ -12,6 +12,8 @@ const trieHard = require('./src');
 // ];
 
 arr = [
+  'co',
+  'coo',
   'cool',
   'cool dude',
   'cool hat',
@@ -25,13 +27,14 @@ let str = trieHard.pack(arr);
 
 console.log('\n\n');
 
-console.time('bench');
+// console.time('bench');
 let trie = trieHard.unpack(str);
-// trie.has('fund');
-arr.forEach((str) => {
-  let bool = trie.has(str);
-  if (!bool) {
-    console.log(str);
-  }
-});
-console.timeEnd('bench');
+
+console.log(trie.has('cool'));
+// arr.forEach((str) => {
+//   let bool = trie.has(str);
+//   if (!bool) {
+//     console.log(str);
+//   }
+// });
+// console.timeEnd('bench');
