@@ -13,26 +13,14 @@
   <code>npm i efrt</code>
 </div>
 
-<div align="center">
-  <sub>
-    by
-    <a href="https://github.com/spencermountain">Spencer Kelly</a> and
-    <a href="https://github.com/nlp-compromise/efrt/graphs/contributors">
-      contributors
-    </a>
-  </sub>
-</div>
-
-* compress a list of words into a very compact form
-* ensure filesize/bandwidth is very low
-* ensure unpacking/lookups are quick
-
 `efrt` is a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words.
 
 based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
  and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
-clients though can query from the compressed form ultra-quick, with performance that's comparable to a straight-up javascript obj.
+ * compress a list of words into a very compact form
+ * ensure filesize/bandwidth is very low
+ * ensure unpacking/lookups are quick
 
 By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side, while ensuring there's no big unpacking step - so that users are always on the critical path.
 
