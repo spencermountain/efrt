@@ -23,7 +23,7 @@ it is based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss
  * ensure unpacking overhead is negligible
  * word-lookups are critical-path
 
-By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side.
+By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side, without much efrt.
 
 ```js
 var efrt = require('efrt')

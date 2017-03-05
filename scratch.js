@@ -11,7 +11,7 @@ var words = [
 ];
 //pack these words as tightly as possible
 var compressed = efrt.pack(words);
-console.log(compressed);
+// console.log(compressed);
 //(some insanely-small string of letters+numbers)
 
 //pull it apart into a lookup-trie
