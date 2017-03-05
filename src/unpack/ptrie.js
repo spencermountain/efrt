@@ -51,6 +51,10 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(want) {
+    //fail-fast
+    if (!want) {
+      return false;
+    }
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
       // console.log(node);
@@ -84,11 +88,8 @@ class PackedTrie {
         return crawl(inode, have);
       }
       return false;
-
-
     };
     return crawl(0, '');
-  // return found;
   }
 
   // References are either absolute (symbol) or relative (1 - based)

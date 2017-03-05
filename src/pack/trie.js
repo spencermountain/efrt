@@ -8,13 +8,13 @@ const pack = require('./pack');
   Usage:
 
       trie = new Trie(dictionary-string);
-      bool = trie.isWord(word);
+      bool = trie.has(word);
 
   To use a packed (compressed) version of the trie stored as a string:
 
       compressed = trie.pack();
       ptrie = new PackedTrie(compressed);
-      bool = ptrie.isWord(word)
+      bool = ptrie.has(word)
 
   Node structure:
 
@@ -34,12 +34,6 @@ const pack = require('./pack');
       '_v': Visited in DFS.
       '_g': For singleton nodes, the name of it's single property.
  */
-// let ptrie = namespace.lookup('org.startpad.trie.packed');
-//
-// ns.extend({
-//   'Trie': Trie,
-//   'Histogram': Histogram
-// });
 
 // Create a Trie data structure for searching for membership of strings
 // in a dictionary in a very space efficient way.
@@ -258,7 +252,7 @@ class Trie {
     }
   }
 
-  isWord(word) {
+  has(word) {
     return this.isFragment(word, this.root);
   }
 

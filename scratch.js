@@ -4,24 +4,11 @@ let arr = require('./test/maleNames');
 const trieHard = require('./src');
 //
 arr = [
-  'Reno', 'Chicago', 'Fargo', 'Minnesota',
-  'Buffalo', 'Toronto', 'Winslow', 'Sarasota',
-  'Wichita', 'Tulsa', 'Ottawa', 'Oklahoma',
-  'Tampa', 'Panama', 'Mattawa', 'La Paloma',
-  'Bangor', 'Baltimore', 'Salvador', 'Amarillo',
-  'Tocapillo', 'Baranquilla', 'and Perdilla'
+  'chicago', 'ago',
 ];
-// console.time('pack');
 let str = trieHard.pack(arr);
+console.log(str);
 let trie = trieHard.unpack(str);
-
-// arr.forEach((s) => {
-//   let bool = trie.has(s);
-//   if (!bool) {
-//     console.log(s);
-//   }
-// });
-//
 
 // console.log(trie.has(''));
 console.log(trie.has('chica'));

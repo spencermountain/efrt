@@ -83,3 +83,18 @@ test('tricky-subsets', function(t) {
   t.equal(ptrie.has('fun d'), false, 'no-false-positive-shared-two-word');
   t.end();
 });
+
+
+test('prefix-match-regression', function(t) {
+  var arr = [
+    'reno', 'chicago', 'fargo'
+  ];
+  let str = trieHard.pack(arr);
+  let trie = trieHard.unpack(str);
+  t.equal(trie.has(''), false, 'empty-string-is-false');
+  t.equal(trie.has('chica'), false, 'does-not-match-prefix');
+  t.equal(trie.has('a'), false, 'does-not-match-prefix');
+  t.equal(trie.has('chicago'), true, 'matches-full');
+  t.equal(trie.has('fargo'), true, 'matches-full');
+  t.end();
+});
