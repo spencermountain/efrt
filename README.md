@@ -47,9 +47,11 @@ console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
-### [Demo!](https://rawgit.com/nlp-compromise/efrt/master/demo/index.html)
+<h3 align="center">
+  <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
+</h3>
 
-if you're doing the second step in the client, you can load only the unpack-half of the library(~3k):
+if you're doing the second step in the client, you can load just the unpack-half of the library(~3k):
 ```html
 <script src="./builds/efrt-unpack.min.js"></script>
 <script>
