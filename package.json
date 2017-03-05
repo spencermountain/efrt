@@ -2,7 +2,7 @@
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
   "description": "compressed-trie data-structure",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./builds/efrt.js",
   "repository": {
     "type": "git",

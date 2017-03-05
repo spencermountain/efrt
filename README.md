@@ -51,15 +51,24 @@ console.log(trie.has('miles davis'));//false
   <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
 </h3>
 
-if you're doing the second step in the client, you can load just the unpack-half of the library(~3k):
+
+the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and some punctuation are not (yet) supported.
+
+**IE9+**
 ```html
-<script src="./builds/efrt-unpack.min.js"></script>
+<script src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>
 <script>
-  $.get('./compressedStuff.txt', (str)=>{
-    var trie=unpack(str);
-    trie.has('miles davis');
-  })
+  var smaller=efrt.pack(['larry','curly','moe'])
+  var trie=efrt.unpack(smaller)
+  console.log(trie.has('moe'))
 </script>
 ```
 
-the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and some punctuation are not (yet) supported.
+if you're doing the second step in the client, you can load just the unpack-half of the library(~3k):
+```html
+<script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
+<script>
+  var trie=unpack(compressedStuff);
+  trie.has('miles davis');
+</script>
+```
