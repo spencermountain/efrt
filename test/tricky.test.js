@@ -98,3 +98,16 @@ test('prefix-match-regression', function(t) {
   t.equal(trie.has('fargo'), true, 'matches-full');
   t.end();
 });
+test('prefix-match-regression2', function(t) {
+  var arr = [
+    'chicago',
+    'fargo',
+    'chaska',
+  ];
+  let str = trieHard.pack(arr);
+  let trie = trieHard.unpack(str);
+  t.equal(trie.has('ch'), false, 'prefix fails');
+  t.equal(trie.has('chicago'), true, 'matches-full');
+  t.equal(trie.has('chaska'), true, 'matches-full');
+  t.end();
+});

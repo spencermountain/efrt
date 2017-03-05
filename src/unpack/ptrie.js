@@ -33,29 +33,38 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(want) {
+    // console.log(this.nodes);
     //fail-fast
     if (!want) {
       return false;
     }
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
+      let letPrefix = false;
       //the '!' means a prefix-alone is a good match
       if (node[0] === '!') {
         //try to match the prefix (the last branch)
         if (prefix === want) {
           return true;
         }
+        letPrefix = true;
         node = node.slice(1); //ok, we tried. remove it.
       }
       //each possible match on this line is something like 'me,me2,me4'.
       //try each one
       let matches = node.split(/([A-Z0-9,]+)/g);
       for (let i = 0; i < matches.length; i += 2) {
+        let str = matches[i];
         let ref = matches[i + 1];
-        let have = prefix + matches[i];
+        if (!str) {
+          continue;
+        }
+        let have = prefix + str;
+        // console.log('  --- ' + str + ', ' + ref);
         //we're at the branch's end, so try to match it
         if (ref === ',' || ref === undefined) {
           if (have === want) {
+            // console.log('::end');
             return true;
           }
           continue;
