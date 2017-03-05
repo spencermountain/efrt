@@ -4,10 +4,12 @@ let arr = require('./test/maleNames');
 const trieHard = require('./src');
 //
 arr = [
-  // 'chicago', 'fargo',
-  'coolish',
-  'cool',
-  'coolhat',
+  'chicago',
+  'fargo',
+  'chaska',
+// 'coolish',
+// 'cool',
+// 'coolhat',
 // 'cool hatting',
 // 'coold',
 ];
@@ -28,4 +30,4 @@ let trie = trieHard.unpack(str);
 // console.log('chica - ' + trie.has('chica'));
 // console.log('chicago - ' + trie.has('chicago'));
 // console.log('cool - ' + trie.has('cool'));
-console.log('cool - ' + trie.has('cool'));
+console.log('ch - ' + trie.has('ch'));

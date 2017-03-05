@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.effrt = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.efrt = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -358,13 +358,13 @@ var _pack = _dereq_('./pack');
   Usage:
 
       trie = new Trie(dictionary-string);
-      bool = trie.isWord(word);
+      bool = trie.has(word);
 
   To use a packed (compressed) version of the trie stored as a string:
 
       compressed = trie.pack();
       ptrie = new PackedTrie(compressed);
-      bool = ptrie.isWord(word)
+      bool = ptrie.has(word)
 
   Node structure:
 
@@ -384,12 +384,6 @@ var _pack = _dereq_('./pack');
       '_v': Visited in DFS.
       '_g': For singleton nodes, the name of it's single property.
  */
-// let ptrie = namespace.lookup('org.startpad.trie.packed');
-//
-// ns.extend({
-//   'Trie': Trie,
-//   'Histogram': Histogram
-// });
 
 // Create a Trie data structure for searching for membership of strings
 // in a dictionary in a very space efficient way.
@@ -633,8 +627,8 @@ var Trie = function () {
       }
     }
   }, {
-    key: 'isWord',
-    value: function isWord(word) {
+    key: 'has',
+    value: function has(word) {
       return this.isFragment(word, this.root);
     }
   }, {
@@ -699,13 +693,38 @@ module.exports = Trie;
 'use strict';
 
 var Ptrie = _dereq_('./ptrie');
+// const Ptrie = require('./ptrie_old');
 
 var unpack = function unpack(str) {
   return new Ptrie(str);
 };
 module.exports = unpack;
 
-},{"./ptrie":9}],9:[function(_dereq_,module,exports){
+},{"./ptrie":10}],9:[function(_dereq_,module,exports){
+'use strict';
+
+//are we on the right path with this string?
+
+var isPrefix = function isPrefix(str, want) {
+  //allow perfect equals
+  if (str === want) {
+    return true;
+  }
+  //compare lengths
+  var len = str.length;
+  if (len >= want.length) {
+    return false;
+  }
+  //quick slice
+  if (len === 1) {
+    return str === want[0];
+  }
+  return want.slice(0, len) === str;
+};
+module.exports = isPrefix;
+// console.log(isPrefix('harvar', 'harvard'));
+
+},{}],10:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -714,46 +733,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = _dereq_('../config');
 var fns = _dereq_('../fns');
+var isPrefix = _dereq_('./prefix');
 
-// const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
-
-//are we on the right path with this string?
-var isPrefix = function isPrefix(str, want) {
-  var len = str.length;
-  if (len >= want.length) {
-    return false;
-  }
-  if (len === 1) {
-    return str === want[0];
-  }
-  return want.slice(0, len) === str;
-};
-// console.log(isPrefix('harvar', 'harvard'));
-
-/*
-  PackedTrie - Trie traversal of the Trie packed-string representation.
-*/
-
-// Implement isWord given a packed representation of a Trie.
+//PackedTrie - Trie traversal of the Trie packed-string representation.
 
 var PackedTrie = function () {
   function PackedTrie(str) {
     _classCallCheck(this, PackedTrie);
 
-    this.nodes = str.split(config.NODE_SEP);
+    this.nodes = str.split(config.NODE_SEP); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
-    //some tries dont even have symbols
+    //process symbols, if they have them
     if (str.match(':')) {
       this.initSymbols();
     }
   }
 
+  //the symbols are at the top of the array.
+
+
   _createClass(PackedTrie, [{
     key: 'initSymbols',
     value: function initSymbols() {
-      //the symbols are at the top of the array.
-      //... process these lines, if they exist
+      //... process these lines
       var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
       for (var i = 0; i < this.nodes.length; i++) {
         var m = reSymbol.exec(this.nodes[i]);
@@ -774,42 +777,47 @@ var PackedTrie = function () {
     value: function has(want) {
       var _this = this;
 
+      //fail-fast
+      if (!want) {
+        return false;
+      }
       var crawl = function crawl(inode, prefix) {
         var node = _this.nodes[inode];
-        // console.log(node);
-        //the '!' means it includes a prefix
+        //the '!' means a prefix-alone is a good match
         if (node[0] === '!') {
-          node = node.slice(1); //remove it
-        }
-        if (node === want) {
-          return true;
-        }
-
-        var matches = node.split(/([A-Z0-9,]+)/g);
-        // console.log(matches);
-        for (var i = 0; i < matches.length; i += 2) {
-          var str = matches[i];
-          var ref = matches[i + 1];
-          var have = prefix + str;
-          if (have === want) {
+          //try to match the prefix (the last branch)
+          if (prefix === want) {
             return true;
           }
-          // Done or no possible future match from str
-          if (!isPrefix(have, want)) {
+          node = node.slice(1); //ok, we tried. remove it.
+        }
+        //each possible match on this line is something like 'me,me2,me4'.
+        //try each one
+        var matches = node.split(/([A-Z0-9,]+)/g);
+        for (var i = 0; i < matches.length; i += 2) {
+          var ref = matches[i + 1];
+          var have = prefix + matches[i];
+          //we're at the branch's end, so try to match it
+          if (ref === ',' || ref === undefined) {
+            if (have === want) {
+              return true;
+            }
             continue;
           }
-          //we're at the end of this branch
-          if (ref === ',' || ref === undefined) {
-            return false;
+          //ok, not a match.
+          //well, should we keep going on this branch?
+          //if we do, we ignore all the others here.
+          if (isPrefix(have, want)) {
+            inode = _this.inodeFromRef(ref, inode);
+            return crawl(inode, have);
           }
-          //otherwise, do the next one
-          inode = _this.inodeFromRef(ref, inode);
-          return crawl(inode, have);
+          //nah, lets try the next branch..
+          continue;
         }
+
         return false;
       };
       return crawl(0, '');
-      // return found;
     }
 
     // References are either absolute (symbol) or relative (1 - based)
@@ -830,5 +838,5 @@ var PackedTrie = function () {
 
 module.exports = PackedTrie;
 
-},{"../config":1,"../fns":2}]},{},[3])(3)
+},{"../config":1,"../fns":2,"./prefix":9}]},{},[3])(3)
 });

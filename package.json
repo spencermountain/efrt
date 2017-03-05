@@ -1,12 +1,12 @@
 {
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
-  "name": "effrt",
+  "name": "efrt",
   "description": "compressed-trie data-structure",
   "version": "0.0.1",
-  "main": "./builds/effrt.js",
+  "main": "./builds/efrt.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/nlp-compromise/effrt.git"
+    "url": "git://github.com/nlp-compromise/efrt.git"
   },
   "scripts": {
     "test": "node ./scripts/test.js",

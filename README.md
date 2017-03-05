@@ -1,4 +1,4 @@
-# effrt
+# efrt
 work-in-progress prefix/suffix [trie-based](https://en.wikipedia.org/wiki/Trie) data-structure optimised for compression of english words
 
 based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
@@ -8,29 +8,29 @@ it can compress a wordlist/dictionary into a very compact form, so that filesize
 the clients though, can query from the compressed form simply and quickly.
 
 ```js
-var trieHard=require('effrt')//
+var trieHard=require('efrt')//
 var words = [
   'calvin coolridge', //must boring, lowercase, non-unicode
   'cool',
   'cool hat',
 ];
 //pack these words as tightly as possible
-var compressed = effrt.pack(arr);
+var compressed = efrt.pack(arr);
 //(some insanely-small string of letters+numbers)
 
 //pull it apart into a lookup-trie
-var trie = effrt.unpack(compressed);
+var trie = efrt.unpack(compressed);
 
 //hit it!
 console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
-## [Demo](https://rawgit.com/nlp-compromise/effrt/master/demo/index.html)
+## [Demo](https://rawgit.com/nlp-compromise/efrt/master/demo/index.html)
 
 if you're doing the second step in the browser, you can just load the unpack bit (~3k):
 ```html
-<script src="./builds/effrt-unpack.min.js"></script>
+<script src="./builds/efrt-unpack.min.js"></script>
 <script>
   $.get('./compressedStuff.txt', (str)=>{
     var trie=unpack(str);
