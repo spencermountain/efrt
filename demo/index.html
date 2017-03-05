@@ -11,8 +11,8 @@
         height: 200px;
         width: 60%;
         color: 'grey';
-        margin-left:20%;
-        margin-top:10%;
+        margin-left:10%;
+        margin-top:6%;
       }
       #word{
         font-size: 25px;
@@ -23,6 +23,7 @@
         color: silver;
         font-size: 15px;
         display:inline-block;
+        width:80%;
         padding:20px;
         margin:20px;
         border:1px solid lightgrey;
@@ -85,14 +86,20 @@ Baraboo, Waterloo, Kalamazoo, Kansas City,
 Sioux City, Cedar City, Dodge City, what a pity.
       </textarea>
       <div>compressed form:</div>
-      <div id="result"></div>
       <div id="length"></div>
+      <textarea id="result"></textarea>
     <p>
     </p>
     <div style='margin:75px;'>
-      lookup:
+      query it:
+      <ul>
         <input type="text" id="word" onKeyPress="findWord()" onKeyUp="findWord()" value="parkersburg"/>
         <div id="found"></div>
+        <div style="margin-left:200px;">
+          <div id="unpack"></div>
+          <div id="foundTime"></div>
+        </div>
+      </ul>
       </div>
     </div>
   </body>
@@ -107,12 +114,18 @@ Sioux City, Cedar City, Dodge City, what a pity.
         var start = new Date();
         var trie=effrt.unpack(window.compressed||'')
         var end=new Date()
+        var unpck = (end.getTime() - start.getTime())
+        document.getElementById('unpack').innerText = 'unpacked in  '+unpck+'ms'
+
+        var start = new Date();
+        var bool=trie.has(str)
+        var end=new Date()
         var ms = (end.getTime() - start.getTime())
-
-        document.getElementById('found').innerText = trie.has(str)+ '  - '+ms+'ms'
+        document.getElementById('found').innerText = bool
+        document.getElementById('foundTime').innerText = 'queried in - '+ms+'ms'
       }
-      function compress() {
 
+      function compress() {
         var str = document.getElementById('words').value || '';
         //normalize it a bit
         str=str.toLowerCase().replace(/'/,'')
@@ -124,7 +137,12 @@ Sioux City, Cedar City, Dodge City, what a pity.
         var ms = (end.getTime() - start.getTime())
 
         document.getElementById('result').innerText = compressed;
-        document.getElementById('length').innerText = str.length +' chars to '+compressed.length +' in '+ms +'ms'
+        var percentage=0
+        if(str.length>1){
+          percentage= ((str.length-compressed.length)/str.length)
+          percentage=parseInt(percentage*100)
+        }
+        document.getElementById('length').innerText = str.length +' chars to '+compressed.length +'  (down '+percentage+'%) in '+ms +'ms'
         findWord()
       }
       compress();//fire!

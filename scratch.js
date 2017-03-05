@@ -3,44 +3,25 @@ let arr = require('./test/maleNames');
 // const trieHard = require('./bits');
 const trieHard = require('./src');
 //
-// arr = [
-//   'fun',
-//   'fungi',
-//   'fund',
-//   // 'fun2',
-//   'funö',
-// ];
-
-// arr = [
-//   'cool',
-//   'cool dude',
-//   'cool hat',
-//   'cool farm',
-//   'fun',
-//   'funghi',
-//   'fungho',
-//   'funzilla',
-//   'funzillo'
-// ];
+arr = [
+  'Reno', 'Chicago', 'Fargo', 'Minnesota',
+  'Buffalo', 'Toronto', 'Winslow', 'Sarasota',
+  'Wichita', 'Tulsa', 'Ottawa', 'Oklahoma',
+  'Tampa', 'Panama', 'Mattawa', 'La Paloma',
+  'Bangor', 'Baltimore', 'Salvador', 'Amarillo',
+  'Tocapillo', 'Baranquilla', 'and Perdilla'
+];
 // console.time('pack');
 let str = trieHard.pack(arr);
-// console.log(str.split(/;/g));
-// console.timeEnd('pack');
-
-console.log('\n\n');
-
-console.time('bench');
 let trie = trieHard.unpack(str);
 
-// console.log(trie.has('fungho'));
-arr.forEach((s) => {
-  let bool = trie.has(s);
-  if (!bool) {
-    console.log(s);
-  }
-});
-console.timeEnd('bench');
+// arr.forEach((s) => {
+//   let bool = trie.has(s);
+//   if (!bool) {
+//     console.log(s);
+//   }
+// });
+//
 
-// console.time('one');
-// console.log(trie.has('mark'));
-// console.timeEnd('one');
+// console.log(trie.has(''));
+console.log(trie.has('chica'));
