@@ -6,8 +6,12 @@ const fns = require('../fns');
 
 //are we on the right path with this string?
 const isPrefix = function(str, want) {
+  //allow ==
+  if (str === want) {
+    return true;
+  }
   let len = str.length;
-  if (len >= want.length) {
+  if (len > want.length) {
     return false;
   }
   if (len === 1) {
@@ -51,15 +55,19 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(want) {
+    // console.log(this.nodes);
     //fail-fast
     if (!want) {
       return false;
     }
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
-      // console.log(node);
+
       //the '!' means it includes a prefix
       if (node[0] === '!') {
+        if (prefix === want) {
+          return true;
+        }
         node = node.slice(1); //remove it
       }
       if (node === want) {
@@ -67,22 +75,27 @@ class PackedTrie {
       }
 
       let matches = node.split(/([A-Z0-9,]+)/g);
-      // console.log(matches);
       for (let i = 0; i < matches.length; i += 2) {
         let str = matches[i];
         let ref = matches[i + 1];
         let have = prefix + str;
-        if (have === want) {
-          return true;
+        // console.log('  ---=-=--------  ' + have);
+        //at the end, so try it out
+        if (ref === ',' || ref === undefined) {
+          if (have === want) {
+            return true;
+          }
+          continue;
         }
         // Done or no possible future match from str
         if (!isPrefix(have, want)) {
+          // console.log('continue');
           continue;
         }
         //we're at the end of this branch
-        if (ref === ',' || ref === undefined) {
-          return false;
-        }
+        // if (ref === ',' || ref === undefined) {
+        //   return false;
+        // }
         //otherwise, do the next one
         inode = this.inodeFromRef(ref, inode);
         return crawl(inode, have);
