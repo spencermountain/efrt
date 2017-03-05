@@ -1,45 +1,23 @@
 'use strict';
 const config = require('../config');
 const fns = require('../fns');
+const isPrefix = require('./prefix');
 
-// const reNodePart = new RegExp('([^A-Z0-9,]+)([A-Z0-9,]+|$)', 'g'); //( , is STRING_SEP)
-
-//are we on the right path with this string?
-const isPrefix = function(str, want) {
-  //allow ==
-  if (str === want) {
-    return true;
-  }
-  let len = str.length;
-  if (len > want.length) {
-    return false;
-  }
-  if (len === 1) {
-    return str === want[0];
-  }
-  return want.slice(0, len) === str;
-};
-// console.log(isPrefix('harvar', 'harvard'));
-
-/*
-  PackedTrie - Trie traversal of the Trie packed-string representation.
-*/
-
-// Implement isWord given a packed representation of a Trie.
+//PackedTrie - Trie traversal of the Trie packed-string representation.
 class PackedTrie {
   constructor(str) {
-    this.nodes = str.split(config.NODE_SEP);
+    this.nodes = str.split(config.NODE_SEP); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
-    //some tries dont even have symbols
+    //process symbols, if they have them
     if (str.match(':')) {
       this.initSymbols();
     }
   }
 
+  //the symbols are at the top of the array.
   initSymbols() {
-    //the symbols are at the top of the array.
-    //... process these lines, if they exist
+    //... process these lines
     const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
     for(let i = 0; i < this.nodes.length; i++) {
       let m = reSymbol.exec(this.nodes[i]);
@@ -55,51 +33,44 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(want) {
-    // console.log(this.nodes);
     //fail-fast
     if (!want) {
       return false;
     }
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
-
-      //the '!' means it includes a prefix
+      //the '!' means a prefix-alone is a good match
       if (node[0] === '!') {
+        //try to match the prefix (the last branch)
         if (prefix === want) {
           return true;
         }
-        node = node.slice(1); //remove it
+        node = node.slice(1); //ok, we tried. remove it.
       }
-      if (node === want) {
-        return true;
-      }
-
+      //each possible match on this line is something like 'me,me2,me4'.
+      //try each one
       let matches = node.split(/([A-Z0-9,]+)/g);
       for (let i = 0; i < matches.length; i += 2) {
-        let str = matches[i];
         let ref = matches[i + 1];
-        let have = prefix + str;
-        // console.log('  ---=-=--------  ' + have);
-        //at the end, so try it out
+        let have = prefix + matches[i];
+        //we're at the branch's end, so try to match it
         if (ref === ',' || ref === undefined) {
           if (have === want) {
             return true;
           }
           continue;
         }
-        // Done or no possible future match from str
-        if (!isPrefix(have, want)) {
-          // console.log('continue');
-          continue;
+        //ok, not a match.
+        //well, should we keep going on this branch?
+        //if we do, we ignore all the others here.
+        if (isPrefix(have, want)) {
+          inode = this.inodeFromRef(ref, inode);
+          return crawl(inode, have);
         }
-        //we're at the end of this branch
-        // if (ref === ',' || ref === undefined) {
-        //   return false;
-        // }
-        //otherwise, do the next one
-        inode = this.inodeFromRef(ref, inode);
-        return crawl(inode, have);
+        //nah, lets try the next branch..
+        continue;
       }
+
       return false;
     };
     return crawl(0, '');

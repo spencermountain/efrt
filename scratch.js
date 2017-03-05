@@ -6,7 +6,7 @@ const trieHard = require('./src');
 arr = [
   // 'chicago', 'fargo',
   'coolish',
-  // 'cool',
+  'cool',
   'coolhat',
 // 'cool hatting',
 // 'coold',
