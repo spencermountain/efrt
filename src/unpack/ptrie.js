@@ -40,14 +40,12 @@ class PackedTrie {
     }
     const crawl = (inode, prefix) => {
       let node = this.nodes[inode];
-      let letPrefix = false;
       //the '!' means a prefix-alone is a good match
       if (node[0] === '!') {
         //try to match the prefix (the last branch)
         if (prefix === want) {
           return true;
         }
-        letPrefix = true;
         node = node.slice(1); //ok, we tried. remove it.
       }
       //each possible match on this line is something like 'me,me2,me4'.
@@ -60,7 +58,6 @@ class PackedTrie {
           continue;
         }
         let have = prefix + str;
-        // console.log('  --- ' + str + ', ' + ref);
         //we're at the branch's end, so try to match it
         if (ref === ',' || ref === undefined) {
           if (have === want) {
