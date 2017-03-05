@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://cloud.githubusercontent.com/assets/399657/21955696/46e882d4-da3e-11e6-94a6-720c34e27df7.jpg" />
+  <img src="https://cloud.githubusercontent.com/assets/399657/23590290/ede73772-01aa-11e7-8915-181ef21027bc.png" />
   <div>trie-based compression of word-data</div>
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/compromise.svg?style=flat-square" />
@@ -24,10 +24,7 @@
 </div>
 
 <div align="center">
-  inspect and play with english text.
-  <div>
   compress a wordlist/dictionary into a very compact form, so that filesize/http/bandwidth is low
-  </div>
 </div>
 <br/>
 
