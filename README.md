@@ -15,29 +15,31 @@
 
 `efrt` is a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words.
 
-based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
+it is based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
  and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
- * compress a list of words into a very compact form
- * ensure filesize/bandwidth is very low
- * ensure unpacking/lookups are quick
+ * squeeze a list of words into a very compact form
+ * reduce filesize/bandwidth aggressively
+ * ensure unpacking overhead is negligible
+ * word-lookups are critical-path
 
-By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side, while ensuring there's no big unpacking step - so that users are always on the critical path.
+By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side.
 
 ```js
-var efrt = require('efrt')//
+var efrt = require('efrt')
 var words = [
-  'coolage', //must boring, lowercase, non-unicode
+  'coolage',
   'cool',
   'cool cat',
   'cool.com',
   'coolamungo'
 ];
+
 //pack these words as tightly as possible
 var compressed = efrt.pack(words);
 //cool0;! cat,.com,a0;ge,mungo
 
-//pull it apart into a lookup-trie
+//create a lookup-trie
 var trie = efrt.unpack(compressed);
 
 //hit it!
