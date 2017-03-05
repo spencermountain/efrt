@@ -23,7 +23,7 @@ it is based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss
  * ensure unpacking overhead is negligible
  * word-lookups are critical-path
 
-By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side, without much efrt.
+By doing the fancy stuff ahead-of-time, *efrt* lets you ship much bigger word-lists to the client-side, without much hassle.
 
 ```js
 var efrt = require('efrt')
@@ -47,7 +47,7 @@ console.log(trie.has('cool'));//true
 console.log(trie.has('miles davis'));//false
 ```
 
-## [Demo](https://rawgit.com/nlp-compromise/efrt/master/demo/index.html)
+### [Demo!](https://rawgit.com/nlp-compromise/efrt/master/demo/index.html)
 
 if you're doing the second step in the client, you can load only the unpack-half of the library(~3k):
 ```html
