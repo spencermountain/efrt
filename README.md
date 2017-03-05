@@ -2,11 +2,15 @@
   <img src="https://cloud.githubusercontent.com/assets/399657/23590290/ede73772-01aa-11e7-8915-181ef21027bc.png" />
   <div>trie-based compression of word-data</div>
   <a href="https://npmjs.org/package/efrt">
-    <img src="https://img.shields.io/npm/v/compromise.svg?style=flat-square" />
+    <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
   </a>
   <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
     <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
   </a>
+</div>
+
+<div align="center">
+  <code>npm i efrt</code>
 </div>
 
 <div align="center">
@@ -19,16 +23,12 @@
   </sub>
 </div>
 
-<div align="center">
-  <code>npm i efrt</code>
-</div>
+* compress a list of words into a very compact form
+* ensure filesize/bandwidth is very low
+* ensure unpacking/lookups are quick
 
-<div align="center">
-  compress a wordlist/dictionary into a very compact form, so that filesize/http/bandwidth is low
-</div>
-<br/>
+`efrt` is a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words.
 
-a prefix/suffix <a href="https://en.wikipedia.org/wiki/Trie">trie</a> optimised for compression of english words
 based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
  and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
