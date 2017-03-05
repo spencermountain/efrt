@@ -1,33 +1,22 @@
 'use strict';
-let arr = require('./test/maleNames');
-// const trieHard = require('./bits');
-const trieHard = require('./src');
-//
-arr = [
-  'chicago',
-  'fargo',
-  'chaska',
-// 'coolish',
-// 'cool',
-// 'coolhat',
-// 'cool hatting',
-// 'coold',
+// let arr = require('./test/data/maleNames');
+const efrt = require('./src');
+
+var words = [
+  'coolage', //must boring, lowercase, non-unicode
+  'cool',
+  'cool cat',
+  'cool.com',
+  'coolamungo'
 ];
-// console.time('pack');
-let str = trieHard.pack(arr);
-let trie = trieHard.unpack(str);
+//pack these words as tightly as possible
+var compressed = efrt.pack(words);
+console.log(compressed);
+//(some insanely-small string of letters+numbers)
 
-// arr.forEach((s) => {
-//   let bool = trie.has(s);
-//   if (!bool) {
-//     console.log(s);
-//   }
-// });
+//pull it apart into a lookup-trie
+var trie = efrt.unpack(compressed);
 
-
-// console.log(trie.has(''));
-// console.log('\n\n');
-// console.log('chica - ' + trie.has('chica'));
-// console.log('chicago - ' + trie.has('chicago'));
-// console.log('cool - ' + trie.has('cool'));
-console.log('ch - ' + trie.has('ch'));
+//hit it!
+console.log(trie.has('cool')); //true
+console.log(trie.has('miles davis')); //false

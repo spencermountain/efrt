@@ -1,22 +1,26 @@
 # efrt
-work-in-progress prefix/suffix [trie-based](https://en.wikipedia.org/wiki/Trie) data-structure optimised for compression of english words
+a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie)-based data-structure optimised for compression of english words
 
 based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
  and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 it can compress a wordlist/dictionary into a very compact form, so that filesize/http/bandwidth is low.
 
-the clients though, can query from the compressed form simply and quickly.
+clients though can query from the compressed form ultra-quick, with performance that's comparable to a straight-up javascript obj.
+
+By doing the fancy stuff ahead-of-time, `efrt` lets you ship much bigger word-lists to the client-side, while ensuring there's no big unpacking step - so that users are always on the critical path.
 
 ```js
-var trieHard=require('efrt')//
+var efrt = require('efrt')//
 var words = [
-  'calvin coolridge', //must boring, lowercase, non-unicode
+  'coolage', //must boring, lowercase, non-unicode
   'cool',
-  'cool hat',
+  'cool cat',
+  'cool.com',
+  'coolamungo'
 ];
 //pack these words as tightly as possible
-var compressed = efrt.pack(arr);
-//(some insanely-small string of letters+numbers)
+var compressed = efrt.pack(words);
+//cool0;! cat,.com,a0;ge,mungo
 
 //pull it apart into a lookup-trie
 var trie = efrt.unpack(compressed);
@@ -28,7 +32,7 @@ console.log(trie.has('miles davis'));//false
 
 ## [Demo](https://rawgit.com/nlp-compromise/efrt/master/demo/index.html)
 
-if you're doing the second step in the browser, you can just load the unpack bit (~3k):
+if you're doing the second step in the client, you can load only the unpack-half of the library(~3k):
 ```html
 <script src="./builds/efrt-unpack.min.js"></script>
 <script>
@@ -39,4 +43,4 @@ if you're doing the second step in the browser, you can just load the unpack bit
 </script>
 ```
 
-the words you input should be pretty-heavily normalized. Number-characters are not yet supported. Spaces and unicode are good.
+the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and some punctuation are not (yet) supported.

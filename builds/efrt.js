@@ -777,6 +777,7 @@ var PackedTrie = function () {
     value: function has(want) {
       var _this = this;
 
+      // console.log(this.nodes);
       //fail-fast
       if (!want) {
         return false;
@@ -795,11 +796,16 @@ var PackedTrie = function () {
         //try each one
         var matches = node.split(/([A-Z0-9,]+)/g);
         for (var i = 0; i < matches.length; i += 2) {
+          var str = matches[i];
           var ref = matches[i + 1];
-          var have = prefix + matches[i];
+          if (!str) {
+            continue;
+          }
+          var have = prefix + str;
           //we're at the branch's end, so try to match it
           if (ref === ',' || ref === undefined) {
             if (have === want) {
+              // console.log('::end');
               return true;
             }
             continue;
