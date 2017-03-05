@@ -19,11 +19,11 @@ it is based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss
  and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
  * squeeze a list of words into a very compact form
- * reduce filesize/bandwidth af
+ * reduce filesize/bandwidth a bunch
  * ensure unpacking overhead is negligible
  * word-lookups are critical-path
 
-By doing the fancy stuff ahead-of-time, *efrt* lets you ship much bigger word-lists to the client-side, without much hassle.
+By doing the fancy stuff ahead-of-time, **efrt** lets you ship much bigger word-lists to the client-side, without much hassle.
 
 ```js
 var efrt = require('efrt')
