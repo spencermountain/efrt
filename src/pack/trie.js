@@ -1,6 +1,8 @@
 'use strict';
 const fns = require('../fns');
 const pack = require('./pack');
+const config = require('../config');
+
 // const pack = require('./packer');
 /*
   org.startpad.trie - A JavaScript implementation of a Trie search datastructure.
@@ -62,7 +64,9 @@ class Trie {
     }
     fns.unique(words);
     for (let i = 0; i < words.length; i++) {
-      this.insert(words[i]);
+      if (words[i].match(config.NOT_ALLOWED) === null) {
+        this.insert(words[i]);
+      }
     }
   }
 

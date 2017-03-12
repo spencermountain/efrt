@@ -52,12 +52,14 @@ console.log(trie.has('miles davis'));//false
 </h3>
 
 
-the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and some punctuation are not (yet) supported.
+the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and [some punctuation](https://github.com/nlp-compromise/efrt/blob/master/src/config.js) are not (yet) supported.
+
 
 ##Performance
-there are two modes that `efrt` can run in, depending on what you want to optimise for:
+there are two modes that `efrt` can run in, depending on what you want to optimise for.
+By itself, it will be ready-instantly, but must lookup words by their prefixes in the trie. This is not super-fast. If you want lookups to go faster, you can call `trie.cache()` first, to pre-compute the queries. Things will run much faster after this:
 ```js
-var compressed = efrt.pack(skateboarders);//1k names (on macbook)
+var compressed = efrt.pack(skateboarders);//1k words (on a macbook)
 var trie = efrt.unpack(compressed)
 trie.has('tony hawk')
 // trie-lookup: 1.1ms
@@ -68,11 +70,21 @@ trie.cache()
 trie.has('tony hawk')
 // cached-lookup: 0.02ms
 ```
-the `trie.cache()` command will spin the trie into a good-old javascript object, for faster lookups. It takes some time though.
+the `trie.cache()` command will spin the trie into a good-old javascript object, for faster lookups. It takes some time building it though.
 
 In this example, with 1k words, it makes sense to hit `.cache()` if you are going to do more-than 5 lookups on the trie, but your mileage may vary.
 You can access the object from `trie._cache` if you'd like use it directly.
 
+##Filesize
+`efrt` will pack filesize down as much as possible:
+* all adjectives in wordnet - 330k -> 99k
+
+ but there are some things to consider:
+* bigger files compress further (see [🎈 birthday problem](https://en.wikipedia.org/wiki/Birthday_problem))
+* using efrt will reduce gains from gzip compression, which most webservers use quietly
+* english is more suffix-redundant than prefix-redundant, so non-english words may benefit from other styles
+
+##Use
 **IE9+**
 ```html
 <script src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>
@@ -91,3 +103,5 @@ if you're doing the second step in the client, you can load just the unpack-half
   trie.has('miles davis');
 </script>
 ```
+
+MIT

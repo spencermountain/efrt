@@ -1,3 +1,7 @@
 src/
 test/
 scripts/
+scratch.js
+.esformatter
+.eslintrc
+.babelrc

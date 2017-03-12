@@ -1,35 +1,31 @@
 'use strict';
 const efrt = require('./src');
-let words = require('./test/data/maleNames');
-console.log(words.length);
+// const wordnet = require('/home/spencer/nlp/wordnet.js');
 
-// var words = [
-//   'bruce',
-//   'bruno',
-//   'bryan',
-//   'bryant',
-//   'bryce',
+// let words = require('./test/data/maleNames');
+let words = require('./test/data/adjectives');
+// words = [
+//   'Neanderthal',
+//   'Neandertal',
+//   'Neanderthalian',
+//   'criterial',
+//   'criterional',
+//   'unexclusive',
+//   'unrestricted',
+//   'axiomatic',
 // ];
-//pack these words as tightly as possible
 var compressed = efrt.pack(words);
-// console.log(compressed);
-//(some insanely-small string of letters+numbers)
-
-//pull it apart into a lookup-trie
 var trie = efrt.unpack(compressed);
-// console.log(trie);
-console.time('plain-lookup');
-trie.has('tim');
-console.timeEnd('plain-lookup');
+console.log(trie.has('neanderthalian'));
 
-console.time('cache');
-trie.cache();
-console.timeEnd('cache');
+//
+// for (var i = 0; i < words.length; i++) {
+//   var has = trie.has(words[i]);
+//   if (!has) {
+//     console.log(words[i]);
+//   }
+// }
 
-console.time('cached-lookup');
-trie.has('tim');
-console.timeEnd('cached-lookup');
-
-//hit it!
-// console.log(trie.has('cool')); //true
-// console.log(trie.has('miles davis')); //false
+// wordnet.words((arr) => {
+//   console.log(arr);
+// });
