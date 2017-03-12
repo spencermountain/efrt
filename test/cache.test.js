@@ -13,6 +13,10 @@ test('cached-match-every-name:', function(t) {
     t.equal(has, true, 'trie has \'' + names[i] + '\'');
   }
   t.equal(ptrie.has('woodstock'), false, 'no-false-positive');
+
+  var len = ptrie.toArray().length;
+  t.equal(len, names.length, 'array');
+
   t.end();
 });
 
@@ -25,6 +29,10 @@ test('cached-match-every-country:', function(t) {
     t.equal(has, true, 'trie has \'' + countries[i] + '\'');
   }
   t.equal(ptrie.has('woodstock'), false, 'no-false-positive');
+
+  var len = ptrie.toArray().length;
+  t.equal(len, countries.length, 'all-words-in-array');
+
   t.end();
 });
 
@@ -35,7 +43,7 @@ test('cached-no-prefixes:', function(t) {
   for (var i = 0; i < countries.length; i++) {
     let str = countries[i];
     for(let o = 1; o < str.length - 1; o++) {
-      let partial = str.slice(0, o);
+      var partial = str.slice(0, o);
       var has = ptrie.has(partial);
       t.equal(has, false, 'no-prefix-' + partial);
     }

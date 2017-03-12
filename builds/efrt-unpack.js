@@ -137,6 +137,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var config = _dereq_('../config');
 var fns = _dereq_('../fns');
 var isPrefix = _dereq_('./prefix');
+var unravel = _dereq_('./unravel');
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
 
@@ -147,6 +148,7 @@ var PackedTrie = function () {
     this.nodes = str.split(config.NODE_SEP); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
+    this._cache = null;
     //process symbols, if they have them
     if (str.match(':')) {
       this.initSymbols();
@@ -185,8 +187,12 @@ var PackedTrie = function () {
       if (!want) {
         return false;
       }
-      var crawl = function crawl(inode, prefix) {
-        var node = _this.nodes[inode];
+      //then, try cache-lookup
+      if (this._cache) {
+        return this._cache[want] || false;
+      }
+      var crawl = function crawl(index, prefix) {
+        var node = _this.nodes[index];
         //the '!' means a prefix-alone is a good match
         if (node[0] === '!') {
           //try to match the prefix (the last branch)
@@ -208,7 +214,6 @@ var PackedTrie = function () {
           //we're at the branch's end, so try to match it
           if (ref === ',' || ref === undefined) {
             if (have === want) {
-              // console.log('::end');
               return true;
             }
             continue;
@@ -217,8 +222,8 @@ var PackedTrie = function () {
           //well, should we keep going on this branch?
           //if we do, we ignore all the others here.
           if (isPrefix(have, want)) {
-            inode = _this.inodeFromRef(ref, inode);
-            return crawl(inode, have);
+            index = _this.indexFromRef(ref, index);
+            return crawl(index, have);
           }
           //nah, lets try the next branch..
           continue;
@@ -232,13 +237,28 @@ var PackedTrie = function () {
     // References are either absolute (symbol) or relative (1 - based)
 
   }, {
-    key: 'inodeFromRef',
-    value: function inodeFromRef(ref, inode) {
+    key: 'indexFromRef',
+    value: function indexFromRef(ref, index) {
       var dnode = fns.fromAlphaCode(ref);
       if (dnode < this.symCount) {
         return this.syms[dnode];
       }
-      return inode + dnode + 1 - this.symCount;
+      return index + dnode + 1 - this.symCount;
+    }
+  }, {
+    key: 'toArray',
+    value: function toArray() {
+      if (this._cache) {
+        return Object.keys(this._cache);
+      }
+      return Object.keys(unravel(this));
+    }
+  }, {
+    key: 'cache',
+    value: function cache() {
+      this._cache = unravel(this);
+      this.nodes = null;
+      this.syms = null;
     }
   }]);
 
@@ -247,5 +267,41 @@ var PackedTrie = function () {
 
 module.exports = PackedTrie;
 
-},{"../config":1,"../fns":2,"./prefix":4}]},{},[3])(3)
+},{"../config":1,"../fns":2,"./prefix":4,"./unravel":6}],6:[function(_dereq_,module,exports){
+'use strict';
+
+//spin-out all words from this trie
+
+var unRavel = function unRavel(trie) {
+  var all = {};
+  var crawl = function crawl(index, prefix) {
+    var node = trie.nodes[index];
+    if (node[0] === '!') {
+      all[prefix] = true;
+      node = node.slice(1); //ok, we tried. remove it.
+    }
+    var matches = node.split(/([A-Z0-9,]+)/g);
+    for (var i = 0; i < matches.length; i += 2) {
+      var str = matches[i];
+      var ref = matches[i + 1];
+      if (!str) {
+        continue;
+      }
+
+      var have = prefix + str;
+      //branch's end
+      if (ref === ',' || ref === undefined) {
+        all[have] = true;
+        continue;
+      }
+      var newIndex = trie.indexFromRef(ref, index);
+      crawl(newIndex, have);
+    }
+  };
+  crawl(0, '');
+  return all;
+};
+module.exports = unRavel;
+
+},{}]},{},[3])(3)
 });
