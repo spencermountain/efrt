@@ -3,7 +3,7 @@ config.silent = true;
 var fs = require('fs');
 
 var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-var banner = '/* efrt v' + pkg.version + '\n   github.com/nlp-compromise/efrt\n   MIT\n*/\n';
+var banner = '/* efrt trie-compression v' + pkg.version + '  github.com/nlp-compromise/efrt  - MIT */';
 
 //use paths, so libs don't need a -g
 var lib = {
@@ -25,10 +25,10 @@ var path = {
 exec('rm -rf ./builds && mkdir builds');
 
 //add a header, before our sourcecode
-exec('echo ' + banner + ' > ' + path.es5);
-exec('echo ' + banner + ' > ' + path.es5min);
-exec('echo ' + banner + ' > ' + path.unpack);
-exec('echo ' + banner + ' > ' + path.unpackmin);
+exec('echo "' + banner + '" > ' + path.es5);
+exec('echo "' + banner + '" > ' + path.es5min);
+exec('echo "' + banner + '" > ' + path.unpack);
+exec('echo "' + banner + '" > ' + path.unpackmin);
 
 //es5 main (browserify + derequire)
 cmd = lib.browserify + ' "./src/index.js" --standalone efrt';

@@ -1,3 +1,4 @@
+/* efrt trie-compression v0.0.3  github.com/nlp-compromise/efrt  - MIT */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.efrt = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
 
@@ -5,6 +6,8 @@ module.exports = {
   NODE_SEP: ';',
   STRING_SEP: ',',
   TERMINAL_PREFIX: '!',
+  //characters banned from entering the trie
+  NOT_ALLOWED: new RegExp('[0-9A-Z,;!]'),
   BASE: 36
 };
 
@@ -351,6 +354,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var fns = _dereq_('../fns');
 var _pack = _dereq_('./pack');
+var config = _dereq_('../config');
+
 // const pack = require('./packer');
 /*
   org.startpad.trie - A JavaScript implementation of a Trie search datastructure.
@@ -419,7 +424,9 @@ var Trie = function () {
       }
       fns.unique(words);
       for (var _i = 0; _i < words.length; _i++) {
-        this.insert(words[_i]);
+        if (words[_i].match(config.NOT_ALLOWED) === null) {
+          this.insert(words[_i]);
+        }
       }
     }
   }, {
@@ -689,7 +696,7 @@ var Trie = function () {
 
 module.exports = Trie;
 
-},{"../fns":2,"./pack":6}],8:[function(_dereq_,module,exports){
+},{"../config":1,"../fns":2,"./pack":6}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var Ptrie = _dereq_('./ptrie');
