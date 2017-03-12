@@ -17,17 +17,21 @@ var compressed = efrt.pack(words);
 //pull it apart into a lookup-trie
 var trie = efrt.unpack(compressed);
 // console.log(trie);
+console.time('lookup1');
+trie.has('bryce');
+trie.has('bruno');
+trie.has('john');
+console.timeEnd('lookup1');
 
 console.time('cache');
 trie.cache();
 console.timeEnd('cache');
-console.log('\n\n');
 
-console.time('lookup');
-console.log(trie.has('bryce'));
-console.log(trie.has('bruno'));
-console.log(trie.has('john'));
-console.timeEnd('lookup');
+console.time('lookup2');
+trie.has('bryce');
+trie.has('bruno');
+trie.has('john');
+console.timeEnd('lookup2');
 
 //hit it!
 // console.log(trie.has('cool')); //true
