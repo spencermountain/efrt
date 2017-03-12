@@ -75,13 +75,16 @@ the `trie.cache()` command will spin the trie into a good-old javascript object,
 In this example, with 1k words, it makes sense to hit `.cache()` if you are going to do more-than 5 lookups on the trie, but your mileage may vary.
 You can access the object from `trie._cache` if you'd like use it directly.
 
-##Filesize
-`efrt` will pack filesize down as much as possible:
-* all adjectives in wordnet - 330k -> 99k
+## Size
+`efrt` will pack filesize down as much as possible, depending upon the redundancy of the prefixes/suffixes in the words, and the size of the list.
+* list of countries - `1.5k -> 0.8k` *(46% compressed)*
+* all adverbs in wordnet - `58k -> 24k` *(58% compressed)*
+* all adjectives in wordnet - `265k -> 99k` *(62% compressed)*
+* all nouns in wordnet - `1,775k -> 692k` *(61% compressed)*
 
- but there are some things to consider:
+but there are some things to consider:
 * bigger files compress further (see [🎈 birthday problem](https://en.wikipedia.org/wiki/Birthday_problem))
-* using efrt will reduce gains from gzip compression, which most webservers use quietly
+* using efrt will reduce gains from gzip compression, which most webservers quietly use
 * english is more suffix-redundant than prefix-redundant, so non-english words may benefit from other styles
 
 ##Use
