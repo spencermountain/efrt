@@ -28,19 +28,19 @@ test('match-every-country:', function(t) {
   t.end();
 });
 
-test('match-every-adjective:', function(t) {
-  var str = trieHard.pack(adjectives);
-  var ptrie = trieHard.unpack(str);
-  for (var i = 0; i < adjectives.length; i++) {
-    var has = ptrie.has(adjectives[i]);
-    if (!has) {
-      //if not there, make sure it wasn't supposed to be there in the first place
-      t.ok(adjectives[i].match(config.NOT_ALLOWED), adjectives[i]);
-    }
-  }
-  t.equal(ptrie.has('woodstock'), false, 'no-false-positive');
-  t.end();
-});
+// test('match-every-adjective:', function(t) {
+//   var str = trieHard.pack(adjectives);
+//   var ptrie = trieHard.unpack(str);
+//   for (var i = 0; i < adjectives.length; i++) {
+//     var has = ptrie.has(adjectives[i]);
+//     if (!has) {
+//       //if not there, make sure it wasn't supposed to be there in the first place
+//       t.ok(adjectives[i].match(config.NOT_ALLOWED), adjectives[i]);
+//     }
+//   }
+//   t.equal(ptrie.has('woodstock'), false, 'no-false-positive');
+//   t.end();
+// });
 
 test('test prefixes:', function(t) {
   var compressed = trieHard.pack(countries);
