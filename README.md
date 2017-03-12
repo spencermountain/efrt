@@ -54,6 +54,25 @@ console.log(trie.has('miles davis'));//false
 
 the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and some punctuation are not (yet) supported.
 
+##Performance
+there are two modes that `efrt` can run in, depending on what you want to optimise for:
+```js
+var compressed = efrt.pack(skateboarders);//1k names (on macbook)
+var trie = efrt.unpack(compressed)
+trie.has('tony hawk')
+// trie-lookup: 1.1ms
+
+trie.cache()
+// caching-step: 5.1ms
+
+trie.has('tony hawk')
+// cached-lookup: 0.02ms
+```
+the `trie.cache()` command will spin the trie into a good-old javascript object, for faster lookups. It takes some time though.
+
+In this example, with 1k words, it makes sense to hit `.cache()` if you are going to do more-than 5 lookups on the trie, but your mileage may vary.
+You can access the object from `trie._cache` if you'd like use it directly.
+
 **IE9+**
 ```html
 <script src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>

@@ -1,6 +1,7 @@
 'use strict';
 const efrt = require('./src');
 let words = require('./test/data/maleNames');
+console.log(words.length);
 
 // var words = [
 //   'bruce',
@@ -17,21 +18,17 @@ var compressed = efrt.pack(words);
 //pull it apart into a lookup-trie
 var trie = efrt.unpack(compressed);
 // console.log(trie);
-console.time('lookup1');
-trie.has('bryce');
-trie.has('bruno');
-trie.has('john');
-console.timeEnd('lookup1');
+console.time('plain-lookup');
+trie.has('tim');
+console.timeEnd('plain-lookup');
 
 console.time('cache');
 trie.cache();
 console.timeEnd('cache');
 
-console.time('lookup2');
-trie.has('bryce');
-trie.has('bruno');
-trie.has('john');
-console.timeEnd('lookup2');
+console.time('cached-lookup');
+trie.has('tim');
+console.timeEnd('cached-lookup');
 
 //hit it!
 // console.log(trie.has('cool')); //true
