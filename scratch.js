@@ -1,14 +1,14 @@
 'use strict';
-// let arr = require('./test/data/maleNames');
 const efrt = require('./src');
+let words = require('./test/data/maleNames');
 
-var words = [
-  'coolage', //must boring, lowercase, non-unicode
-  'cool',
-  'cool cat',
-  'cool.com',
-  'coolamungo'
-];
+// var words = [
+//   'bruce',
+//   'bruno',
+//   'bryan',
+//   'bryant',
+//   'bryce',
+// ];
 //pack these words as tightly as possible
 var compressed = efrt.pack(words);
 // console.log(compressed);
@@ -16,7 +16,19 @@ var compressed = efrt.pack(words);
 
 //pull it apart into a lookup-trie
 var trie = efrt.unpack(compressed);
+// console.log(trie);
+
+console.time('cache');
+trie.cache();
+console.timeEnd('cache');
+console.log('\n\n');
+
+console.time('lookup');
+console.log(trie.has('bryce'));
+console.log(trie.has('bruno'));
+console.log(trie.has('john'));
+console.timeEnd('lookup');
 
 //hit it!
-console.log(trie.has('cool')); //true
-console.log(trie.has('miles davis')); //false
+// console.log(trie.has('cool')); //true
+// console.log(trie.has('miles davis')); //false

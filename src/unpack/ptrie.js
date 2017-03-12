@@ -2,6 +2,7 @@
 const config = require('../config');
 const fns = require('../fns');
 const isPrefix = require('./prefix');
+const unravel = require('./unravel');
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
 class PackedTrie {
@@ -9,6 +10,7 @@ class PackedTrie {
     this.nodes = str.split(config.NODE_SEP); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
+    this._cache = null;
     //process symbols, if they have them
     if (str.match(':')) {
       this.initSymbols();
@@ -38,8 +40,12 @@ class PackedTrie {
     if (!want) {
       return false;
     }
-    const crawl = (inode, prefix) => {
-      let node = this.nodes[inode];
+    //then, try cache-lookup
+    if (this._cache) {
+      return this._cache[want] || false;
+    }
+    const crawl = (index, prefix) => {
+      let node = this.nodes[index];
       //the '!' means a prefix-alone is a good match
       if (node[0] === '!') {
         //try to match the prefix (the last branch)
@@ -61,7 +67,6 @@ class PackedTrie {
         //we're at the branch's end, so try to match it
         if (ref === ',' || ref === undefined) {
           if (have === want) {
-            // console.log('::end');
             return true;
           }
           continue;
@@ -70,8 +75,8 @@ class PackedTrie {
         //well, should we keep going on this branch?
         //if we do, we ignore all the others here.
         if (isPrefix(have, want)) {
-          inode = this.inodeFromRef(ref, inode);
-          return crawl(inode, have);
+          index = this.indexFromRef(ref, index);
+          return crawl(index, have);
         }
         //nah, lets try the next branch..
         continue;
@@ -83,14 +88,25 @@ class PackedTrie {
   }
 
   // References are either absolute (symbol) or relative (1 - based)
-  inodeFromRef(ref, inode) {
+  indexFromRef(ref, index) {
     let dnode = fns.fromAlphaCode(ref);
     if (dnode < this.symCount) {
       return this.syms[dnode];
     }
-    return inode + dnode + 1 - this.symCount;
+    return index + dnode + 1 - this.symCount;
   }
 
+  toArray() {
+    if (this._cache) {
+      return Object.keys(this._cache);
+    }
+    return Object.keys(unravel(this));
+  }
+  cache() {
+    this._cache = unravel(this);
+    this.nodes = null;
+    this.syms = null;
+  }
 
 }
 
