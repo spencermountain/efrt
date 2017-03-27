@@ -2,7 +2,7 @@
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
   "description": "compressed-trie data-structure",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./builds/efrt.js",
   "repository": {
     "type": "git",
@@ -14,7 +14,8 @@
     "watch": "node ./scripts/watch.js"
   },
   "files": [
-    "builds/"
+    "builds/",
+    "src/"
   ],
   "dependencies": {},
   "devDependencies": {
@@ -25,7 +26,7 @@
     "babelify": "7.3.0",
     "browserify": "13.0.1",
     "derequire": "^2.0.3",
-    "eslint": "^3.1.1",
+    "eslint": "^3.17.1",
     "gaze": "^1.1.2",
     "shelljs": "^0.7.2",
     "tap-spec": "4.1.1",
