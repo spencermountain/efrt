@@ -1,24 +1,13 @@
 /* efrt trie-compression v0.0.5  github.com/nlp-compromise/efrt  - MIT */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.unpack = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-module.exports = {
-  NODE_SEP: ';',
-  STRING_SEP: ',',
-  TERMINAL_PREFIX: '!',
-  //characters banned from entering the trie
-  NOT_ALLOWED: new RegExp('[0-9A-Z,;!]'),
-  BASE: 36,
-};
-
-},{}],2:[function(_dereq_,module,exports){
 'use strict';
-const config = _dereq_('./config');
+const BASE = 36;
 
 const seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const cache = seq.split('').reduce((h, c, i) => {
   h[c] = i;
   return h;
 }, {});
-// console.log(cache);
 
 // 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
 const toAlphaCode = function(n) {
@@ -26,15 +15,15 @@ const toAlphaCode = function(n) {
     return seq[n];
   }
   let places = 1;
-  let range = config.BASE;
+  let range = BASE;
   let s = '';
 
-  for (; n >= range; n -= range, places++, range *= config.BASE) {
+  for (; n >= range; n -= range, places++, range *= BASE) {
   }
   while (places--) {
-    let d = n % config.BASE;
+    const d = n % BASE;
     s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
-    n = (n - d) / config.BASE;
+    n = (n - d) / BASE;
   }
   return s;
 };
@@ -46,12 +35,12 @@ const fromAlphaCode = function(s) {
   }
   let n = 0;
   let places = 1;
-  let range = config.BASE;
+  let range = BASE;
   let pow = 1;
 
-  for (; places < s.length; n += range, places++, range *= config.BASE) {
+  for (; places < s.length; n += range, places++, range *= BASE) {
   }
-  for (let i = s.length - 1; i >= 0; i--, pow *= config.BASE) {
+  for (let i = s.length - 1; i >= 0; i--, pow *= BASE) {
     let d = s.charCodeAt(i) - 48;
     if (d > 10) {
       d -= 7;
@@ -61,52 +50,21 @@ const fromAlphaCode = function(s) {
   return n;
 };
 
-/* Sort elements and remove duplicates from array (modified in place) */
-const unique = function(a) {
-  a.sort();
-  for (let i = 1; i < a.length; i++) {
-    if (a[i - 1] === a[i]) {
-      a.splice(i, 1);
-    }
-  }
-};
-
-const commonPrefix = function(w1, w2) {
-  var len = Math.min(w1.length, w2.length);
-  while (len > 0) {
-    var prefix = w1.slice(0, len);
-    if (prefix === w2.slice(0, len)) {
-      return prefix;
-    }
-    len -= 1;
-  }
-  return '';
-};
-
-
 module.exports = {
   toAlphaCode: toAlphaCode,
-  fromAlphaCode: fromAlphaCode,
-  unique: unique,
-  commonPrefix: commonPrefix
+  fromAlphaCode: fromAlphaCode
 };
 
-// let out = fromAlphaCode('A');
-// console.log(out);
-// console.log(fromAlphaCode(out));
-// console.log(fromAlphaCode('R'));
-
-},{"./config":1}],3:[function(_dereq_,module,exports){
+},{}],2:[function(_dereq_,module,exports){
 'use strict';
 const Ptrie = _dereq_('./ptrie');
-// const Ptrie = require('./ptrie_old');
 
 const unpack = (str) => {
   return new Ptrie(str);
 };
 module.exports = unpack;
 
-},{"./ptrie":5}],4:[function(_dereq_,module,exports){
+},{"./ptrie":4}],3:[function(_dereq_,module,exports){
 'use strict';
 
 //are we on the right path with this string?
@@ -129,17 +87,16 @@ const isPrefix = function(str, want) {
 module.exports = isPrefix;
 // console.log(isPrefix('harvar', 'harvard'));
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],4:[function(_dereq_,module,exports){
 'use strict';
-const config = _dereq_('../config');
-const fns = _dereq_('../fns');
+const encoding = _dereq_('../encoding');
 const isPrefix = _dereq_('./prefix');
 const unravel = _dereq_('./unravel');
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
 class PackedTrie {
   constructor(str) {
-    this.nodes = str.split(config.NODE_SEP); //that's all ;)!
+    this.nodes = str.split(';'); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
     this._cache = null;
@@ -154,12 +111,12 @@ class PackedTrie {
     //... process these lines
     const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
     for(let i = 0; i < this.nodes.length; i++) {
-      let m = reSymbol.exec(this.nodes[i]);
+      const m = reSymbol.exec(this.nodes[i]);
       if (!m) {
         this.symCount = i;
         break;
       }
-      this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
+      this.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
     }
     //remove from main node list
     this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
@@ -188,14 +145,14 @@ class PackedTrie {
       }
       //each possible match on this line is something like 'me,me2,me4'.
       //try each one
-      let matches = node.split(/([A-Z0-9,]+)/g);
+      const matches = node.split(/([A-Z0-9,]+)/g);
       for (let i = 0; i < matches.length; i += 2) {
-        let str = matches[i];
-        let ref = matches[i + 1];
+        const str = matches[i];
+        const ref = matches[i + 1];
         if (!str) {
           continue;
         }
-        let have = prefix + str;
+        const have = prefix + str;
         //we're at the branch's end, so try to match it
         if (ref === ',' || ref === undefined) {
           if (have === want) {
@@ -221,7 +178,7 @@ class PackedTrie {
 
   // References are either absolute (symbol) or relative (1 - based)
   indexFromRef(ref, index) {
-    let dnode = fns.fromAlphaCode(ref);
+    const dnode = encoding.fromAlphaCode(ref);
     if (dnode < this.symCount) {
       return this.syms[dnode];
     }
@@ -244,7 +201,7 @@ class PackedTrie {
 
 module.exports = PackedTrie;
 
-},{"../config":1,"../fns":2,"./prefix":4,"./unravel":6}],6:[function(_dereq_,module,exports){
+},{"../encoding":1,"./prefix":3,"./unravel":5}],5:[function(_dereq_,module,exports){
 'use strict';
 
 //spin-out all words from this trie
@@ -279,5 +236,5 @@ const unRavel = (trie) => {
 };
 module.exports = unRavel;
 
-},{}]},{},[3])(3)
+},{}]},{},[2])(2)
 });

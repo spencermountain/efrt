@@ -14,14 +14,13 @@ module.exports = {
 },{}],2:[function(_dereq_,module,exports){
 'use strict';
 
-var config = _dereq_('./config');
+var BASE = 36;
 
 var seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 var cache = seq.split('').reduce(function (h, c, i) {
   h[c] = i;
   return h;
 }, {});
-// console.log(cache);
 
 // 0, 1, 2, ..., A, B, C, ..., 00, 01, ... AA, AB, AC, ..., AAA, AAB, ...
 var toAlphaCode = function toAlphaCode(n) {
@@ -29,14 +28,14 @@ var toAlphaCode = function toAlphaCode(n) {
     return seq[n];
   }
   var places = 1;
-  var range = config.BASE;
+  var range = BASE;
   var s = '';
 
-  for (; n >= range; n -= range, places++, range *= config.BASE) {}
+  for (; n >= range; n -= range, places++, range *= BASE) {}
   while (places--) {
-    var d = n % config.BASE;
+    var d = n % BASE;
     s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
-    n = (n - d) / config.BASE;
+    n = (n - d) / BASE;
   }
   return s;
 };
@@ -47,11 +46,11 @@ var fromAlphaCode = function fromAlphaCode(s) {
   }
   var n = 0;
   var places = 1;
-  var range = config.BASE;
+  var range = BASE;
   var pow = 1;
 
-  for (; places < s.length; n += range, places++, range *= config.BASE) {}
-  for (var i = s.length - 1; i >= 0; i--, pow *= config.BASE) {
+  for (; places < s.length; n += range, places++, range *= BASE) {}
+  for (var i = s.length - 1; i >= 0; i--, pow *= BASE) {
     var d = s.charCodeAt(i) - 48;
     if (d > 10) {
       d -= 7;
@@ -61,15 +60,21 @@ var fromAlphaCode = function fromAlphaCode(s) {
   return n;
 };
 
-/* Sort elements and remove duplicates from array (modified in place) */
-var unique = function unique(a) {
-  a.sort();
-  for (var i = 1; i < a.length; i++) {
-    if (a[i - 1] === a[i]) {
-      a.splice(i, 1);
-    }
-  }
+module.exports = {
+  toAlphaCode: toAlphaCode,
+  fromAlphaCode: fromAlphaCode
 };
+
+},{}],3:[function(_dereq_,module,exports){
+'use strict';
+
+module.exports = {
+  pack: _dereq_('./pack/index'),
+  unpack: _dereq_('./unpack/index')
+};
+
+},{"./pack/index":6,"./unpack/index":9}],4:[function(_dereq_,module,exports){
+'use strict';
 
 var commonPrefix = function commonPrefix(w1, w2) {
   var len = Math.min(w1.length, w2.length);
@@ -83,27 +88,22 @@ var commonPrefix = function commonPrefix(w1, w2) {
   return '';
 };
 
-module.exports = {
-  toAlphaCode: toAlphaCode,
-  fromAlphaCode: fromAlphaCode,
-  unique: unique,
-  commonPrefix: commonPrefix
+/* Sort elements and remove duplicates from array (modified in place) */
+var unique = function unique(a) {
+  a.sort();
+  for (var i = 1; i < a.length; i++) {
+    if (a[i - 1] === a[i]) {
+      a.splice(i, 1);
+    }
+  }
 };
 
-// let out = fromAlphaCode('A');
-// console.log(out);
-// console.log(fromAlphaCode(out));
-// console.log(fromAlphaCode('R'));
-
-},{"./config":1}],3:[function(_dereq_,module,exports){
-'use strict';
-
 module.exports = {
-  pack: _dereq_('./pack/index'),
-  unpack: _dereq_('./unpack/index')
+  commonPrefix: commonPrefix,
+  unique: unique
 };
 
-},{"./pack/index":5,"./unpack/index":8}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -172,7 +172,7 @@ var Histogram = function () {
 
 module.exports = Histogram;
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 'use strict';
 
 var Trie = _dereq_('./trie');
@@ -184,12 +184,13 @@ var pack = function pack(arr) {
 };
 module.exports = pack;
 
-},{"./trie":7}],6:[function(_dereq_,module,exports){
+},{"./trie":8}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var Histogram = _dereq_('./histogram');
 var config = _dereq_('../config');
-var fns = _dereq_('../fns');
+var encoding = _dereq_('../encoding');
+
 // Return packed representation of Trie as a string.
 
 // Return packed representation of Trie as a string.
@@ -243,7 +244,7 @@ var nodeLine = function nodeLine(self, node) {
       sep = '';
       continue;
     }
-    var ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
+    var ref = encoding.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
     // Large reference to smaller string suffix -> duplicate suffix
     if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
       ref = node[prop]._g;
@@ -271,7 +272,7 @@ var analyzeRefs = function analyzeRefs(self, node) {
     }
     // Count the number of characters saved by converting an absolute
     // reference to a one-character symbol.
-    self.histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
+    self.histAbs.add(node[prop]._n, encoding.toAlphaCode(ref).length - 1);
     analyzeRefs(self, node[prop]);
   }
 };
@@ -282,7 +283,7 @@ var symbolCount = function symbolCount(self) {
   savings[-1] = 0;
   var best = 0,
       sCount = 0;
-  var defSize = 3 + fns.toAlphaCode(self.nodeCount).length;
+  var defSize = 3 + encoding.toAlphaCode(self.nodeCount).length;
   for (var sym = 0; sym < config.BASE; sym++) {
     if (self.histAbs[sym] === undefined) {
       break;
@@ -328,14 +329,14 @@ var pack = function pack(self) {
   analyzeRefs(self, self.root);
   self.symCount = symbolCount(self);
   for (var sym = 0; sym < self.symCount; sym++) {
-    self.syms[self.histAbs[sym][0]] = fns.toAlphaCode(sym);
+    self.syms[self.histAbs[sym][0]] = encoding.toAlphaCode(sym);
   }
   for (var i = 0; i < self.nodeCount; i++) {
     self.nodes[i] = nodeLine(self, self.nodes[i]);
   }
   // Prepend symbols
   for (var _sym = self.symCount - 1; _sym >= 0; _sym--) {
-    self.nodes.unshift(fns.toAlphaCode(_sym) + ':' + fns.toAlphaCode(self.nodeCount - self.histAbs[_sym][0] - 1));
+    self.nodes.unshift(encoding.toAlphaCode(_sym) + ':' + encoding.toAlphaCode(self.nodeCount - self.histAbs[_sym][0] - 1));
   }
 
   return self.nodes.join(config.NODE_SEP);
@@ -343,7 +344,7 @@ var pack = function pack(self) {
 
 module.exports = pack;
 
-},{"../config":1,"../fns":2,"./histogram":4}],7:[function(_dereq_,module,exports){
+},{"../config":1,"../encoding":2,"./histogram":5}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -352,7 +353,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var fns = _dereq_('../fns');
+var fns = _dereq_('./fns');
 var _pack = _dereq_('./pack');
 var config = _dereq_('../config');
 
@@ -696,18 +697,17 @@ var Trie = function () {
 
 module.exports = Trie;
 
-},{"../config":1,"../fns":2,"./pack":6}],8:[function(_dereq_,module,exports){
+},{"../config":1,"./fns":4,"./pack":7}],9:[function(_dereq_,module,exports){
 'use strict';
 
 var Ptrie = _dereq_('./ptrie');
-// const Ptrie = require('./ptrie_old');
 
 var unpack = function unpack(str) {
   return new Ptrie(str);
 };
 module.exports = unpack;
 
-},{"./ptrie":10}],9:[function(_dereq_,module,exports){
+},{"./ptrie":11}],10:[function(_dereq_,module,exports){
 'use strict';
 
 //are we on the right path with this string?
@@ -731,15 +731,14 @@ var isPrefix = function isPrefix(str, want) {
 module.exports = isPrefix;
 // console.log(isPrefix('harvar', 'harvard'));
 
-},{}],10:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = _dereq_('../config');
-var fns = _dereq_('../fns');
+var encoding = _dereq_('../encoding');
 var isPrefix = _dereq_('./prefix');
 var unravel = _dereq_('./unravel');
 
@@ -749,7 +748,7 @@ var PackedTrie = function () {
   function PackedTrie(str) {
     _classCallCheck(this, PackedTrie);
 
-    this.nodes = str.split(config.NODE_SEP); //that's all ;)!
+    this.nodes = str.split(';'); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
     this._cache = null;
@@ -773,7 +772,7 @@ var PackedTrie = function () {
           this.symCount = i;
           break;
         }
-        this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
+        this.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
       }
       //remove from main node list
       this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
@@ -843,7 +842,7 @@ var PackedTrie = function () {
   }, {
     key: 'indexFromRef',
     value: function indexFromRef(ref, index) {
-      var dnode = fns.fromAlphaCode(ref);
+      var dnode = encoding.fromAlphaCode(ref);
       if (dnode < this.symCount) {
         return this.syms[dnode];
       }
@@ -871,7 +870,7 @@ var PackedTrie = function () {
 
 module.exports = PackedTrie;
 
-},{"../config":1,"../fns":2,"./prefix":9,"./unravel":11}],11:[function(_dereq_,module,exports){
+},{"../encoding":2,"./prefix":10,"./unravel":12}],12:[function(_dereq_,module,exports){
 'use strict';
 
 //spin-out all words from this trie

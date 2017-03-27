@@ -17,6 +17,7 @@ var path = {
 cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.unpack6;
+console.log(cmd);
 exec(cmd);
 
 //es5 (browserify + derequire)
@@ -24,9 +25,11 @@ cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
 cmd += ' -t [ babelify --presets [ es2015 stage-2 ] --plugins [transform-es3-property-literals transform-es3-member-expression-literals] ]';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.unpack5;
+console.log(cmd);
 exec(cmd);
 
 //unpacker min (uglify)
-cmd = lib.uglify + ' ' + path.unpack + ' --mangle --compress ';
+cmd = lib.uglify + ' ' + path.unpack5 + ' --mangle --compress ';
 cmd += ' >> ' + path.unpackmin;
+console.log(cmd);
 exec(cmd);
