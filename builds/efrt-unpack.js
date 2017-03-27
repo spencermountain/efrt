@@ -124,7 +124,6 @@ class PackedTrie {
 
   // Return largest matching string in the dictionary (or '')
   has(want) {
-    // console.log(this.nodes);
     //fail-fast
     if (!want) {
       return false;
@@ -186,10 +185,13 @@ class PackedTrie {
   }
 
   toArray() {
+    return Object.keys(this.toObject());
+  }
+  toObject() {
     if (this._cache) {
-      return Object.keys(this._cache);
+      return this._cache;
     }
-    return Object.keys(unravel(this));
+    return unravel(this);
   }
   cache() {
     this._cache = unravel(this);

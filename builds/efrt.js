@@ -785,7 +785,6 @@ var PackedTrie = function () {
     value: function has(want) {
       var _this = this;
 
-      // console.log(this.nodes);
       //fail-fast
       if (!want) {
         return false;
@@ -851,10 +850,15 @@ var PackedTrie = function () {
   }, {
     key: 'toArray',
     value: function toArray() {
+      return Object.keys(this.toObject());
+    }
+  }, {
+    key: 'toObject',
+    value: function toObject() {
       if (this._cache) {
-        return Object.keys(this._cache);
+        return this._cache;
       }
-      return Object.keys(unravel(this));
+      return unravel(this);
     }
   }, {
     key: 'cache',

@@ -73,7 +73,7 @@ trie.has('tony hawk')
 the `trie.cache()` command will spin the trie into a good-old javascript object, for faster lookups. It takes some time building it though.
 
 In this example, with 1k words, it makes sense to hit `.cache()` if you are going to do more-than 5 lookups on the trie, but your mileage may vary.
-You can access the object from `trie._cache` if you'd like use it directly.
+You can access the object from `trie.toObject()`, or `trie.toArray()` if you'd like use it directly.
 
 ## Size
 `efrt` will pack filesize down as much as possible, depending upon the redundancy of the prefixes/suffixes in the words, and the size of the list.
