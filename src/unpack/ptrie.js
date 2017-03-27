@@ -1,13 +1,12 @@
 'use strict';
-const config = require('../config');
-const fns = require('../fns');
+const encoding = require('../encoding');
 const isPrefix = require('./prefix');
 const unravel = require('./unravel');
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
 class PackedTrie {
   constructor(str) {
-    this.nodes = str.split(config.NODE_SEP); //that's all ;)!
+    this.nodes = str.split(';'); //that's all ;)!
     this.syms = [];
     this.symCount = 0;
     this._cache = null;
@@ -22,12 +21,12 @@ class PackedTrie {
     //... process these lines
     const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
     for(let i = 0; i < this.nodes.length; i++) {
-      let m = reSymbol.exec(this.nodes[i]);
+      const m = reSymbol.exec(this.nodes[i]);
       if (!m) {
         this.symCount = i;
         break;
       }
-      this.syms[fns.fromAlphaCode(m[1])] = fns.fromAlphaCode(m[2]);
+      this.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
     }
     //remove from main node list
     this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
@@ -56,14 +55,14 @@ class PackedTrie {
       }
       //each possible match on this line is something like 'me,me2,me4'.
       //try each one
-      let matches = node.split(/([A-Z0-9,]+)/g);
+      const matches = node.split(/([A-Z0-9,]+)/g);
       for (let i = 0; i < matches.length; i += 2) {
-        let str = matches[i];
-        let ref = matches[i + 1];
+        const str = matches[i];
+        const ref = matches[i + 1];
         if (!str) {
           continue;
         }
-        let have = prefix + str;
+        const have = prefix + str;
         //we're at the branch's end, so try to match it
         if (ref === ',' || ref === undefined) {
           if (have === want) {
@@ -89,7 +88,7 @@ class PackedTrie {
 
   // References are either absolute (symbol) or relative (1 - based)
   indexFromRef(ref, index) {
-    let dnode = fns.fromAlphaCode(ref);
+    const dnode = encoding.fromAlphaCode(ref);
     if (dnode < this.symCount) {
       return this.syms[dnode];
     }

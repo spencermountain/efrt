@@ -1,7 +1,8 @@
 'use strict';
 const Histogram = require('./histogram');
 const config = require('../config');
-const fns = require('../fns');
+const encoding = require('../encoding');
+
 // Return packed representation of Trie as a string.
 
 // Return packed representation of Trie as a string.
@@ -42,9 +43,9 @@ const nodeLine = function(self, node) {
     line += config.TERMINAL_PREFIX;
   }
 
-  let props = self.nodeProps(node);
+  const props = self.nodeProps(node);
   for (let i = 0; i < props.length; i++) {
-    let prop = props[i];
+    const prop = props[i];
     if (typeof node[prop] === 'number') {
       line += sep + prop;
       sep = config.STRING_SEP;
@@ -55,7 +56,7 @@ const nodeLine = function(self, node) {
       sep = '';
       continue;
     }
-    let ref = fns.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
+    let ref = encoding.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
     // Large reference to smaller string suffix -> duplicate suffix
     if (node[prop]._g && ref.length >= node[prop]._g.length &&
       node[node[prop]._g] === 1) {
@@ -74,17 +75,17 @@ const analyzeRefs = function(self, node) {
   if (self.visited(node)) {
     return;
   }
-  let props = self.nodeProps(node, true);
+  const props = self.nodeProps(node, true);
   for (let i = 0; i < props.length; i++) {
-    let prop = props[i];
-    let ref = node._n - node[prop]._n - 1;
+    const prop = props[i];
+    const ref = node._n - node[prop]._n - 1;
     // Count the number of single-character relative refs
     if (ref < config.BASE) {
       self.histRel.add(ref);
     }
     // Count the number of characters saved by converting an absolute
     // reference to a one-character symbol.
-    self.histAbs.add(node[prop]._n, fns.toAlphaCode(ref).length - 1);
+    self.histAbs.add(node[prop]._n, encoding.toAlphaCode(ref).length - 1);
     analyzeRefs(self, node[prop]);
   }
 };
@@ -95,7 +96,7 @@ const symbolCount = function(self) {
   savings[-1] = 0;
   let best = 0,
     sCount = 0;
-  let defSize = 3 + fns.toAlphaCode(self.nodeCount).length;
+  let defSize = 3 + encoding.toAlphaCode(self.nodeCount).length;
   for (let sym = 0; sym < config.BASE; sym++) {
     if (self.histAbs[sym] === undefined) {
       break;
@@ -142,15 +143,14 @@ const pack = function(self) {
   analyzeRefs(self, self.root);
   self.symCount = symbolCount(self);
   for (let sym = 0; sym < self.symCount; sym++) {
-    self.syms[self.histAbs[sym][0]] = fns.toAlphaCode(sym);
+    self.syms[self.histAbs[sym][0]] = encoding.toAlphaCode(sym);
   }
   for (let i = 0; i < self.nodeCount; i++) {
     self.nodes[i] = nodeLine(self, self.nodes[i]);
   }
   // Prepend symbols
   for (let sym = self.symCount - 1; sym >= 0; sym--) {
-    self.nodes.unshift(fns.toAlphaCode(sym) + ':' +
-      fns.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1));
+    self.nodes.unshift(encoding.toAlphaCode(sym) + ':' + encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1));
   }
 
   return self.nodes.join(config.NODE_SEP);

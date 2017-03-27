@@ -1,5 +1,5 @@
 'use strict';
-const fns = require('../fns');
+const fns = require('./fns');
 const pack = require('./pack');
 const config = require('../config');
 
