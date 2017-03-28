@@ -1,6 +1,6 @@
 'use strict';
 var test = require('tape');
-const trieHard = require('../src/index');
+const efrt = require('./lib/efrt');
 
 // test('trie has everything:', function(t) {
 //   var arr = [
@@ -25,10 +25,10 @@ test('Ptrie has everything:', function(t) {
     'cool hat',
     'cooledomingo',
   ];
-  var str = trieHard.pack(arr);
+  var str = efrt.pack(arr);
   t.equal(typeof str, 'string', 'packed-string');
 
-  var ptrie = trieHard.unpack(str);
+  var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
     var has = ptrie.has(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');

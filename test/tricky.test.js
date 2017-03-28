@@ -1,6 +1,6 @@
 'use strict';
 var test = require('tape');
-const trieHard = require('../src/index');
+const efrt = require('./lib/efrt');
 
 test('uncompressable-array', function(t) {
   var arr = [
@@ -11,8 +11,8 @@ test('uncompressable-array', function(t) {
     'e',
     'f',
   ];
-  var str = trieHard.pack(arr);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(arr);
+  var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
     var has = ptrie.has(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
@@ -43,8 +43,8 @@ test('very-compressable-array', function(t) {
   // 'fe567890',
   // 'workin\'',
   ];
-  var str = trieHard.pack(arr);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(arr);
+  var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
     var has = ptrie.has(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
@@ -70,8 +70,8 @@ test('tricky-subsets', function(t) {
     'lkj hat',
     'fim hat'
   ];
-  var str = trieHard.pack(arr);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(arr);
+  var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
     var has = ptrie.has(arr[i]);
     t.equal(has, true, 'trie has \'' + arr[i] + '\'');
@@ -84,13 +84,12 @@ test('tricky-subsets', function(t) {
   t.end();
 });
 
-
 test('prefix-match-regression', function(t) {
   var arr = [
     'reno', 'chicago', 'fargo'
   ];
-  let str = trieHard.pack(arr);
-  let trie = trieHard.unpack(str);
+  let str = efrt.pack(arr);
+  let trie = efrt.unpack(str);
   t.equal(trie.has(''), false, 'empty-string-is-false');
   t.equal(trie.has('chica'), false, 'does-not-match-prefix');
   t.equal(trie.has('a'), false, 'does-not-match-prefix');
@@ -98,14 +97,15 @@ test('prefix-match-regression', function(t) {
   t.equal(trie.has('fargo'), true, 'matches-full');
   t.end();
 });
+
 test('prefix-match-regression2', function(t) {
   var arr = [
     'chicago',
     'fargo',
     'chaska',
   ];
-  let str = trieHard.pack(arr);
-  let trie = trieHard.unpack(str);
+  let str = efrt.pack(arr);
+  let trie = efrt.unpack(str);
   t.equal(trie.has('ch'), false, 'prefix fails');
   t.equal(trie.has('chicago'), true, 'matches-full');
   t.equal(trie.has('chaska'), true, 'matches-full');

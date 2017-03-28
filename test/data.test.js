@@ -3,12 +3,11 @@ const test = require('tape');
 const names = require('./data/maleNames');
 const countries = require('./data/countries');
 const adjectives = require('./data/adjectives');
-const trieHard = require('../src/index');
-const config = require('../src/config');
+const efrt = require('./lib/efrt');
 
 test('match-every-name:', function(t) {
-  var str = trieHard.pack(names);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(names);
+  var ptrie = efrt.unpack(str);
   for (var i = 0; i < names.length; i++) {
     var has = ptrie.has(names[i]);
     t.equal(has, true, 'trie has \'' + names[i] + '\'');
@@ -18,8 +17,8 @@ test('match-every-name:', function(t) {
 });
 
 test('match-every-country:', function(t) {
-  var str = trieHard.pack(countries);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(countries);
+  var ptrie = efrt.unpack(str);
   for (var i = 0; i < countries.length; i++) {
     var has = ptrie.has(countries[i]);
     t.equal(has, true, 'trie has \'' + countries[i] + '\'');
@@ -29,13 +28,13 @@ test('match-every-country:', function(t) {
 });
 
 // test('match-every-adjective:', function(t) {
-//   var str = trieHard.pack(adjectives);
-//   var ptrie = trieHard.unpack(str);
+//   var str = efrt.pack(adjectives);
+//   var ptrie = efrt.unpack(str);
 //   for (var i = 0; i < adjectives.length; i++) {
 //     var has = ptrie.has(adjectives[i]);
 //     if (!has) {
 //       //if not there, make sure it wasn't supposed to be there in the first place
-//       t.ok(adjectives[i].match(config.NOT_ALLOWED), adjectives[i]);
+//       t.ok(adjectives[i].match(/[0-9A-Z,;!]/), adjectives[i]);
 //     }
 //   }
 //   t.equal(ptrie.has('woodstock'), false, 'no-false-positive');
@@ -43,8 +42,8 @@ test('match-every-country:', function(t) {
 // });
 
 test('test prefixes:', function(t) {
-  var compressed = trieHard.pack(countries);
-  var ptrie = trieHard.unpack(compressed);
+  var compressed = efrt.pack(countries);
+  var ptrie = efrt.unpack(compressed);
 
   for (var i = 0; i < countries.length; i++) {
     let str = countries[i];

@@ -2,11 +2,11 @@
 const test = require('tape');
 const names = require('./data/maleNames');
 const countries = require('./data/countries');
-const trieHard = require('../src/index');
+const efrt = require('./lib/efrt');
 
 test('cached-match-every-name:', function(t) {
-  var str = trieHard.pack(names);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(names);
+  var ptrie = efrt.unpack(str);
   ptrie.cache();
   for (var i = 0; i < names.length; i++) {
     var has = ptrie.has(names[i]);
@@ -21,8 +21,8 @@ test('cached-match-every-name:', function(t) {
 });
 
 test('cached-match-every-country:', function(t) {
-  var str = trieHard.pack(countries);
-  var ptrie = trieHard.unpack(str);
+  var str = efrt.pack(countries);
+  var ptrie = efrt.unpack(str);
   ptrie.cache();
   for (var i = 0; i < countries.length; i++) {
     var has = ptrie.has(countries[i]);
@@ -37,8 +37,8 @@ test('cached-match-every-country:', function(t) {
 });
 
 test('cached-no-prefixes:', function(t) {
-  var compressed = trieHard.pack(countries);
-  var ptrie = trieHard.unpack(compressed);
+  var compressed = efrt.pack(countries);
+  var ptrie = efrt.unpack(compressed);
   ptrie.cache();
   for (var i = 0; i < countries.length; i++) {
     let str = countries[i];
