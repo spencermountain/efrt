@@ -1,9 +1,13 @@
+/* nlp-compromise/efrt v0.0.6 
+ usage: unpack(myPackedString).has(word)
+ by @spencermountain MIT
+*/
 'use strict';
 
 const BASE = 36;
 
 const seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const cache = seq.split('').reduce((h, c, i) => {
+const cache = seq.split('').reduce(function(h, c, i) {
   h[c] = i;
   return h;
 }, {});
@@ -90,7 +94,7 @@ var prefix = function(str, want) {
 // console.log(module.exports('harvar', 'harvard'));
 
 //spin-out all words from this trie
-var unravel = (trie) => {
+var unravel = function(trie) {
   let all = {};
   const crawl = function(index, pref) {
     let node = trie.nodes[index];
@@ -131,8 +135,9 @@ const methods = {
     if (this._cache) {
       return this._cache[want] || false;
     }
-    const crawl = (index, prefix$$1) => {
-      let node = this.nodes[index];
+    let self = this;
+    const crawl = function(index, prefix$$1) {
+      let node = self.nodes[index];
       //the '!' means a prefix-alone is a good match
       if (node[0] === '!') {
         //try to match the prefix (the last branch)
@@ -162,7 +167,7 @@ const methods = {
         //well, should we keep going on this branch?
         //if we do, we ignore all the others here.
         if (prefix(have, want)) {
-          index = this.indexFromRef(ref, index);
+          index = self.indexFromRef(ref, index);
           return crawl(index, have);
         }
         //nah, lets try the next branch..
@@ -214,13 +219,13 @@ const PackedTrie = function(str) {
   }
 };
 
-Object.keys(methods_1).forEach((k) => {
+Object.keys(methods_1).forEach(function(k) {
   PackedTrie.prototype[k] = methods_1[k];
 });
 
 var ptrie = PackedTrie;
 
-var index = (str) => {
+var index = function(str) {
   return new ptrie(str);
 };
 

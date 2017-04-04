@@ -14,8 +14,9 @@ const methods = {
     if (this._cache) {
       return this._cache[want] || false;
     }
-    const crawl = (index, prefix) => {
-      let node = this.nodes[index];
+    let self = this;
+    const crawl = function(index, prefix) {
+      let node = self.nodes[index];
       //the '!' means a prefix-alone is a good match
       if (node[0] === '!') {
         //try to match the prefix (the last branch)
@@ -45,7 +46,7 @@ const methods = {
         //well, should we keep going on this branch?
         //if we do, we ignore all the others here.
         if (isPrefix(have, want)) {
-          index = this.indexFromRef(ref, index);
+          index = self.indexFromRef(ref, index);
           return crawl(index, have);
         }
         //nah, lets try the next branch..

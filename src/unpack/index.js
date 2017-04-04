@@ -1,6 +1,6 @@
 'use strict';
 const Ptrie = require('./ptrie');
 
-module.exports = (str) => {
+module.exports = function(str) {
   return new Ptrie(str);
 };

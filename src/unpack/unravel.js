@@ -1,6 +1,6 @@
 'use strict';
 //spin-out all words from this trie
-module.exports = (trie) => {
+module.exports = function(trie) {
   let all = {};
   const crawl = function(index, pref) {
     let node = trie.nodes[index];

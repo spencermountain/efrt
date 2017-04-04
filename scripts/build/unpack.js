@@ -22,7 +22,7 @@ exec(cmd);
 
 //es5 (browserify + derequire)
 cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
-cmd += ' -t [ babelify --presets [ es2015 stage-2 ] --plugins [transform-es3-property-literals transform-es3-member-expression-literals] ]';
+cmd += ' -t [ babelify --presets [ es2015 ] ]';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.unpack5;
 console.log(cmd);

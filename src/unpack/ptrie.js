@@ -14,7 +14,7 @@ const PackedTrie = function(str) {
   }
 };
 
-Object.keys(methods).forEach((k) => {
+Object.keys(methods).forEach(function(k) {
   PackedTrie.prototype[k] = methods[k];
 });
 

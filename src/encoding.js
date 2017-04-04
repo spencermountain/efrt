@@ -2,7 +2,7 @@
 const BASE = 36;
 
 const seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const cache = seq.split('').reduce((h, c, i) => {
+const cache = seq.split('').reduce(function(h, c, i) {
   h[c] = i;
   return h;
 }, {});

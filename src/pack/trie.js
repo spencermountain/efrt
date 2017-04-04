@@ -27,7 +27,7 @@ const Trie = function(words) {
   this.insertWords(words);
   this.vCur = 0;
 };
-Object.keys(methods).forEach((k) => {
+Object.keys(methods).forEach(function(k) {
   Trie.prototype[k] = methods[k];
 });
 module.exports = Trie;
