@@ -1,4 +1,4 @@
-/* nlp-compromise/efrt v0.0.5 
+/* nlp-compromise/efrt v0.0.6 
  usage: unpack(myPackedString).has(word)
  by @spencermountain MIT
 */

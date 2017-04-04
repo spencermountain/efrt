@@ -7,7 +7,8 @@ var path = {
   es5min: './builds/efrt.min.js',
   unpack: './builds/efrt-unpack.js',
   unpack5: './builds/efrt-unpack.es5.js',
-  unpackmin: './builds/efrt-unpack.min.js'
+  unpackmin: './builds/efrt-unpack.min.js',
+  unpackes6: './builds/efrt-unpack.es6.js',
 };
 
 //cleanup. remove old builds
@@ -37,5 +38,6 @@ console.log('\n');
 console.log('    es5 ' + fileSize(path.es5));
 console.log(' -  min ' + fileSize(path.es5min));
 console.log(' -  unpack ' + fileSize(path.unpack));
+console.log(' -  unpackes6 ' + fileSize(path.unpackmin));
 console.log(' -  unpackmin ' + fileSize(path.unpackmin));
 console.log('\n');
