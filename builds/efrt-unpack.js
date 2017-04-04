@@ -64,66 +64,15 @@ const unpack = (str) => {
 };
 module.exports = unpack;
 
-},{"./ptrie":4}],3:[function(_dereq_,module,exports){
-'use strict';
-
-//are we on the right path with this string?
-const isPrefix = function(str, want) {
-  //allow perfect equals
-  if (str === want) {
-    return true;
-  }
-  //compare lengths
-  let len = str.length;
-  if (len >= want.length) {
-    return false;
-  }
-  //quick slice
-  if (len === 1) {
-    return str === want[0];
-  }
-  return want.slice(0, len) === str;
-};
-module.exports = isPrefix;
-// console.log(isPrefix('harvar', 'harvard'));
-
-},{}],4:[function(_dereq_,module,exports){
+},{"./ptrie":5}],3:[function(_dereq_,module,exports){
 'use strict';
 const encoding = _dereq_('../encoding');
 const isPrefix = _dereq_('./prefix');
 const unravel = _dereq_('./unravel');
 
-//PackedTrie - Trie traversal of the Trie packed-string representation.
-class PackedTrie {
-  constructor(str) {
-    this.nodes = str.split(';'); //that's all ;)!
-    this.syms = [];
-    this.symCount = 0;
-    this._cache = null;
-    //process symbols, if they have them
-    if (str.match(':')) {
-      this.initSymbols();
-    }
-  }
-
-  //the symbols are at the top of the array.
-  initSymbols() {
-    //... process these lines
-    const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-    for(let i = 0; i < this.nodes.length; i++) {
-      const m = reSymbol.exec(this.nodes[i]);
-      if (!m) {
-        this.symCount = i;
-        break;
-      }
-      this.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
-    }
-    //remove from main node list
-    this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
-  }
-
+const methods = {
   // Return largest matching string in the dictionary (or '')
-  has(want) {
+  has: function(want) {
     //fail-fast
     if (!want) {
       return false;
@@ -173,37 +122,103 @@ class PackedTrie {
       return false;
     };
     return crawl(0, '');
-  }
+  },
 
   // References are either absolute (symbol) or relative (1 - based)
-  indexFromRef(ref, index) {
+  indexFromRef: function(ref, index) {
     const dnode = encoding.fromAlphaCode(ref);
     if (dnode < this.symCount) {
       return this.syms[dnode];
     }
     return index + dnode + 1 - this.symCount;
-  }
+  },
 
-  toArray() {
+  toArray: function() {
     return Object.keys(this.toObject());
-  }
-  toObject() {
+  },
+
+  toObject: function() {
     if (this._cache) {
       return this._cache;
     }
     return unravel(this);
-  }
-  cache() {
+  },
+
+  cache: function() {
     this._cache = unravel(this);
     this.nodes = null;
     this.syms = null;
   }
+};
+module.exports = methods;
 
-}
+},{"../encoding":1,"./prefix":4,"./unravel":7}],4:[function(_dereq_,module,exports){
+'use strict';
+
+//are we on the right path with this string?
+const isPrefix = function(str, want) {
+  //allow perfect equals
+  if (str === want) {
+    return true;
+  }
+  //compare lengths
+  let len = str.length;
+  if (len >= want.length) {
+    return false;
+  }
+  //quick slice
+  if (len === 1) {
+    return str === want[0];
+  }
+  return want.slice(0, len) === str;
+};
+module.exports = isPrefix;
+// console.log(isPrefix('harvar', 'harvard'));
+
+},{}],5:[function(_dereq_,module,exports){
+'use strict';
+const parseSymbols = _dereq_('./symbols');
+const methods = _dereq_('./methods');
+
+//PackedTrie - Trie traversal of the Trie packed-string representation.
+const PackedTrie = function(str) {
+  this.nodes = str.split(';'); //that's all ;)!
+  this.syms = [];
+  this.symCount = 0;
+  this._cache = null;
+  //process symbols, if they have them
+  if (str.match(':')) {
+    parseSymbols(this);
+  }
+};
+
+Object.keys(methods).forEach((k) => {
+  PackedTrie.prototype[k] = methods[k];
+});
 
 module.exports = PackedTrie;
 
-},{"../encoding":1,"./prefix":3,"./unravel":5}],5:[function(_dereq_,module,exports){
+},{"./methods":3,"./symbols":6}],6:[function(_dereq_,module,exports){
+'use strict';
+
+//the symbols are at the top of the array.
+const parseSymbols = function(t) {
+  //... process these lines
+  const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+  for(let i = 0; i < t.nodes.length; i++) {
+    const m = reSymbol.exec(t.nodes[i]);
+    if (!m) {
+      t.symCount = i;
+      break;
+    }
+    t.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
+  }
+  //remove from main node list
+  t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
+};
+module.exports = parseSymbols;
+
+},{}],7:[function(_dereq_,module,exports){
 'use strict';
 
 //spin-out all words from this trie

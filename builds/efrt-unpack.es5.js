@@ -62,7 +62,98 @@ var unpack = function unpack(str) {
 };
 module.exports = unpack;
 
-},{"./ptrie":4}],3:[function(_dereq_,module,exports){
+},{"./ptrie":5}],3:[function(_dereq_,module,exports){
+'use strict';
+
+var encoding = _dereq_('../encoding');
+var isPrefix = _dereq_('./prefix');
+var unravel = _dereq_('./unravel');
+
+var methods = {
+  // Return largest matching string in the dictionary (or '')
+  has: function has(want) {
+    var _this = this;
+
+    //fail-fast
+    if (!want) {
+      return false;
+    }
+    //then, try cache-lookup
+    if (this._cache) {
+      return this._cache[want] || false;
+    }
+    var crawl = function crawl(index, prefix) {
+      var node = _this.nodes[index];
+      //the '!' means a prefix-alone is a good match
+      if (node[0] === '!') {
+        //try to match the prefix (the last branch)
+        if (prefix === want) {
+          return true;
+        }
+        node = node.slice(1); //ok, we tried. remove it.
+      }
+      //each possible match on this line is something like 'me,me2,me4'.
+      //try each one
+      var matches = node.split(/([A-Z0-9,]+)/g);
+      for (var i = 0; i < matches.length; i += 2) {
+        var str = matches[i];
+        var ref = matches[i + 1];
+        if (!str) {
+          continue;
+        }
+        var have = prefix + str;
+        //we're at the branch's end, so try to match it
+        if (ref === ',' || ref === undefined) {
+          if (have === want) {
+            return true;
+          }
+          continue;
+        }
+        //ok, not a match.
+        //well, should we keep going on this branch?
+        //if we do, we ignore all the others here.
+        if (isPrefix(have, want)) {
+          index = _this.indexFromRef(ref, index);
+          return crawl(index, have);
+        }
+        //nah, lets try the next branch..
+        continue;
+      }
+
+      return false;
+    };
+    return crawl(0, '');
+  },
+
+  // References are either absolute (symbol) or relative (1 - based)
+  indexFromRef: function indexFromRef(ref, index) {
+    var dnode = encoding.fromAlphaCode(ref);
+    if (dnode < this.symCount) {
+      return this.syms[dnode];
+    }
+    return index + dnode + 1 - this.symCount;
+  },
+
+  toArray: function toArray() {
+    return Object.keys(this.toObject());
+  },
+
+  toObject: function toObject() {
+    if (this._cache) {
+      return this._cache;
+    }
+    return unravel(this);
+  },
+
+  cache: function cache() {
+    this._cache = unravel(this);
+    this.nodes = null;
+    this.syms = null;
+  }
+};
+module.exports = methods;
+
+},{"../encoding":1,"./prefix":4,"./unravel":7}],4:[function(_dereq_,module,exports){
 'use strict';
 
 //are we on the right path with this string?
@@ -86,150 +177,52 @@ var isPrefix = function isPrefix(str, want) {
 module.exports = isPrefix;
 // console.log(isPrefix('harvar', 'harvard'));
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var encoding = _dereq_('../encoding');
-var isPrefix = _dereq_('./prefix');
-var unravel = _dereq_('./unravel');
+var parseSymbols = _dereq_('./symbols');
+var methods = _dereq_('./methods');
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
-
-var PackedTrie = function () {
-  function PackedTrie(str) {
-    _classCallCheck(this, PackedTrie);
-
-    this.nodes = str.split(';'); //that's all ;)!
-    this.syms = [];
-    this.symCount = 0;
-    this._cache = null;
-    //process symbols, if they have them
-    if (str.match(':')) {
-      this.initSymbols();
-    }
+var PackedTrie = function PackedTrie(str) {
+  this.nodes = str.split(';'); //that's all ;)!
+  this.syms = [];
+  this.symCount = 0;
+  this._cache = null;
+  //process symbols, if they have them
+  if (str.match(':')) {
+    parseSymbols(this);
   }
+};
 
-  //the symbols are at the top of the array.
-
-
-  _createClass(PackedTrie, [{
-    key: 'initSymbols',
-    value: function initSymbols() {
-      //... process these lines
-      var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
-      for (var i = 0; i < this.nodes.length; i++) {
-        var m = reSymbol.exec(this.nodes[i]);
-        if (!m) {
-          this.symCount = i;
-          break;
-        }
-        this.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
-      }
-      //remove from main node list
-      this.nodes = this.nodes.slice(this.symCount, this.nodes.length);
-    }
-
-    // Return largest matching string in the dictionary (or '')
-
-  }, {
-    key: 'has',
-    value: function has(want) {
-      var _this = this;
-
-      //fail-fast
-      if (!want) {
-        return false;
-      }
-      //then, try cache-lookup
-      if (this._cache) {
-        return this._cache[want] || false;
-      }
-      var crawl = function crawl(index, prefix) {
-        var node = _this.nodes[index];
-        //the '!' means a prefix-alone is a good match
-        if (node[0] === '!') {
-          //try to match the prefix (the last branch)
-          if (prefix === want) {
-            return true;
-          }
-          node = node.slice(1); //ok, we tried. remove it.
-        }
-        //each possible match on this line is something like 'me,me2,me4'.
-        //try each one
-        var matches = node.split(/([A-Z0-9,]+)/g);
-        for (var i = 0; i < matches.length; i += 2) {
-          var str = matches[i];
-          var ref = matches[i + 1];
-          if (!str) {
-            continue;
-          }
-          var have = prefix + str;
-          //we're at the branch's end, so try to match it
-          if (ref === ',' || ref === undefined) {
-            if (have === want) {
-              return true;
-            }
-            continue;
-          }
-          //ok, not a match.
-          //well, should we keep going on this branch?
-          //if we do, we ignore all the others here.
-          if (isPrefix(have, want)) {
-            index = _this.indexFromRef(ref, index);
-            return crawl(index, have);
-          }
-          //nah, lets try the next branch..
-          continue;
-        }
-
-        return false;
-      };
-      return crawl(0, '');
-    }
-
-    // References are either absolute (symbol) or relative (1 - based)
-
-  }, {
-    key: 'indexFromRef',
-    value: function indexFromRef(ref, index) {
-      var dnode = encoding.fromAlphaCode(ref);
-      if (dnode < this.symCount) {
-        return this.syms[dnode];
-      }
-      return index + dnode + 1 - this.symCount;
-    }
-  }, {
-    key: 'toArray',
-    value: function toArray() {
-      return Object.keys(this.toObject());
-    }
-  }, {
-    key: 'toObject',
-    value: function toObject() {
-      if (this._cache) {
-        return this._cache;
-      }
-      return unravel(this);
-    }
-  }, {
-    key: 'cache',
-    value: function cache() {
-      this._cache = unravel(this);
-      this.nodes = null;
-      this.syms = null;
-    }
-  }]);
-
-  return PackedTrie;
-}();
+Object.keys(methods).forEach(function (k) {
+  PackedTrie.prototype[k] = methods[k];
+});
 
 module.exports = PackedTrie;
 
-},{"../encoding":1,"./prefix":3,"./unravel":5}],5:[function(_dereq_,module,exports){
+},{"./methods":3,"./symbols":6}],6:[function(_dereq_,module,exports){
+'use strict';
+
+//the symbols are at the top of the array.
+
+var parseSymbols = function parseSymbols(t) {
+  //... process these lines
+  var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+  for (var i = 0; i < t.nodes.length; i++) {
+    var m = reSymbol.exec(t.nodes[i]);
+    if (!m) {
+      t.symCount = i;
+      break;
+    }
+    t.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
+  }
+  //remove from main node list
+  t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
+};
+module.exports = parseSymbols;
+
+},{}],7:[function(_dereq_,module,exports){
 'use strict';
 
 //spin-out all words from this trie
