@@ -13,7 +13,7 @@ var path = {
   unpackmin: './builds/efrt-unpack.min.js'
 };
 
-//es6 (browserify + derequire)
+// //es6 (browserify + derequire)
 cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.unpack6;
@@ -33,3 +33,5 @@ cmd = lib.uglify + ' ' + path.unpack5 + ' --mangle --compress ';
 cmd += ' >> ' + path.unpackmin;
 console.log(cmd);
 exec(cmd);
+
+exec('rollup -c');

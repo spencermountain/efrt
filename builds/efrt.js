@@ -92,7 +92,7 @@ if (typeof module !== 'undefined') {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./pack/index":6,"./unpack/index":9}],4:[function(_dereq_,module,exports){
+},{"./pack/index":6,"./unpack/index":10}],4:[function(_dereq_,module,exports){
 'use strict';
 
 var commonPrefix = function commonPrefix(w1, w2) {
@@ -203,7 +203,273 @@ var pack = function pack(arr) {
 };
 module.exports = pack;
 
-},{"./trie":8}],7:[function(_dereq_,module,exports){
+},{"./trie":9}],7:[function(_dereq_,module,exports){
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var fns = _dereq_('./fns');
+var _pack = _dereq_('./pack');
+var config = _dereq_('../config');
+
+module.exports = {
+  // Insert words from one big string, or from an array.
+  insertWords: function insertWords(words) {
+    if (words === undefined) {
+      return;
+    }
+    if (typeof words === 'string') {
+      words = words.split(/[^a-zA-Z]+/);
+    }
+    for (var i = 0; i < words.length; i++) {
+      words[i] = words[i].toLowerCase();
+    }
+    fns.unique(words);
+    for (var _i = 0; _i < words.length; _i++) {
+      if (words[_i].match(config.NOT_ALLOWED) === null) {
+        this.insert(words[_i]);
+      }
+    }
+  },
+
+  insert: function insert(word) {
+    this._insert(word, this.root);
+    var lastWord = this.lastWord;
+    this.lastWord = word;
+
+    var prefix = fns.commonPrefix(word, lastWord);
+    if (prefix === lastWord) {
+      return;
+    }
+
+    var freeze = this.uniqueNode(lastWord, word, this.root);
+    if (freeze) {
+      this.combineSuffixNode(freeze);
+    }
+  },
+
+  _insert: function _insert(word, node) {
+    var prefix = void 0,
+        next = void 0;
+
+    // Duplicate word entry - ignore
+    if (word.length === 0) {
+      return;
+    }
+
+    // Do any existing props share a common prefix?
+    var keys = Object.keys(node);
+    for (var i = 0; i < keys.length; i++) {
+      var prop = keys[i];
+      prefix = fns.commonPrefix(word, prop);
+      if (prefix.length === 0) {
+        continue;
+      }
+      // Prop is a proper prefix - recurse to child node
+      if (prop === prefix && _typeof(node[prop]) === 'object') {
+        this._insert(word.slice(prefix.length), node[prop]);
+        return;
+      }
+      // Duplicate terminal string - ignore
+      if (prop === word && typeof node[prop] === 'number') {
+        return;
+      }
+      next = {};
+      next[prop.slice(prefix.length)] = node[prop];
+      this.addTerminal(next, word = word.slice(prefix.length));
+      delete node[prop];
+      node[prefix] = next;
+      this.wordCount++;
+      return;
+    }
+
+    // No shared prefix.  Enter the word here as a terminal string.
+    this.addTerminal(node, word);
+    this.wordCount++;
+  },
+
+  // Add a terminal string to node.
+  // If 2 characters or less, just add with value == 1.
+  // If more than 2 characters, point to shared node
+  // Note - don't prematurely share suffixes - these
+  // terminals may become split and joined with other
+  // nodes in this part of the tree.
+  addTerminal: function addTerminal(node, prop) {
+    if (prop.length <= 1) {
+      node[prop] = 1;
+      return;
+    }
+    var next = {};
+    node[prop[0]] = next;
+    this.addTerminal(next, prop.slice(1));
+  },
+
+  // Well ordered list of properties in a node (string or object properties)
+  // Use nodesOnly==true to return only properties of child nodes (not
+  // terminal strings.
+  nodeProps: function nodeProps(node, nodesOnly) {
+    var props = [];
+    for (var prop in node) {
+      if (prop !== '' && prop[0] !== '_') {
+        if (!nodesOnly || _typeof(node[prop]) === 'object') {
+          props.push(prop);
+        }
+      }
+    }
+    props.sort();
+    return props;
+  },
+
+  optimize: function optimize() {
+    this.combineSuffixNode(this.root);
+    this.prepDFS();
+    this.countDegree(this.root);
+    this.prepDFS();
+    this.collapseChains(this.root);
+  },
+
+  // Convert Trie to a DAWG by sharing identical nodes
+  combineSuffixNode: function combineSuffixNode(node) {
+    // Frozen node - can't change.
+    if (node._c) {
+      return node;
+    }
+    // Make sure all children are combined and generate unique node
+    // signature for this node.
+    var sig = [];
+    if (this.isTerminal(node)) {
+      sig.push('!');
+    }
+    var props = this.nodeProps(node);
+    for (var i = 0; i < props.length; i++) {
+      var prop = props[i];
+      if (_typeof(node[prop]) === 'object') {
+        node[prop] = this.combineSuffixNode(node[prop]);
+        sig.push(prop);
+        sig.push(node[prop]._c);
+      } else {
+        sig.push(prop);
+      }
+    }
+    sig = sig.join('-');
+
+    var shared = this.suffixes[sig];
+    if (shared) {
+      return shared;
+    }
+    this.suffixes[sig] = node;
+    node._c = this.cNext++;
+    return node;
+  },
+
+  prepDFS: function prepDFS() {
+    this.vCur++;
+  },
+
+  visited: function visited(node) {
+    if (node._v === this.vCur) {
+      return true;
+    }
+    node._v = this.vCur;
+    return false;
+  },
+
+  countDegree: function countDegree(node) {
+    if (node._d === undefined) {
+      node._d = 0;
+    }
+    node._d++;
+    if (this.visited(node)) {
+      return;
+    }
+    var props = this.nodeProps(node, true);
+    for (var i = 0; i < props.length; i++) {
+      this.countDegree(node[props[i]]);
+    }
+  },
+
+  // Remove intermediate singleton nodes by hoisting into their parent
+  collapseChains: function collapseChains(node) {
+    var prop = void 0,
+        props = void 0,
+        child = void 0,
+        i = void 0;
+    if (this.visited(node)) {
+      return;
+    }
+    props = this.nodeProps(node);
+    for (i = 0; i < props.length; i++) {
+      prop = props[i];
+      child = node[prop];
+      if ((typeof child === 'undefined' ? 'undefined' : _typeof(child)) !== 'object') {
+        continue;
+      }
+      this.collapseChains(child);
+      // Hoist the singleton child's single property to the parent
+      if (child._g !== undefined && (child._d === 1 || child._g.length === 1)) {
+        delete node[prop];
+        prop += child._g;
+        node[prop] = child[child._g];
+      }
+    }
+    // Identify singleton nodes
+    if (props.length === 1 && !this.isTerminal(node)) {
+      node._g = prop;
+    }
+  },
+
+  has: function has(word) {
+    return this.isFragment(word, this.root);
+  },
+
+  isTerminal: function isTerminal(node) {
+    return !!node[''];
+  },
+
+  isFragment: function isFragment(word, node) {
+    if (word.length === 0) {
+      return this.isTerminal(node);
+    }
+
+    if (node[word] === 1) {
+      return true;
+    }
+
+    // Find a prefix of word reference to a child
+    var props = this.nodeProps(node, true);
+    for (var i = 0; i < props.length; i++) {
+      var prop = props[i];
+      if (prop === word.slice(0, prop.length)) {
+        return this.isFragment(word.slice(prop.length), node[prop]);
+      }
+    }
+
+    return false;
+  },
+
+
+  // Find highest node in Trie that is on the path to word
+  // and that is NOT on the path to other.
+  uniqueNode: function uniqueNode(word, other, node) {
+    var props = this.nodeProps(node, true);
+    for (var i = 0; i < props.length; i++) {
+      var prop = props[i];
+      if (prop === word.slice(0, prop.length)) {
+        if (prop !== other.slice(0, prop.length)) {
+          return node[prop];
+        }
+        return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node[prop]);
+      }
+    }
+    return undefined;
+  },
+
+  pack: function pack() {
+    return _pack(this);
+  }
+};
+
+},{"../config":1,"./fns":4,"./pack":8}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var Histogram = _dereq_('./histogram');
@@ -363,38 +629,13 @@ var pack = function pack(self) {
 
 module.exports = pack;
 
-},{"../config":1,"../encoding":2,"./histogram":5}],8:[function(_dereq_,module,exports){
+},{"../config":1,"../encoding":2,"./histogram":5}],9:[function(_dereq_,module,exports){
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var fns = _dereq_('./fns');
-var _pack = _dereq_('./pack');
-var config = _dereq_('../config');
-
-// const pack = require('./packer');
+var methods = _dereq_('./methods');
 /*
-  org.startpad.trie - A JavaScript implementation of a Trie search datastructure.
-
-  Usage:
-
-      trie = new Trie(dictionary-string);
-      bool = trie.has(word);
-
-  To use a packed (compressed) version of the trie stored as a string:
-
-      compressed = trie.pack();
-      ptrie = new PackedTrie(compressed);
-      bool = ptrie.has(word)
-
-  Node structure:
-
-    Each node of the Trie is an Object that can contain the following properties:
-
+ A JavaScript implementation of a Trie search datastructure.
+Each node of the Trie is an Object that can contain the following properties:
       '' - If present (with value == 1), the node is a Terminal Node - the prefix
           leading to this node is a word in the dictionary.
       numeric properties (value == 1) - the property name is a terminal string
@@ -409,14 +650,7 @@ var config = _dereq_('../config');
       '_v': Visited in DFS.
       '_g': For singleton nodes, the name of it's single property.
  */
-
-// Create a Trie data structure for searching for membership of strings
-// in a dictionary in a very space efficient way.
-
-var Trie = function () {
-  function Trie(words) {
-    _classCallCheck(this, Trie);
-
+var Trie = function Trie(words) {
     this.root = {};
     this.lastWord = '';
     this.suffixes = {};
@@ -425,308 +659,22 @@ var Trie = function () {
     this.wordCount = 0;
     this.insertWords(words);
     this.vCur = 0;
-  }
-
-  // Insert words from one big string, or from an array.
-
-
-  _createClass(Trie, [{
-    key: 'insertWords',
-    value: function insertWords(words) {
-      if (words === undefined) {
-        return;
-      }
-      if (typeof words === 'string') {
-        words = words.split(/[^a-zA-Z]+/);
-      }
-      for (var i = 0; i < words.length; i++) {
-        words[i] = words[i].toLowerCase();
-      }
-      fns.unique(words);
-      for (var _i = 0; _i < words.length; _i++) {
-        if (words[_i].match(config.NOT_ALLOWED) === null) {
-          this.insert(words[_i]);
-        }
-      }
-    }
-  }, {
-    key: 'insert',
-    value: function insert(word) {
-      this._insert(word, this.root);
-      var lastWord = this.lastWord;
-      this.lastWord = word;
-
-      var prefix = fns.commonPrefix(word, lastWord);
-      if (prefix === lastWord) {
-        return;
-      }
-
-      var freeze = this.uniqueNode(lastWord, word, this.root);
-      if (freeze) {
-        this.combineSuffixNode(freeze);
-      }
-    }
-  }, {
-    key: '_insert',
-    value: function _insert(word, node) {
-      var prefix = void 0,
-          next = void 0;
-
-      // Duplicate word entry - ignore
-      if (word.length === 0) {
-        return;
-      }
-
-      // Do any existing props share a common prefix?
-      var keys = Object.keys(node);
-      for (var i = 0; i < keys.length; i++) {
-        var prop = keys[i];
-        prefix = fns.commonPrefix(word, prop);
-        if (prefix.length === 0) {
-          continue;
-        }
-        // Prop is a proper prefix - recurse to child node
-        if (prop === prefix && _typeof(node[prop]) === 'object') {
-          this._insert(word.slice(prefix.length), node[prop]);
-          return;
-        }
-        // Duplicate terminal string - ignore
-        if (prop === word && typeof node[prop] === 'number') {
-          return;
-        }
-        next = {};
-        next[prop.slice(prefix.length)] = node[prop];
-        this.addTerminal(next, word = word.slice(prefix.length));
-        delete node[prop];
-        node[prefix] = next;
-        this.wordCount++;
-        return;
-      }
-
-      // No shared prefix.  Enter the word here as a terminal string.
-      this.addTerminal(node, word);
-      this.wordCount++;
-    }
-
-    // Add a terminal string to node.
-    // If 2 characters or less, just add with value == 1.
-    // If more than 2 characters, point to shared node
-    // Note - don't prematurely share suffixes - these
-    // terminals may become split and joined with other
-    // nodes in this part of the tree.
-
-  }, {
-    key: 'addTerminal',
-    value: function addTerminal(node, prop) {
-      if (prop.length <= 1) {
-        node[prop] = 1;
-        return;
-      }
-      var next = {};
-      node[prop[0]] = next;
-      this.addTerminal(next, prop.slice(1));
-    }
-
-    // Well ordered list of properties in a node (string or object properties)
-    // Use nodesOnly==true to return only properties of child nodes (not
-    // terminal strings.
-
-  }, {
-    key: 'nodeProps',
-    value: function nodeProps(node, nodesOnly) {
-      var props = [];
-      for (var prop in node) {
-        if (prop !== '' && prop[0] !== '_') {
-          if (!nodesOnly || _typeof(node[prop]) === 'object') {
-            props.push(prop);
-          }
-        }
-      }
-      props.sort();
-      return props;
-    }
-  }, {
-    key: 'optimize',
-    value: function optimize() {
-      this.combineSuffixNode(this.root);
-      this.prepDFS();
-      this.countDegree(this.root);
-      this.prepDFS();
-      this.collapseChains(this.root);
-    }
-
-    // Convert Trie to a DAWG by sharing identical nodes
-
-  }, {
-    key: 'combineSuffixNode',
-    value: function combineSuffixNode(node) {
-      // Frozen node - can't change.
-      if (node._c) {
-        return node;
-      }
-      // Make sure all children are combined and generate unique node
-      // signature for this node.
-      var sig = [];
-      if (this.isTerminal(node)) {
-        sig.push('!');
-      }
-      var props = this.nodeProps(node);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        if (_typeof(node[prop]) === 'object') {
-          node[prop] = this.combineSuffixNode(node[prop]);
-          sig.push(prop);
-          sig.push(node[prop]._c);
-        } else {
-          sig.push(prop);
-        }
-      }
-      sig = sig.join('-');
-
-      var shared = this.suffixes[sig];
-      if (shared) {
-        return shared;
-      }
-      this.suffixes[sig] = node;
-      node._c = this.cNext++;
-      return node;
-    }
-  }, {
-    key: 'prepDFS',
-    value: function prepDFS() {
-      this.vCur++;
-    }
-  }, {
-    key: 'visited',
-    value: function visited(node) {
-      if (node._v === this.vCur) {
-        return true;
-      }
-      node._v = this.vCur;
-      return false;
-    }
-  }, {
-    key: 'countDegree',
-    value: function countDegree(node) {
-      if (node._d === undefined) {
-        node._d = 0;
-      }
-      node._d++;
-      if (this.visited(node)) {
-        return;
-      }
-      var props = this.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        this.countDegree(node[props[i]]);
-      }
-    }
-
-    // Remove intermediate singleton nodes by hoisting into their parent
-
-  }, {
-    key: 'collapseChains',
-    value: function collapseChains(node) {
-      var prop = void 0,
-          props = void 0,
-          child = void 0,
-          i = void 0;
-      if (this.visited(node)) {
-        return;
-      }
-      props = this.nodeProps(node);
-      for (i = 0; i < props.length; i++) {
-        prop = props[i];
-        child = node[prop];
-        if ((typeof child === 'undefined' ? 'undefined' : _typeof(child)) !== 'object') {
-          continue;
-        }
-        this.collapseChains(child);
-        // Hoist the singleton child's single property to the parent
-        if (child._g !== undefined && (child._d === 1 || child._g.length === 1)) {
-          delete node[prop];
-          prop += child._g;
-          node[prop] = child[child._g];
-        }
-      }
-      // Identify singleton nodes
-      if (props.length === 1 && !this.isTerminal(node)) {
-        node._g = prop;
-      }
-    }
-  }, {
-    key: 'has',
-    value: function has(word) {
-      return this.isFragment(word, this.root);
-    }
-  }, {
-    key: 'isTerminal',
-    value: function isTerminal(node) {
-      return !!node[''];
-    }
-  }, {
-    key: 'isFragment',
-    value: function isFragment(word, node) {
-      if (word.length === 0) {
-        return this.isTerminal(node);
-      }
-
-      if (node[word] === 1) {
-        return true;
-      }
-
-      // Find a prefix of word reference to a child
-      var props = this.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        if (prop === word.slice(0, prop.length)) {
-          return this.isFragment(word.slice(prop.length), node[prop]);
-        }
-      }
-
-      return false;
-    }
-
-    // Find highest node in Trie that is on the path to word
-    // and that is NOT on the path to other.
-
-  }, {
-    key: 'uniqueNode',
-    value: function uniqueNode(word, other, node) {
-      var props = this.nodeProps(node, true);
-      for (var i = 0; i < props.length; i++) {
-        var prop = props[i];
-        if (prop === word.slice(0, prop.length)) {
-          if (prop !== other.slice(0, prop.length)) {
-            return node[prop];
-          }
-          return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node[prop]);
-        }
-      }
-      return undefined;
-    }
-  }, {
-    key: 'pack',
-    value: function pack() {
-      return _pack(this);
-    }
-  }]);
-
-  return Trie;
-}();
-
+};
+Object.keys(methods).forEach(function (k) {
+    Trie.prototype[k] = methods[k];
+});
 module.exports = Trie;
 
-},{"../config":1,"./fns":4,"./pack":7}],9:[function(_dereq_,module,exports){
+},{"./methods":7}],10:[function(_dereq_,module,exports){
 'use strict';
 
 var Ptrie = _dereq_('./ptrie');
 
-var unpack = function unpack(str) {
+module.exports = function (str) {
   return new Ptrie(str);
 };
-module.exports = unpack;
 
-},{"./ptrie":12}],10:[function(_dereq_,module,exports){
+},{"./ptrie":13}],11:[function(_dereq_,module,exports){
 'use strict';
 
 var encoding = _dereq_('../encoding');
@@ -817,12 +765,11 @@ var methods = {
 };
 module.exports = methods;
 
-},{"../encoding":2,"./prefix":11,"./unravel":14}],11:[function(_dereq_,module,exports){
+},{"../encoding":2,"./prefix":12,"./unravel":15}],12:[function(_dereq_,module,exports){
 'use strict';
-
 //are we on the right path with this string?
 
-var isPrefix = function isPrefix(str, want) {
+module.exports = function (str, want) {
   //allow perfect equals
   if (str === want) {
     return true;
@@ -838,10 +785,9 @@ var isPrefix = function isPrefix(str, want) {
   }
   return want.slice(0, len) === str;
 };
-module.exports = isPrefix;
-// console.log(isPrefix('harvar', 'harvard'));
+// console.log(module.exports('harvar', 'harvard'));
 
-},{}],12:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 'use strict';
 
 var parseSymbols = _dereq_('./symbols');
@@ -865,12 +811,13 @@ Object.keys(methods).forEach(function (k) {
 
 module.exports = PackedTrie;
 
-},{"./methods":10,"./symbols":13}],13:[function(_dereq_,module,exports){
+},{"./methods":11,"./symbols":14}],14:[function(_dereq_,module,exports){
 'use strict';
 
-//the symbols are at the top of the array.
+var encoding = _dereq_('../encoding');
 
-var parseSymbols = function parseSymbols(t) {
+//the symbols are at the top of the array.
+module.exports = function (t) {
   //... process these lines
   var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
   for (var i = 0; i < t.nodes.length; i++) {
@@ -884,19 +831,17 @@ var parseSymbols = function parseSymbols(t) {
   //remove from main node list
   t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
 };
-module.exports = parseSymbols;
 
-},{}],14:[function(_dereq_,module,exports){
+},{"../encoding":2}],15:[function(_dereq_,module,exports){
 'use strict';
-
 //spin-out all words from this trie
 
-var unRavel = function unRavel(trie) {
+module.exports = function (trie) {
   var all = {};
-  var crawl = function crawl(index, prefix) {
+  var crawl = function crawl(index, pref) {
     var node = trie.nodes[index];
     if (node[0] === '!') {
-      all[prefix] = true;
+      all[pref] = true;
       node = node.slice(1); //ok, we tried. remove it.
     }
     var matches = node.split(/([A-Z0-9,]+)/g);
@@ -907,7 +852,7 @@ var unRavel = function unRavel(trie) {
         continue;
       }
 
-      var have = prefix + str;
+      var have = pref + str;
       //branch's end
       if (ref === ',' || ref === undefined) {
         all[have] = true;
@@ -920,7 +865,6 @@ var unRavel = function unRavel(trie) {
   crawl(0, '');
   return all;
 };
-module.exports = unRavel;
 
 },{}]},{},[3])(3)
 });

@@ -1,7 +1,6 @@
 'use strict';
-
 //are we on the right path with this string?
-const isPrefix = function(str, want) {
+module.exports = function(str, want) {
   //allow perfect equals
   if (str === want) {
     return true;
@@ -17,5 +16,4 @@ const isPrefix = function(str, want) {
   }
   return want.slice(0, len) === str;
 };
-module.exports = isPrefix;
-// console.log(isPrefix('harvar', 'harvard'));
+// console.log(module.exports('harvar', 'harvard'));

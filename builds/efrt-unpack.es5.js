@@ -57,10 +57,9 @@ module.exports = {
 
 var Ptrie = _dereq_('./ptrie');
 
-var unpack = function unpack(str) {
+module.exports = function (str) {
   return new Ptrie(str);
 };
-module.exports = unpack;
 
 },{"./ptrie":5}],3:[function(_dereq_,module,exports){
 'use strict';
@@ -155,10 +154,9 @@ module.exports = methods;
 
 },{"../encoding":1,"./prefix":4,"./unravel":7}],4:[function(_dereq_,module,exports){
 'use strict';
-
 //are we on the right path with this string?
 
-var isPrefix = function isPrefix(str, want) {
+module.exports = function (str, want) {
   //allow perfect equals
   if (str === want) {
     return true;
@@ -174,8 +172,7 @@ var isPrefix = function isPrefix(str, want) {
   }
   return want.slice(0, len) === str;
 };
-module.exports = isPrefix;
-// console.log(isPrefix('harvar', 'harvard'));
+// console.log(module.exports('harvar', 'harvard'));
 
 },{}],5:[function(_dereq_,module,exports){
 'use strict';
@@ -204,9 +201,10 @@ module.exports = PackedTrie;
 },{"./methods":3,"./symbols":6}],6:[function(_dereq_,module,exports){
 'use strict';
 
-//the symbols are at the top of the array.
+var encoding = _dereq_('../encoding');
 
-var parseSymbols = function parseSymbols(t) {
+//the symbols are at the top of the array.
+module.exports = function (t) {
   //... process these lines
   var reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
   for (var i = 0; i < t.nodes.length; i++) {
@@ -220,19 +218,17 @@ var parseSymbols = function parseSymbols(t) {
   //remove from main node list
   t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
 };
-module.exports = parseSymbols;
 
-},{}],7:[function(_dereq_,module,exports){
+},{"../encoding":1}],7:[function(_dereq_,module,exports){
 'use strict';
-
 //spin-out all words from this trie
 
-var unRavel = function unRavel(trie) {
+module.exports = function (trie) {
   var all = {};
-  var crawl = function crawl(index, prefix) {
+  var crawl = function crawl(index, pref) {
     var node = trie.nodes[index];
     if (node[0] === '!') {
-      all[prefix] = true;
+      all[pref] = true;
       node = node.slice(1); //ok, we tried. remove it.
     }
     var matches = node.split(/([A-Z0-9,]+)/g);
@@ -243,7 +239,7 @@ var unRavel = function unRavel(trie) {
         continue;
       }
 
-      var have = prefix + str;
+      var have = pref + str;
       //branch's end
       if (ref === ',' || ref === undefined) {
         all[have] = true;
@@ -256,7 +252,6 @@ var unRavel = function unRavel(trie) {
   crawl(0, '');
   return all;
 };
-module.exports = unRavel;
 
 },{}]},{},[2])(2)
 });

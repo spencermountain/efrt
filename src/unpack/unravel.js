@@ -1,12 +1,11 @@
 'use strict';
-
 //spin-out all words from this trie
-const unRavel = (trie) => {
+module.exports = (trie) => {
   let all = {};
-  const crawl = function(index, prefix) {
+  const crawl = function(index, pref) {
     let node = trie.nodes[index];
     if (node[0] === '!') {
-      all[prefix] = true;
+      all[pref] = true;
       node = node.slice(1); //ok, we tried. remove it.
     }
     let matches = node.split(/([A-Z0-9,]+)/g);
@@ -17,7 +16,7 @@ const unRavel = (trie) => {
         continue;
       }
 
-      let have = prefix + str;
+      let have = pref + str;
       //branch's end
       if (ref === ',' || ref === undefined) {
         all[have] = true;
@@ -30,4 +29,3 @@ const unRavel = (trie) => {
   crawl(0, '');
   return all;
 };
-module.exports = unRavel;

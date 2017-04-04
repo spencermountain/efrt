@@ -1,32 +1,10 @@
 'use strict';
 const efrt = require('./src');
-// const wordnet = require('/home/spencer/nlp/wordnet.js');
-
+const unpack = require('./builds/efrt-unpack.es6');
 let words = require('./test/data/countries');
-// let words = require('./test/data/adjectives');
-// words = [
-//   'Neanderthal',
-//   'Neandertal',
-//   'Neanderthalian',
-//   'criterial',
-//   'criterional',
-//   'unexclusive',
-//   'unrestricted',
-//   'axiomatic',
-// ];
-var compressed = efrt.pack(words);
-var trie = efrt.unpack(compressed);
-console.log(compressed);
-// console.log(trie.has('neanderthalian'));
 
-//
-// for (var i = 0; i < words.length; i++) {
-//   var has = trie.has(words[i]);
-//   if (!has) {
-//     console.log(words[i]);
-//   }
-// }
+var packd = efrt.pack(words);
+var trie = unpack(packd);
+// var trie = efrt.unpack(packd);
 
-// wordnet.words((arr) => {
-//   console.log(arr);
-// });
+console.log(trie.toArray());

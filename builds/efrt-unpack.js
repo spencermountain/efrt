@@ -59,10 +59,9 @@ module.exports = {
 'use strict';
 const Ptrie = _dereq_('./ptrie');
 
-const unpack = (str) => {
+module.exports = (str) => {
   return new Ptrie(str);
 };
-module.exports = unpack;
 
 },{"./ptrie":5}],3:[function(_dereq_,module,exports){
 'use strict';
@@ -154,9 +153,8 @@ module.exports = methods;
 
 },{"../encoding":1,"./prefix":4,"./unravel":7}],4:[function(_dereq_,module,exports){
 'use strict';
-
 //are we on the right path with this string?
-const isPrefix = function(str, want) {
+module.exports = function(str, want) {
   //allow perfect equals
   if (str === want) {
     return true;
@@ -172,8 +170,7 @@ const isPrefix = function(str, want) {
   }
   return want.slice(0, len) === str;
 };
-module.exports = isPrefix;
-// console.log(isPrefix('harvar', 'harvard'));
+// console.log(module.exports('harvar', 'harvard'));
 
 },{}],5:[function(_dereq_,module,exports){
 'use strict';
@@ -200,9 +197,10 @@ module.exports = PackedTrie;
 
 },{"./methods":3,"./symbols":6}],6:[function(_dereq_,module,exports){
 'use strict';
+const encoding = _dereq_('../encoding');
 
 //the symbols are at the top of the array.
-const parseSymbols = function(t) {
+module.exports = function(t) {
   //... process these lines
   const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
   for(let i = 0; i < t.nodes.length; i++) {
@@ -216,18 +214,16 @@ const parseSymbols = function(t) {
   //remove from main node list
   t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
 };
-module.exports = parseSymbols;
 
-},{}],7:[function(_dereq_,module,exports){
+},{"../encoding":1}],7:[function(_dereq_,module,exports){
 'use strict';
-
 //spin-out all words from this trie
-const unRavel = (trie) => {
+module.exports = (trie) => {
   let all = {};
-  const crawl = function(index, prefix) {
+  const crawl = function(index, pref) {
     let node = trie.nodes[index];
     if (node[0] === '!') {
-      all[prefix] = true;
+      all[pref] = true;
       node = node.slice(1); //ok, we tried. remove it.
     }
     let matches = node.split(/([A-Z0-9,]+)/g);
@@ -238,7 +234,7 @@ const unRavel = (trie) => {
         continue;
       }
 
-      let have = prefix + str;
+      let have = pref + str;
       //branch's end
       if (ref === ',' || ref === undefined) {
         all[have] = true;
@@ -251,7 +247,6 @@ const unRavel = (trie) => {
   crawl(0, '');
   return all;
 };
-module.exports = unRavel;
 
 },{}]},{},[2])(2)
 });
