@@ -77,7 +77,10 @@ var methods = {
     }
     //then, try cache-lookup
     if (this._cache) {
-      return this._cache[want] || false;
+      if (this._cache.hasOwnProperty(want) === true) {
+        return this._cache[want];
+      }
+      return false;
     }
     var self = this;
     var crawl = function crawl(index, prefix) {
