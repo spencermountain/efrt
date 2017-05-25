@@ -10,7 +10,9 @@
 </div>
 
 <div align="center">
-  <code>npm i efrt</code>
+  <code>npm install efrt</code>
+  (or alternatively:)
+  <code>npm install efrt-unpack</code>
 </div>
 
 `efrt` is a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words.
@@ -99,6 +101,9 @@ but there are some things to consider:
 ```
 
 if you're doing the second step in the client, you can load just the unpack-half of the library(~3k):
+```bash
+npm install efrt-unpack
+```
 ```html
 <script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
 <script>
