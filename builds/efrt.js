@@ -2,18 +2,6 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.efrt = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
 
-module.exports = {
-  NODE_SEP: ';',
-  STRING_SEP: ',',
-  TERMINAL_PREFIX: '!',
-  //characters banned from entering the trie
-  NOT_ALLOWED: new RegExp('[0-9A-Z,;!]'),
-  BASE: 36
-};
-
-},{}],2:[function(_dereq_,module,exports){
-'use strict';
-
 var BASE = 36;
 
 var seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -65,7 +53,7 @@ module.exports = {
   fromAlphaCode: fromAlphaCode
 };
 
-},{}],3:[function(_dereq_,module,exports){
+},{}],2:[function(_dereq_,module,exports){
 (function (global){
 'use strict';
 
@@ -92,7 +80,7 @@ if (typeof module !== 'undefined') {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./pack/index":6,"./unpack/index":10}],4:[function(_dereq_,module,exports){
+},{"./pack/index":5,"./unpack/index":9}],3:[function(_dereq_,module,exports){
 'use strict';
 
 var commonPrefix = function commonPrefix(w1, w2) {
@@ -122,95 +110,107 @@ module.exports = {
   unique: unique
 };
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],4:[function(_dereq_,module,exports){
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var Histogram = function Histogram() {
+  this.counts = {};
+};
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Histogram = function () {
-  function Histogram() {
-    _classCallCheck(this, Histogram);
-
-    this.counts = {};
+var methods = {
+  init: function init(sym) {
+    if (this.counts[sym] === undefined) {
+      this.counts[sym] = 0;
+    }
+  },
+  add: function add(sym, n) {
+    if (n === undefined) {
+      n = 1;
+    }
+    this.init(sym);
+    this.counts[sym] += n;
+  },
+  countOf: function countOf(sym) {
+    this.init(sym);
+    return this.counts[sym];
+  },
+  highest: function highest(top) {
+    var sorted = [];
+    var keys = Object.keys(this.counts);
+    for (var i = 0; i < keys.length; i++) {
+      var sym = keys[i];
+      sorted.push([sym, this.counts[sym]]);
+    }
+    sorted.sort(function (a, b) {
+      return b[1] - a[1];
+    });
+    if (top) {
+      sorted = sorted.slice(0, top);
+    }
+    return sorted;
   }
-
-  _createClass(Histogram, [{
-    key: 'init',
-    value: function init(sym) {
-      if (this.counts[sym] === undefined) {
-        this.counts[sym] = 0;
-      }
-    }
-  }, {
-    key: 'add',
-    value: function add(sym, n) {
-      if (n === undefined) {
-        n = 1;
-      }
-      this.init(sym);
-      this.counts[sym] += n;
-    }
-  }, {
-    key: 'change',
-    value: function change(symNew, symOld, n) {
-      if (n === undefined) {
-        n = 1;
-      }
-      this.add(symOld, -n);
-      this.add(symNew, n);
-    }
-  }, {
-    key: 'countOf',
-    value: function countOf(sym) {
-      this.init(sym);
-      return this.counts[sym];
-    }
-  }, {
-    key: 'highest',
-    value: function highest(top) {
-      var sorted = [];
-      var keys = Object.keys(this.counts);
-      for (var i = 0; i < keys.length; i++) {
-        var sym = keys[i];
-        sorted.push([sym, this.counts[sym]]);
-      }
-      sorted.sort(function (a, b) {
-        return b[1] - a[1];
-      });
-      if (top) {
-        sorted = sorted.slice(0, top);
-      }
-      return sorted;
-    }
-  }]);
-
-  return Histogram;
-}();
-
+};
+Object.keys(methods).forEach(function (k) {
+  Histogram.prototype[k] = methods[k];
+});
 module.exports = Histogram;
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 'use strict';
 
 var Trie = _dereq_('./trie');
 
+var handleFormats = function handleFormats(input) {
+  //null
+  if (input === null || input === undefined) {
+    return {};
+  }
+  //string
+  if (typeof input === 'string') {
+    return input.split(/ +/g).reduce(function (h, str) {
+      h[str] = true;
+      return h;
+    }, {});
+  }
+  //array
+  if (Object.prototype.toString.call(input) === '[object Array]') {
+    return input.reduce(function (h, str) {
+      h[str] = true;
+      return h;
+    }, {});
+  }
+  //object
+  return input;
+};
+
 //turn an array into a compressed string
-var pack = function pack(arr) {
-  var t = new Trie(arr);
-  return t.pack();
+var pack = function pack(obj) {
+  obj = handleFormats(obj);
+  //pivot into categories:
+  var flat = Object.keys(obj).reduce(function (h, k) {
+    var val = obj[k];
+    h[val] = h[val] || [];
+    h[val].push(k);
+    return h;
+  }, {});
+  //pack each into a compressed string
+  Object.keys(flat).forEach(function (k) {
+    var t = new Trie(flat[k]);
+    flat[k] = t.pack();
+  });
+  flat = JSON.stringify(flat, null, 0);
+  return flat;
 };
 module.exports = pack;
 
-},{"./trie":9}],7:[function(_dereq_,module,exports){
+},{"./trie":8}],6:[function(_dereq_,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var fns = _dereq_('./fns');
 var _pack = _dereq_('./pack');
-var config = _dereq_('../config');
+var NOT_ALLOWED = new RegExp('[0-9A-Z,;!]'); //characters banned from entering the trie
 
 module.exports = {
   // Insert words from one big string, or from an array.
@@ -226,7 +226,7 @@ module.exports = {
     }
     fns.unique(words);
     for (var _i = 0; _i < words.length; _i++) {
-      if (words[_i].match(config.NOT_ALLOWED) === null) {
+      if (words[_i].match(NOT_ALLOWED) === null) {
         this.insert(words[_i]);
       }
     }
@@ -418,35 +418,9 @@ module.exports = {
     }
   },
 
-  has: function has(word) {
-    return this.isFragment(word, this.root);
-  },
-
   isTerminal: function isTerminal(node) {
     return !!node[''];
   },
-
-  isFragment: function isFragment(word, node) {
-    if (word.length === 0) {
-      return this.isTerminal(node);
-    }
-
-    if (node[word] === 1) {
-      return true;
-    }
-
-    // Find a prefix of word reference to a child
-    var props = this.nodeProps(node, true);
-    for (var i = 0; i < props.length; i++) {
-      var prop = props[i];
-      if (prop === word.slice(0, prop.length)) {
-        return this.isFragment(word.slice(prop.length), node[prop]);
-      }
-    }
-
-    return false;
-  },
-
 
   // Find highest node in Trie that is on the path to word
   // and that is NOT on the path to other.
@@ -469,12 +443,17 @@ module.exports = {
   }
 };
 
-},{"../config":1,"./fns":4,"./pack":8}],8:[function(_dereq_,module,exports){
+},{"./fns":3,"./pack":7}],7:[function(_dereq_,module,exports){
 'use strict';
 
 var Histogram = _dereq_('./histogram');
-var config = _dereq_('../config');
 var encoding = _dereq_('../encoding');
+var config = {
+  NODE_SEP: ';',
+  STRING_SEP: ',',
+  TERMINAL_PREFIX: '!',
+  BASE: 36
+};
 
 // Return packed representation of Trie as a string.
 
@@ -506,7 +485,6 @@ var encoding = _dereq_('../encoding');
 // with a (relative!) line number of the node that string references.
 // Terminal strings (those without child node references) are
 // separated by ',' characters.
-
 
 var nodeLine = function nodeLine(self, node) {
   var line = '',
@@ -629,7 +607,7 @@ var pack = function pack(self) {
 
 module.exports = pack;
 
-},{"../config":1,"../encoding":2,"./histogram":5}],9:[function(_dereq_,module,exports){
+},{"../encoding":1,"./histogram":4}],8:[function(_dereq_,module,exports){
 'use strict';
 
 var methods = _dereq_('./methods');
@@ -665,155 +643,26 @@ Object.keys(methods).forEach(function (k) {
 });
 module.exports = Trie;
 
-},{"./methods":7}],10:[function(_dereq_,module,exports){
+},{"./methods":6}],9:[function(_dereq_,module,exports){
 'use strict';
 
-var Ptrie = _dereq_('./ptrie');
+var unpack = _dereq_('./unpack');
 
-module.exports = function (str) {
-  return new Ptrie(str);
+module.exports = function (obj) {
+  if (typeof obj === 'string') {
+    obj = JSON.parse(obj); //weee!
+  }
+  var all = {};
+  Object.keys(obj).forEach(function (cat) {
+    var arr = unpack(obj[cat]);
+    for (var i = 0; i < arr.length; i++) {
+      all[arr[i]] = cat;
+    }
+  });
+  return all;
 };
 
-},{"./ptrie":13}],11:[function(_dereq_,module,exports){
-'use strict';
-
-var encoding = _dereq_('../encoding');
-var isPrefix = _dereq_('./prefix');
-var unravel = _dereq_('./unravel');
-
-var methods = {
-  // Return largest matching string in the dictionary (or '')
-  has: function has(want) {
-    //fail-fast
-    if (!want) {
-      return false;
-    }
-    //then, try cache-lookup
-    if (this._cache) {
-      if (this._cache.hasOwnProperty(want) === true) {
-        return this._cache[want];
-      }
-      return false;
-    }
-    var self = this;
-    var crawl = function crawl(index, prefix) {
-      var node = self.nodes[index];
-      //the '!' means a prefix-alone is a good match
-      if (node[0] === '!') {
-        //try to match the prefix (the last branch)
-        if (prefix === want) {
-          return true;
-        }
-        node = node.slice(1); //ok, we tried. remove it.
-      }
-      //each possible match on this line is something like 'me,me2,me4'.
-      //try each one
-      var matches = node.split(/([A-Z0-9,]+)/g);
-      for (var i = 0; i < matches.length; i += 2) {
-        var str = matches[i];
-        var ref = matches[i + 1];
-        if (!str) {
-          continue;
-        }
-        var have = prefix + str;
-        //we're at the branch's end, so try to match it
-        if (ref === ',' || ref === undefined) {
-          if (have === want) {
-            return true;
-          }
-          continue;
-        }
-        //ok, not a match.
-        //well, should we keep going on this branch?
-        //if we do, we ignore all the others here.
-        if (isPrefix(have, want)) {
-          index = self.indexFromRef(ref, index);
-          return crawl(index, have);
-        }
-        //nah, lets try the next branch..
-        continue;
-      }
-
-      return false;
-    };
-    return crawl(0, '');
-  },
-
-  // References are either absolute (symbol) or relative (1 - based)
-  indexFromRef: function indexFromRef(ref, index) {
-    var dnode = encoding.fromAlphaCode(ref);
-    if (dnode < this.symCount) {
-      return this.syms[dnode];
-    }
-    return index + dnode + 1 - this.symCount;
-  },
-
-  toArray: function toArray() {
-    return Object.keys(this.toObject());
-  },
-
-  toObject: function toObject() {
-    if (this._cache) {
-      return this._cache;
-    }
-    return unravel(this);
-  },
-
-  cache: function cache() {
-    this._cache = unravel(this);
-    this.nodes = null;
-    this.syms = null;
-  }
-};
-module.exports = methods;
-
-},{"../encoding":2,"./prefix":12,"./unravel":15}],12:[function(_dereq_,module,exports){
-'use strict';
-//are we on the right path with this string?
-
-module.exports = function (str, want) {
-  //allow perfect equals
-  if (str === want) {
-    return true;
-  }
-  //compare lengths
-  var len = str.length;
-  if (len >= want.length) {
-    return false;
-  }
-  //quick slice
-  if (len === 1) {
-    return str === want[0];
-  }
-  return want.slice(0, len) === str;
-};
-// console.log(module.exports('harvar', 'harvard'));
-
-},{}],13:[function(_dereq_,module,exports){
-'use strict';
-
-var parseSymbols = _dereq_('./symbols');
-var methods = _dereq_('./methods');
-
-//PackedTrie - Trie traversal of the Trie packed-string representation.
-var PackedTrie = function PackedTrie(str) {
-  this.nodes = str.split(';'); //that's all ;)!
-  this.syms = [];
-  this.symCount = 0;
-  this._cache = null;
-  //process symbols, if they have them
-  if (str.match(':')) {
-    parseSymbols(this);
-  }
-};
-
-Object.keys(methods).forEach(function (k) {
-  PackedTrie.prototype[k] = methods[k];
-});
-
-module.exports = PackedTrie;
-
-},{"./methods":11,"./symbols":14}],14:[function(_dereq_,module,exports){
+},{"./unpack":11}],10:[function(_dereq_,module,exports){
 'use strict';
 
 var encoding = _dereq_('../encoding');
@@ -834,16 +683,27 @@ module.exports = function (t) {
   t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
 };
 
-},{"../encoding":2}],15:[function(_dereq_,module,exports){
+},{"../encoding":1}],11:[function(_dereq_,module,exports){
 'use strict';
-//spin-out all words from this trie
 
-module.exports = function (trie) {
-  var all = {};
+var parseSymbols = _dereq_('./symbols');
+var encoding = _dereq_('../encoding');
+
+// References are either absolute (symbol) or relative (1 - based)
+var indexFromRef = function indexFromRef(trie, ref, index) {
+  var dnode = encoding.fromAlphaCode(ref);
+  if (dnode < trie.symCount) {
+    return trie.syms[dnode];
+  }
+  return index + dnode + 1 - trie.symCount;
+};
+
+var toArray = function toArray(trie) {
+  var all = [];
   var crawl = function crawl(index, pref) {
     var node = trie.nodes[index];
     if (node[0] === '!') {
-      all[pref] = true;
+      all.push(pref);
       node = node.slice(1); //ok, we tried. remove it.
     }
     var matches = node.split(/([A-Z0-9,]+)/g);
@@ -857,10 +717,10 @@ module.exports = function (trie) {
       var have = pref + str;
       //branch's end
       if (ref === ',' || ref === undefined) {
-        all[have] = true;
+        all.push(have);
         continue;
       }
-      var newIndex = trie.indexFromRef(ref, index);
+      var newIndex = indexFromRef(trie, ref, index);
       crawl(newIndex, have);
     }
   };
@@ -868,5 +728,21 @@ module.exports = function (trie) {
   return all;
 };
 
-},{}]},{},[3])(3)
+//PackedTrie - Trie traversal of the Trie packed-string representation.
+var unpack = function unpack(str) {
+  var trie = {
+    nodes: str.split(';'), //that's all ;)!
+    syms: [],
+    symCount: 0
+  };
+  //process symbols, if they have them
+  if (str.match(':')) {
+    parseSymbols(trie);
+  }
+  return toArray(trie);
+};
+
+module.exports = unpack;
+
+},{"../encoding":1,"./symbols":10}]},{},[2])(2)
 });

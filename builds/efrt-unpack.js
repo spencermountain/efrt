@@ -57,149 +57,23 @@ module.exports = {
 
 },{}],2:[function(_dereq_,module,exports){
 'use strict';
-const Ptrie = _dereq_('./ptrie');
+const unpack = _dereq_('./unpack');
 
-module.exports = function(str) {
-  return new Ptrie(str);
+module.exports = function(obj) {
+  if (typeof obj === 'string') {
+    obj = JSON.parse(obj); //weee!
+  }
+  let all = {};
+  Object.keys(obj).forEach(function(cat) {
+    let arr = unpack(obj[cat]);
+    for (var i = 0; i < arr.length; i++) {
+      all[arr[i]] = cat;
+    }
+  });
+  return all;
 };
 
-},{"./ptrie":5}],3:[function(_dereq_,module,exports){
-'use strict';
-const encoding = _dereq_('../encoding');
-const isPrefix = _dereq_('./prefix');
-const unravel = _dereq_('./unravel');
-
-const methods = {
-  // Return largest matching string in the dictionary (or '')
-  has: function(want) {
-    //fail-fast
-    if (!want) {
-      return false;
-    }
-    //then, try cache-lookup
-    if (this._cache) {
-      if (this._cache.hasOwnProperty(want) === true) {
-        return this._cache[want];
-      }
-      return false;
-    }
-    let self = this;
-    const crawl = function(index, prefix) {
-      let node = self.nodes[index];
-      //the '!' means a prefix-alone is a good match
-      if (node[0] === '!') {
-        //try to match the prefix (the last branch)
-        if (prefix === want) {
-          return true;
-        }
-        node = node.slice(1); //ok, we tried. remove it.
-      }
-      //each possible match on this line is something like 'me,me2,me4'.
-      //try each one
-      const matches = node.split(/([A-Z0-9,]+)/g);
-      for (let i = 0; i < matches.length; i += 2) {
-        const str = matches[i];
-        const ref = matches[i + 1];
-        if (!str) {
-          continue;
-        }
-        const have = prefix + str;
-        //we're at the branch's end, so try to match it
-        if (ref === ',' || ref === undefined) {
-          if (have === want) {
-            return true;
-          }
-          continue;
-        }
-        //ok, not a match.
-        //well, should we keep going on this branch?
-        //if we do, we ignore all the others here.
-        if (isPrefix(have, want)) {
-          index = self.indexFromRef(ref, index);
-          return crawl(index, have);
-        }
-        //nah, lets try the next branch..
-        continue;
-      }
-
-      return false;
-    };
-    return crawl(0, '');
-  },
-
-  // References are either absolute (symbol) or relative (1 - based)
-  indexFromRef: function(ref, index) {
-    const dnode = encoding.fromAlphaCode(ref);
-    if (dnode < this.symCount) {
-      return this.syms[dnode];
-    }
-    return index + dnode + 1 - this.symCount;
-  },
-
-  toArray: function() {
-    return Object.keys(this.toObject());
-  },
-
-  toObject: function() {
-    if (this._cache) {
-      return this._cache;
-    }
-    return unravel(this);
-  },
-
-  cache: function() {
-    this._cache = unravel(this);
-    this.nodes = null;
-    this.syms = null;
-  }
-};
-module.exports = methods;
-
-},{"../encoding":1,"./prefix":4,"./unravel":7}],4:[function(_dereq_,module,exports){
-'use strict';
-//are we on the right path with this string?
-module.exports = function(str, want) {
-  //allow perfect equals
-  if (str === want) {
-    return true;
-  }
-  //compare lengths
-  let len = str.length;
-  if (len >= want.length) {
-    return false;
-  }
-  //quick slice
-  if (len === 1) {
-    return str === want[0];
-  }
-  return want.slice(0, len) === str;
-};
-// console.log(module.exports('harvar', 'harvard'));
-
-},{}],5:[function(_dereq_,module,exports){
-'use strict';
-const parseSymbols = _dereq_('./symbols');
-const methods = _dereq_('./methods');
-
-//PackedTrie - Trie traversal of the Trie packed-string representation.
-const PackedTrie = function(str) {
-  this.nodes = str.split(';'); //that's all ;)!
-  this.syms = [];
-  this.symCount = 0;
-  this._cache = null;
-  //process symbols, if they have them
-  if (str.match(':')) {
-    parseSymbols(this);
-  }
-};
-
-Object.keys(methods).forEach(function(k) {
-  PackedTrie.prototype[k] = methods[k];
-});
-
-module.exports = PackedTrie;
-
-},{"./methods":3,"./symbols":6}],6:[function(_dereq_,module,exports){
+},{"./unpack":4}],3:[function(_dereq_,module,exports){
 'use strict';
 const encoding = _dereq_('../encoding');
 
@@ -219,15 +93,26 @@ module.exports = function(t) {
   t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
 };
 
-},{"../encoding":1}],7:[function(_dereq_,module,exports){
+},{"../encoding":1}],4:[function(_dereq_,module,exports){
 'use strict';
-//spin-out all words from this trie
-module.exports = function(trie) {
-  let all = {};
-  const crawl = function(index, pref) {
+const parseSymbols = _dereq_('./symbols');
+const encoding = _dereq_('../encoding');
+
+// References are either absolute (symbol) or relative (1 - based)
+const indexFromRef = function(trie, ref, index) {
+  const dnode = encoding.fromAlphaCode(ref);
+  if (dnode < trie.symCount) {
+    return trie.syms[dnode];
+  }
+  return index + dnode + 1 - trie.symCount;
+};
+
+const toArray = function(trie) {
+  let all = [];
+  const crawl = (index, pref) => {
     let node = trie.nodes[index];
     if (node[0] === '!') {
-      all[pref] = true;
+      all.push(pref);
       node = node.slice(1); //ok, we tried. remove it.
     }
     let matches = node.split(/([A-Z0-9,]+)/g);
@@ -241,10 +126,10 @@ module.exports = function(trie) {
       let have = pref + str;
       //branch's end
       if (ref === ',' || ref === undefined) {
-        all[have] = true;
+        all.push(have);
         continue;
       }
-      let newIndex = trie.indexFromRef(ref, index);
+      let newIndex = indexFromRef(trie, ref, index);
       crawl(newIndex, have);
     }
   };
@@ -252,5 +137,21 @@ module.exports = function(trie) {
   return all;
 };
 
-},{}]},{},[2])(2)
+//PackedTrie - Trie traversal of the Trie packed-string representation.
+const unpack = function(str) {
+  let trie = {
+    nodes: str.split(';'), //that's all ;)!
+    syms: [],
+    symCount: 0
+  };
+  //process symbols, if they have them
+  if (str.match(':')) {
+    parseSymbols(trie);
+  }
+  return toArray(trie);
+};
+
+module.exports = unpack;
+
+},{"../encoding":1,"./symbols":3}]},{},[2])(2)
 });
