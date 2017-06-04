@@ -17,8 +17,11 @@
 
 `efrt` is a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words.
 
-it is based on [mckoss/lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss)
- and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
+it is based on 
+[lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
+[tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), 
+and 
+[bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
  * squeeze a list of words into a very compact form
  * reduce filesize/bandwidth a bunch

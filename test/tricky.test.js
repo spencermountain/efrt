@@ -3,21 +3,14 @@ var test = require('tape');
 const efrt = require('./lib/efrt');
 
 test('uncompressable-array', function(t) {
-  var arr = [
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-  ];
+  var arr = ['a', 'b', 'c', 'd', 'e', 'f'];
   var str = efrt.pack(arr);
   var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
-    var has = ptrie.has(arr[i]);
-    t.equal(has, true, 'trie has \'' + arr[i] + '\'');
+    var has = ptrie.hasOwnProperty(arr[i]);
+    t.equal(has, true, "trie has '" + arr[i] + "'");
   }
-  t.equal(ptrie.has('z'), false, 'no-false-positive');
+  t.equal(ptrie.hasOwnProperty('z'), false, 'no-false-positive');
   t.end();
 });
 
@@ -32,25 +25,25 @@ test('very-compressable-array', function(t) {
     'aaaa',
     'aö',
     'a a',
-    'aA',
-    'a\'s',
+    // 'aA',
+    "a's",
     'b',
     'proto neo antidisistablishmentarianism'
-  // 'b22',
-  // '35',
-  // '1234e',
-  // '567890',
-  // 'fe567890',
-  // 'workin\'',
+    // 'b22',
+    // '35',
+    // '1234e',
+    // '567890',
+    // 'fe567890',
+    // 'workin\'',
   ];
   var str = efrt.pack(arr);
   var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
-    var has = ptrie.has(arr[i]);
-    t.equal(has, true, 'trie has \'' + arr[i] + '\'');
+    var has = ptrie.hasOwnProperty(arr[i]);
+    t.equal(has, true, "trie has '" + arr[i] + "'");
   }
-  t.equal(ptrie.has('zaaa'), false, 'no-false-positive');
-  t.equal(ptrie.has('z aaa'), false, 'no-false-positive-two-word');
+  t.equal(ptrie.hasOwnProperty('zaaa'), false, 'no-false-positive');
+  t.equal(ptrie.hasOwnProperty('z aaa'), false, 'no-false-positive-two-word');
   t.end();
 });
 
@@ -73,41 +66,35 @@ test('tricky-subsets', function(t) {
   var str = efrt.pack(arr);
   var ptrie = efrt.unpack(str);
   for (var i = 0; i < arr.length; i++) {
-    var has = ptrie.has(arr[i]);
-    t.equal(has, true, 'trie has \'' + arr[i] + '\'');
+    var has = ptrie.hasOwnProperty(arr[i]);
+    t.equal(has, true, "trie has '" + arr[i] + "'");
   }
-  t.equal(ptrie.has('zaaa'), false, 'no-false-positive');
-  t.equal(ptrie.has('z cool'), false, 'no-false-positive-two-word');
-  t.equal(ptrie.has('funish'), false, 'no-false-positive-shared');
-  t.equal(ptrie.has('fun hat'), false, 'no-false-positive-shared-two-word');
-  t.equal(ptrie.has('fun d'), false, 'no-false-positive-shared-two-word');
+  t.equal(ptrie.hasOwnProperty('zaaa'), false, 'no-false-positive');
+  t.equal(ptrie.hasOwnProperty('z cool'), false, 'no-false-positive-two-word');
+  t.equal(ptrie.hasOwnProperty('funish'), false, 'no-false-positive-shared');
+  t.equal(ptrie.hasOwnProperty('fun hat'), false, 'no-false-positive-shared-two-word');
+  t.equal(ptrie.hasOwnProperty('fun d'), false, 'no-false-positive-shared-two-word');
   t.end();
 });
 
 test('prefix-match-regression', function(t) {
-  var arr = [
-    'reno', 'chicago', 'fargo'
-  ];
+  var arr = ['reno', 'chicago', 'fargo'];
   let str = efrt.pack(arr);
   let trie = efrt.unpack(str);
-  t.equal(trie.has(''), false, 'empty-string-is-false');
-  t.equal(trie.has('chica'), false, 'does-not-match-prefix');
-  t.equal(trie.has('a'), false, 'does-not-match-prefix');
-  t.equal(trie.has('chicago'), true, 'matches-full');
-  t.equal(trie.has('fargo'), true, 'matches-full');
+  t.equal(trie.hasOwnProperty(''), false, 'empty-string-is-false');
+  t.equal(trie.hasOwnProperty('chica'), false, 'does-not-match-prefix');
+  t.equal(trie.hasOwnProperty('a'), false, 'does-not-match-prefix');
+  t.equal(trie.hasOwnProperty('chicago'), true, 'matches-full');
+  t.equal(trie.hasOwnProperty('fargo'), true, 'matches-full');
   t.end();
 });
 
 test('prefix-match-regression2', function(t) {
-  var arr = [
-    'chicago',
-    'fargo',
-    'chaska',
-  ];
+  var arr = ['chicago', 'fargo', 'chaska'];
   let str = efrt.pack(arr);
   let trie = efrt.unpack(str);
-  t.equal(trie.has('ch'), false, 'prefix fails');
-  t.equal(trie.has('chicago'), true, 'matches-full');
-  t.equal(trie.has('chaska'), true, 'matches-full');
+  t.equal(trie.hasOwnProperty('ch'), false, 'prefix fails');
+  t.equal(trie.hasOwnProperty('chicago'), true, 'matches-full');
+  t.equal(trie.hasOwnProperty('chaska'), true, 'matches-full');
   t.end();
 });
