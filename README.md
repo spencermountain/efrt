@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://cloud.githubusercontent.com/assets/399657/23590290/ede73772-01aa-11e7-8915-181ef21027bc.png" />
-  <div>trie-based compression of word-data</div>
+  <div>compression of key-value data</div>
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
   </a>
@@ -11,11 +11,13 @@
 
 <div align="center">
   <code>npm install efrt</code>
+  <br/>
   (or alternatively:)
+  <br/>
   <code>npm install efrt-unpack</code>
 </div>
 
-`efrt` is a prefix/suffix [trie](https://en.wikipedia.org/wiki/Trie) optimised for compression of english words.
+`efrt` turns a javascript object into a very-compressed prefix [trie](https://en.wikipedia.org/wiki/Trie) format, so that any redundancies in key-value paris are compressed, and nothing is repeated.
 
 it is based on 
 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
@@ -23,62 +25,60 @@ it is based on
 and 
 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
- * squeeze a list of words into a very compact form
+ * squeeze a key-value object into a very compact form
  * reduce filesize/bandwidth a bunch
- * ensure unpacking overhead is negligible
+ * ensure the unpacking overhead is negligible
  * word-lookups are critical-path
 
-By doing the fancy stuff ahead-of-time, **efrt** lets you ship much bigger word-lists to the client-side, without much hassle.
+By doing the fancy stuff ahead-of-time, **efrt** lets you ship much bigger key-value data to the client-side, without much hassle.
+The whole library is *8kb*, the unpack-half is only *2.5kb*. 
 
 ```js
 var efrt = require('efrt')
-var words = [
-  'coolage',
-  'cool',
-  'cool cat',
-  'cool.com',
-  'coolamungo'
-];
+var data = {
+  bedfordshire   : 'England',
+  aberdeenshire  : 'Scotland',
+  berkshire      : 'England',
+  buckinghamshire: 'England',
+  argyllshire    : 'Scotland',
+  bambridgeshire : 'England',
+  angus          : 'Scotland',
+  bristol        : 'England',
+  cheshire       : 'England',
+  ayrshire       : 'Scotland',
+  banffshire     : 'Scotland',
+  berwickshire   : 'Scotland'
+}
 
 //pack these words as tightly as possible
-var compressed = efrt.pack(words);
-//cool0;! cat,.com,a0;ge,mungo
+var compressed = efrt.pack(data);
+//{"England":"b0che2;ambridge1e0ristol,uckingham1;dford0rk0;shire","Scotland":"a1b0;anff1erwick1;berdeen0ngus,rgyll0yr0;shire"}
 
 //create a lookup-trie
-var trie = efrt.unpack(compressed);
+var objAgain = efrt.unpack(compressed);
 
 //hit it!
-console.log(trie.has('cool'));//true
-console.log(trie.has('miles davis'));//false
+console.log(objAgain['bedfordshire']);//'England'
+console.log(objAgain.hasOwnProperty('miles davis'));//false
 ```
 
 <h3 align="center">
   <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
 </h3>
 
-
-the words you input should be pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and [some punctuation](https://github.com/nlp-compromise/efrt/blob/master/src/config.js) are not (yet) supported.
+the keys you input are pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 
 
 ## Performance
-there are two modes that `efrt` can run in, depending on what you want to optimise for.
-By itself, it will be ready-instantly, but must lookup words by their prefixes in the trie. This is not super-fast. If you want lookups to go faster, you can call `trie.cache()` first, to pre-compute the queries. Things will run much faster after this:
+*efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually cool.
 ```js
 var compressed = efrt.pack(skateboarders);//1k words (on a macbook)
 var trie = efrt.unpack(compressed)
-trie.has('tony hawk')
-// trie-lookup: 1.1ms
+// unpacking-step: 5.1ms
 
-trie.cache()
-// caching-step: 5.1ms
-
-trie.has('tony hawk')
+trie.hasOwnProperty('tony hawk')
 // cached-lookup: 0.02ms
 ```
-the `trie.cache()` command will spin the trie into a good-old javascript object, for faster lookups. It takes some time building it though.
-
-In this example, with 1k words, it makes sense to hit `.cache()` if you are going to do more-than 5 lookups on the trie, but your mileage may vary.
-You can access the object from `trie.toObject()`, or `trie.toArray()` if you'd like use it directly.
 
 ## Size
 `efrt` will pack filesize down as much as possible, depending upon the redundancy of the prefixes/suffixes in the words, and the size of the list.
@@ -92,6 +92,8 @@ but there are some things to consider:
 * using efrt will reduce gains from gzip compression, which most webservers quietly use
 * english is more suffix-redundant than prefix-redundant, so non-english words may benefit from other styles
 
+Assuming your data has a low _category-to-data ratio_, you will hit-breakeven with at about 250 keys. If your data is in the thousands, you can very be confident about saving your users some considerable bandwidth.
+
 ## Use
 **IE9+**
 ```html
@@ -99,7 +101,7 @@ but there are some things to consider:
 <script>
   var smaller=efrt.pack(['larry','curly','moe'])
   var trie=efrt.unpack(smaller)
-  console.log(trie.has('moe'))
+  console.log(trie['moe'])
 </script>
 ```
 
@@ -111,7 +113,7 @@ npm install efrt-unpack
 <script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
 <script>
   var trie=unpack(compressedStuff);
-  trie.has('miles davis');
+  trie.hasOwnProperty('miles davis');
 </script>
 ```
 
