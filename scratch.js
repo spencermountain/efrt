@@ -24,3 +24,12 @@ console.log(packd);
 console.log('');
 // var trie = efrt.unpack(packd);
 // console.log(trie);
+
+var compressed = '{"true":"cool0;! cat,.com,a0;ge,mungo"}';
+console.log(JSON.parse(compressed));
+// var trie = efrt.unpack(compressed);
+// var attempt = ['miles davis', 'cool.com', 'cool'].map(function(str) {
+//   return str + ' -> ' + trie.hasOwnProperty(str);
+// });
+
+// console.log(attempt);
