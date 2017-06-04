@@ -1,6 +1,6 @@
 const fns = require('./fns');
 const pack = require('./pack');
-const config = require('../config');
+const NOT_ALLOWED = new RegExp('[0-9A-Z,;!]'); //characters banned from entering the trie
 
 module.exports = {
   // Insert words from one big string, or from an array.
@@ -16,7 +16,7 @@ module.exports = {
     }
     fns.unique(words);
     for (let i = 0; i < words.length; i++) {
-      if (words[i].match(config.NOT_ALLOWED) === null) {
+      if (words[i].match(NOT_ALLOWED) === null) {
         this.insert(words[i]);
       }
     }
@@ -39,8 +39,7 @@ module.exports = {
   },
 
   _insert: function(word, node) {
-    let prefix,
-      next;
+    let prefix, next;
 
     // Duplicate word entry - ignore
     if (word.length === 0) {
@@ -49,7 +48,7 @@ module.exports = {
 
     // Do any existing props share a common prefix?
     let keys = Object.keys(node);
-    for(let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i++) {
       let prop = keys[i];
       prefix = fns.commonPrefix(word, prop);
       if (prefix.length === 0) {
@@ -66,7 +65,7 @@ module.exports = {
       }
       next = {};
       next[prop.slice(prefix.length)] = node[prop];
-      this.addTerminal(next, word = word.slice(prefix.length));
+      this.addTerminal(next, (word = word.slice(prefix.length)));
       delete node[prop];
       node[prefix] = next;
       this.wordCount++;
@@ -180,10 +179,7 @@ module.exports = {
 
   // Remove intermediate singleton nodes by hoisting into their parent
   collapseChains: function(node) {
-    let prop,
-      props,
-      child,
-      i;
+    let prop, props, child, i;
     if (this.visited(node)) {
       return;
     }
@@ -208,33 +204,8 @@ module.exports = {
     }
   },
 
-  has: function(word) {
-    return this.isFragment(word, this.root);
-  },
-
   isTerminal: function(node) {
     return !!node[''];
-  },
-
-  isFragment(word, node) {
-    if (word.length === 0) {
-      return this.isTerminal(node);
-    }
-
-    if (node[word] === 1) {
-      return true;
-    }
-
-    // Find a prefix of word reference to a child
-    let props = this.nodeProps(node, true);
-    for (let i = 0; i < props.length; i++) {
-      let prop = props[i];
-      if (prop === word.slice(0, prop.length)) {
-        return this.isFragment(word.slice(prop.length), node[prop]);
-      }
-    }
-
-    return false;
   },
 
   // Find highest node in Trie that is on the path to word
@@ -247,9 +218,7 @@ module.exports = {
         if (prop !== other.slice(0, prop.length)) {
           return node[prop];
         }
-        return this.uniqueNode(word.slice(prop.length),
-          other.slice(prop.length),
-          node[prop]);
+        return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node[prop]);
       }
     }
     return undefined;

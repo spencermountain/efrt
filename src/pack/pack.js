@@ -1,7 +1,12 @@
 'use strict';
 const Histogram = require('./histogram');
-const config = require('../config');
 const encoding = require('../encoding');
+const config = {
+  NODE_SEP: ';',
+  STRING_SEP: ',',
+  TERMINAL_PREFIX: '!',
+  BASE: 36
+};
 
 // Return packed representation of Trie as a string.
 
@@ -34,10 +39,8 @@ const encoding = require('../encoding');
 // Terminal strings (those without child node references) are
 // separated by ',' characters.
 
-
 const nodeLine = function(self, node) {
-  let line = '',
-    sep = '';
+  let line = '', sep = '';
 
   if (self.isTerminal(node)) {
     line += config.TERMINAL_PREFIX;
@@ -58,8 +61,7 @@ const nodeLine = function(self, node) {
     }
     let ref = encoding.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
     // Large reference to smaller string suffix -> duplicate suffix
-    if (node[prop]._g && ref.length >= node[prop]._g.length &&
-      node[node[prop]._g] === 1) {
+    if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
       ref = node[prop]._g;
       line += sep + prop + ref;
       sep = config.STRING_SEP;
@@ -94,16 +96,13 @@ const symbolCount = function(self) {
   self.histAbs = self.histAbs.highest(config.BASE);
   let savings = [];
   savings[-1] = 0;
-  let best = 0,
-    sCount = 0;
+  let best = 0, sCount = 0;
   let defSize = 3 + encoding.toAlphaCode(self.nodeCount).length;
   for (let sym = 0; sym < config.BASE; sym++) {
     if (self.histAbs[sym] === undefined) {
       break;
     }
-    savings[sym] = self.histAbs[sym][1] - defSize -
-    self.histRel.countOf(config.BASE - sym - 1) +
-    savings[sym - 1];
+    savings[sym] = self.histAbs[sym][1] - defSize - self.histRel.countOf(config.BASE - sym - 1) + savings[sym - 1];
     if (savings[sym] >= best) {
       best = savings[sym];
       sCount = sym + 1;
@@ -112,7 +111,8 @@ const symbolCount = function(self) {
   return sCount;
 };
 
-const numberNodes = function(self, node) { // Topological sort into nodes array
+const numberNodes = function(self, node) {
+  // Topological sort into nodes array
   if (node._n !== undefined) {
     return;
   }
@@ -150,7 +150,9 @@ const pack = function(self) {
   }
   // Prepend symbols
   for (let sym = self.symCount - 1; sym >= 0; sym--) {
-    self.nodes.unshift(encoding.toAlphaCode(sym) + ':' + encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1));
+    self.nodes.unshift(
+      encoding.toAlphaCode(sym) + ':' + encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1)
+    );
   }
 
   return self.nodes.join(config.NODE_SEP);

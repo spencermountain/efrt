@@ -17,13 +17,6 @@ const methods = {
     this.init(sym);
     this.counts[sym] += n;
   },
-  change: function(symNew, symOld, n) {
-    if (n === undefined) {
-      n = 1;
-    }
-    this.add(symOld, -n);
-    this.add(symNew, n);
-  },
   countOf: function(sym) {
     this.init(sym);
     return this.counts[sym];

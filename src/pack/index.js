@@ -34,6 +34,7 @@ const pack = function(obj) {
     h[val].push(k);
     return h;
   }, {});
+  //pack each into a compressed string
   Object.keys(flat).forEach(function(k) {
     let t = new Trie(flat[k]);
     flat[k] = t.pack();
