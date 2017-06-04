@@ -1,33 +1,34 @@
 'use strict';
 
-class Histogram {
-  constructor() {
-    this.counts = {};
-  }
-  init(sym) {
+const Histogram = function() {
+  this.counts = {};
+};
+
+const methods = {
+  init: function(sym) {
     if (this.counts[sym] === undefined) {
       this.counts[sym] = 0;
     }
-  }
-  add(sym, n) {
+  },
+  add: function(sym, n) {
     if (n === undefined) {
       n = 1;
     }
     this.init(sym);
     this.counts[sym] += n;
-  }
-  change(symNew, symOld, n) {
+  },
+  change: function(symNew, symOld, n) {
     if (n === undefined) {
       n = 1;
     }
     this.add(symOld, -n);
     this.add(symNew, n);
-  }
-  countOf(sym) {
+  },
+  countOf: function(sym) {
     this.init(sym);
     return this.counts[sym];
-  }
-  highest(top) {
+  },
+  highest: function(top) {
     let sorted = [];
     let keys = Object.keys(this.counts);
     for (let i = 0; i < keys.length; i++) {
@@ -42,5 +43,8 @@ class Histogram {
     }
     return sorted;
   }
-}
+};
+Object.keys(methods).forEach(function(k) {
+  Histogram.prototype[k] = methods[k];
+});
 module.exports = Histogram;
