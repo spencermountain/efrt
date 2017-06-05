@@ -43,9 +43,9 @@ obj['bedfordshire'];//'England'
 
 <h1 align="center">Yep,</h1>
 
-**efrt** packs category-type data into a *[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)* format, so that redundancies in the data are compressed, and nothing is repeated. 
+**efrt** packs category-type data into a *[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)* format, so that redundancies in the data are shared, and nothing is repeated. 
 
-By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without much hassle or overhead.
+By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without hassle or overhead.
 
 The whole library is **8kb**, the unpack half is barely **2.5kb**. 
 
