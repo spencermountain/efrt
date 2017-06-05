@@ -68,6 +68,22 @@ console.log(objAgain.hasOwnProperty('miles davis'));//false
 
 the keys you input are pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 
+an element may have more than one category. It will accept an array of strings, and pack them into multiple tries like this:
+```js
+var foods = {
+  strawberry: 'fruit',
+  blueberry: 'fruit',
+  blackberry: 'fruit',
+  tomato: ['fruit', 'vegetable'],
+  cucumber: 'vegetable',
+  pepper: 'vegetable'
+};
+var str = efrt.pack(foods);
+//'{"fruit":"bl0straw1tomato;ack0ue0;berry","vegetable":"cucumb0pepp0tomato;er"}'
+var obj=efrt.unpack(str)
+console.log(obj.tomato)
+//['fruit', 'vegetable']
+```
 
 ## Performance
 *efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually cool.
