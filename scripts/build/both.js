@@ -14,7 +14,7 @@ var path = {
 
 //es5 -main (browserify + derequire)
 cmd = lib.browserify + ' "./src/index.js" --standalone efrt';
-cmd += ' -t [ babelify --presets [ es2015 stage-2 ] --plugins [transform-es3-property-literals transform-es3-member-expression-literals] ]';
+cmd += ' -t [ babelify --presets [ es2015 ] ]';
 cmd += ' | ' + lib.derequire;
 cmd += ' >> ' + path.es5;
 exec(cmd);
