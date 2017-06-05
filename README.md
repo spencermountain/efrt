@@ -17,24 +17,8 @@
   <code>npm install efrt-unpack</code>
 </div>
 
-`efrt` turns a javascript object into a very-compressed prefix [trie](https://en.wikipedia.org/wiki/Trie) format, so that any redundancies in key-value paris are compressed, and nothing is repeated.
-
-it is based on 
-[lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
-[tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), 
-and 
-[bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
-
- * squeeze a key-value object into a very compact form
- * reduce filesize/bandwidth a bunch
- * ensure the unpacking overhead is negligible
- * word-lookups are critical-path
-
-By doing the fancy stuff ahead-of-time, **efrt** lets you ship much bigger key-value data to the client-side, without much hassle.
-The whole library is *8kb*, the unpack-half is only *2.5kb*. 
-
+if you have data that looks like this:
 ```js
-var efrt = require('efrt')
 var data = {
   bedfordshire   : 'England',
   aberdeenshire  : 'Scotland',
@@ -49,27 +33,42 @@ var data = {
   banffshire     : 'Scotland',
   berwickshire   : 'Scotland'
 }
-
-//pack these words as tightly as possible
-var compressed = efrt.pack(data);
-//{"England":"b0che2;ambridge1e0ristol,uckingham1;dford0rk0;shire","Scotland":"a1b0;anff1erwick1;berdeen0ngus,rgyll0yr0;shire"}
-
-//create a lookup-trie
-var objAgain = efrt.unpack(compressed);
-
-//hit it!
-console.log(objAgain['bedfordshire']);//'England'
-console.log(objAgain.hasOwnProperty('miles davis'));//false
 ```
+with `efrt`, you can compress it like this:
+```js
+var small = efrt.pack(data);
+//'{"England":"b0che2;ambridge1e0ristol,uckingham1;dford0rk0;shire","Scotland":"a1b0;anff1erwick1;berdeen0ngus,rgyll0yr0;shire"}'
+```
+then (very!) quickly flip it back into it's original form:
+```js
+var obj = efrt.unpack(small);
+obj['bedfordshire'];//'England'
+obj.hasOwnProperty('miles davis');//false
+```
+
+`efrt` quickly flips key-value data into a [compressed prefix trie](https://en.wikipedia.org/wiki/Trie) format, so that any redundancies in the data are compressed, and nothing is repeated. By doing the clever stuff ahead-of-time, **efrt** lets you ship much more data to the client-side, without much hassle.
+
+The (whole) library is *8kb*, the unpack half is barely *2.5kb*. 
+
+it is based on:
+* [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
+* [tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), 
+* and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
 <h3 align="center">
   <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
 </h3>
 
+ * squeeze a key-value object into a very compact form
+ * reduce filesize/bandwidth a bunch
+ * ensure the unpacking overhead is negligible
+ * word-lookups are critical-path
+
 the keys you input are pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 
 an element may have more than one category. It will accept an array of strings, and pack them into multiple tries like this:
 ```js
+var efrt = require('efrt')
 var foods = {
   strawberry: 'fruit',
   blueberry: 'fruit',
@@ -85,7 +84,7 @@ console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
 
-*efrt* is used in [compromise](https://github.com/nlp-compromise/compromise), to greatly expand the amount of word-data it can fit onto the client-side. 
+*efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side. 
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
 ## Performance
