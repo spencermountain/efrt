@@ -17,7 +17,7 @@
   <code>npm install efrt-unpack</code>
 </div>
 
-if you have data that looks like this:
+if your data looks like this:
 ```js
 var data = {
   bedfordshire: 'England',
@@ -35,33 +35,34 @@ you can compress it like this:
 var str = efrt.pack(data);
 //'{"England":"b0che1;ambridge0edford0uckingham0;shire","Scotland":"a0banff1;berdeen0rgyll0yr0;shire"}'
 ```
-then (very!) quickly flip it back into it's original form:
+then _very!_ quickly flip it back into form:
 ```js
 var obj = efrt.unpack(str);
 obj['bedfordshire'];//'England'
 ```
 
-`efrt` quickly flips key-value data into a [compressed prefix trie](https://en.wikipedia.org/wiki/Trie) format, so that any redundancies in the data are compressed, and nothing is repeated. By doing the clever stuff ahead-of-time, **efrt** lets you ship much more data to the client-side, without much hassle.
+`efrt` packs category-type data into a [very compressed prefix trie](https://en.wikipedia.org/wiki/Trie) format, so that redundancies in the data are compressed, and nothing is repeated. 
 
-The (whole) library is *8kb*, the unpack half is barely *2.5kb*. 
+By doing the clever stuff ahead-of-time, **efrt** lets you ship much more data to the client-side, without much hassle or overhead.
+
+The (whole) library is **8kb**, the unpack half is barely **2.5kb**. 
 
 it is based on:
-* 💚 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
-* 😍 [tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), 
-* and 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
+* 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
+* 😍 [tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), and
+* 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
 <h3 align="center">
   <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
 </h3>
 
- * squeeze a key-value object into a very compact form
+<h5 align="left">
+Basically,
+</h5>
+ * get a key-value object into a very compact form
  * reduce filesize/bandwidth a bunch
- * ensure the unpacking overhead is negligible
+ * ensure the unpacking time is negligible
  * word-lookups are critical-path
-
-the keys you input are pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
-
-an element may have more than one category. It will accept an array of strings, and pack them into multiple tries like this:
 ```js
 var efrt = require('efrt')
 var foods = {
@@ -78,6 +79,7 @@ var obj=efrt.unpack(str)
 console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
+the keys you input are pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 
 *efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side. 
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
