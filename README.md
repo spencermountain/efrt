@@ -35,21 +35,23 @@ you can compress it like this:
 var str = efrt.pack(data);
 //'{"England":"b0che1;ambridge0edford0uckingham0;shire","Scotland":"a0banff1;berdeen0rgyll0yr0;shire"}'
 ```
-then _very!_ quickly flip it back into form:
+then \_very!\_ quickly flip it back into:
 ```js
 var obj = efrt.unpack(str);
 obj['bedfordshire'];//'England'
 ```
 
-`efrt` packs category-type data into a [very compressed prefix trie](https://en.wikipedia.org/wiki/Trie) format, so that redundancies in the data are compressed, and nothing is repeated. 
+<h1 align="center">Yep,</h1>
 
-By doing the clever stuff ahead-of-time, **efrt** lets you ship much more data to the client-side, without much hassle or overhead.
+**efrt** packs category-type data into a *[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)* format, so that redundancies in the data are compressed, and nothing is repeated. 
 
-The (whole) library is **8kb**, the unpack half is barely **2.5kb**. 
+By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without much hassle or overhead.
+
+The whole library is **8kb**, the unpack half is barely **2.5kb**. 
 
 it is based on:
+* 😍 [tamper](https://nytimes.github.io/tamper/) by the [NYTimes](https://github.com/NYTimes/)
 * 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
-* 😍 [tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), and
 * 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
 <h3 align="center">
@@ -59,10 +61,12 @@ it is based on:
 <h5 align="left">
 Basically,
 </h5>
- * get a key-value object into a very compact form
- * reduce filesize/bandwidth a bunch
- * ensure the unpacking time is negligible
- * word-lookups are critical-path
+
+* get a key-value object into a very compact form
+* reduce filesize/bandwidth a bunch
+* ensure the unpacking time is negligible
+* word-lookups are critical-path
+
 ```js
 var efrt = require('efrt')
 var foods = {
