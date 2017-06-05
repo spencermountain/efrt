@@ -3,15 +3,17 @@ const efrt = require('./src');
 // const unpack = require('./builds/efrt-unpack.es6');
 // let words = require('./test/data/countries');
 
-var foods = {
-  strawberry: 'fruit',
-  blueberry: 'fruit',
-  blackberry: 'fruit',
-  tomato: ['fruit', 'vegetable'],
-  cucumber: 'vegetable',
-  pepper: 'vegetable'
+var data = {
+  bedfordshire: 'England',
+  aberdeenshire: 'Scotland',
+  buckinghamshire: 'England',
+  argyllshire: 'Scotland',
+  bambridgeshire: 'England',
+  cheshire: 'England',
+  ayrshire: 'Scotland',
+  banffshire: 'Scotland'
 };
-var packd = efrt.pack(foods);
+var packd = efrt.pack(data);
 console.log(packd, '\n');
-var obj = efrt.unpack(packd);
-console.log(obj);
+// var obj = efrt.unpack(packd);
+// console.log(obj);

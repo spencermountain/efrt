@@ -20,30 +20,25 @@
 if you have data that looks like this:
 ```js
 var data = {
-  bedfordshire   : 'England',
-  aberdeenshire  : 'Scotland',
-  berkshire      : 'England',
+  bedfordshire: 'England',
+  aberdeenshire: 'Scotland',
   buckinghamshire: 'England',
-  argyllshire    : 'Scotland',
-  bambridgeshire : 'England',
-  angus          : 'Scotland',
-  bristol        : 'England',
-  cheshire       : 'England',
-  ayrshire       : 'Scotland',
-  banffshire     : 'Scotland',
-  berwickshire   : 'Scotland'
-}
+  argyllshire: 'Scotland',
+  bambridgeshire: 'England',
+  cheshire: 'England',
+  ayrshire: 'Scotland',
+  banffshire: 'Scotland'
+};
 ```
-with `efrt`, you can compress it like this:
+you can compress it like this:
 ```js
-var small = efrt.pack(data);
-//'{"England":"b0che2;ambridge1e0ristol,uckingham1;dford0rk0;shire","Scotland":"a1b0;anff1erwick1;berdeen0ngus,rgyll0yr0;shire"}'
+var str = efrt.pack(data);
+//'{"England":"b0che1;ambridge0edford0uckingham0;shire","Scotland":"a0banff1;berdeen0rgyll0yr0;shire"}'
 ```
 then (very!) quickly flip it back into it's original form:
 ```js
-var obj = efrt.unpack(small);
+var obj = efrt.unpack(str);
 obj['bedfordshire'];//'England'
-obj.hasOwnProperty('miles davis');//false
 ```
 
 `efrt` quickly flips key-value data into a [compressed prefix trie](https://en.wikipedia.org/wiki/Trie) format, so that any redundancies in the data are compressed, and nothing is repeated. By doing the clever stuff ahead-of-time, **efrt** lets you ship much more data to the client-side, without much hassle.
@@ -51,9 +46,9 @@ obj.hasOwnProperty('miles davis');//false
 The (whole) library is *8kb*, the unpack half is barely *2.5kb*. 
 
 it is based on:
-* [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
-* [tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), 
-* and [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
+* 💚 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
+* 😍 [tamper](https://nytimes.github.io/tamper/) by the [nyTimes](https://github.com/NYTimes/), 
+* and 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
 <h3 align="center">
   <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
