@@ -1,7 +1,7 @@
 {
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
-  "description": "compressed-trie data-structure",
+  "description": "neato compression of key-value data",
   "version": "1.1.0",
   "main": "./builds/efrt.js",
   "repository": {
