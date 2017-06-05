@@ -85,6 +85,9 @@ console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
 
+*efrt* is used in [compromise](https://github.com/nlp-compromise/compromise), to greatly expand the amount of word-data it can fit onto the client-side. 
+If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
+
 ## Performance
 *efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually cool.
 ```js

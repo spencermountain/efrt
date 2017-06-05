@@ -1,4 +1,4 @@
-/* efrt trie-compression v1.0.0  github.com/nlp-compromise/efrt  - MIT */
+/* efrt trie-compression v1.1.0  github.com/nlp-compromise/efrt  - MIT */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.efrt = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
 
@@ -160,6 +160,10 @@ module.exports = Histogram;
 
 var Trie = _dereq_('./trie');
 
+var isArray = function isArray(input) {
+  return Object.prototype.toString.call(input) === '[object Array]';
+};
+
 var handleFormats = function handleFormats(input) {
   //null
   if (input === null || input === undefined) {
@@ -173,7 +177,7 @@ var handleFormats = function handleFormats(input) {
     }, {});
   }
   //array
-  if (Object.prototype.toString.call(input) === '[object Array]') {
+  if (isArray(input)) {
     return input.reduce(function (h, str) {
       h[str] = true;
       return h;
@@ -189,6 +193,16 @@ var pack = function pack(obj) {
   //pivot into categories:
   var flat = Object.keys(obj).reduce(function (h, k) {
     var val = obj[k];
+    //array version-
+    //put it in several buckets
+    if (isArray(val)) {
+      for (var i = 0; i < val.length; i++) {
+        h[val[i]] = h[val[i]] || [];
+        h[val[i]].push(k);
+      }
+      return h;
+    }
+    //normal string/boolean version
     h[val] = h[val] || [];
     h[val].push(k);
     return h;
@@ -655,8 +669,21 @@ module.exports = function (obj) {
   var all = {};
   Object.keys(obj).forEach(function (cat) {
     var arr = unpack(obj[cat]);
+    //special case, for botched-boolean
+    if (cat === 'true') {
+      cat = true;
+    }
     for (var i = 0; i < arr.length; i++) {
-      all[arr[i]] = cat;
+      var k = arr[i];
+      if (all[k] !== undefined) {
+        if (typeof all[k] === 'string') {
+          all[k] = [all[k], cat];
+        } else {
+          all[k].push(cat);
+        }
+      } else {
+        all[k] = cat;
+      }
     }
   });
   return all;

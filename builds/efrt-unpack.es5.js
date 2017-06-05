@@ -64,8 +64,21 @@ module.exports = function (obj) {
   var all = {};
   Object.keys(obj).forEach(function (cat) {
     var arr = unpack(obj[cat]);
+    //special case, for botched-boolean
+    if (cat === 'true') {
+      cat = true;
+    }
     for (var i = 0; i < arr.length; i++) {
-      all[arr[i]] = cat;
+      var k = arr[i];
+      if (all[k] !== undefined) {
+        if (typeof all[k] === 'string') {
+          all[k] = [all[k], cat];
+        } else {
+          all[k].push(cat);
+        }
+      } else {
+        all[k] = cat;
+      }
     }
   });
   return all;
