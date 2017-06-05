@@ -62,13 +62,14 @@ it is based on:
 Basically,
 </h5>
 
-* get a key-value object into a very compact form
+* get a js object into very compact form
 * reduce filesize/bandwidth a bunch
 * ensure the unpacking time is negligible
-* word-lookups are critical-path
+* keep word-lookups on critical-path
 
 ```js
 var efrt = require('efrt')
+
 var foods = {
   strawberry: 'fruit',
   blueberry: 'fruit',
@@ -79,11 +80,12 @@ var foods = {
 };
 var str = efrt.pack(foods);
 //'{"fruit":"bl0straw1tomato;ack0ue0;berry","vegetable":"cucumb0pepp0tomato;er"}'
+
 var obj=efrt.unpack(str)
 console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
-the keys you input are pretty normalized. Spaces and unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
+the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 
 *efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side. 
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
