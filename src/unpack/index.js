@@ -1,29 +1,29 @@
-'use strict';
-const unpack = require('./unpack');
+'use strict'
+const unpack = require('./unpack')
 
 module.exports = function(obj) {
   if (typeof obj === 'string') {
-    obj = JSON.parse(obj); //weee!
+    obj = JSON.parse(obj) //weee!
   }
-  let all = {};
+  let all = {}
   Object.keys(obj).forEach(function(cat) {
-    let arr = unpack(obj[cat]);
+    let arr = unpack(obj[cat])
     //special case, for botched-boolean
     if (cat === 'true') {
-      cat = true;
+      cat = true
     }
     for (var i = 0; i < arr.length; i++) {
-      let k = arr[i];
-      if (all[k] !== undefined) {
-        if (typeof all[k] === 'string') {
-          all[k] = [all[k], cat];
+      let k = arr[i]
+      if (all.hasOwnProperty(k) === true) {
+        if (Array.isArray(all[k]) === false) {
+          all[k] = [all[k], cat]
         } else {
-          all[k].push(cat);
+          all[k].push(cat)
         }
       } else {
-        all[k] = cat;
+        all[k] = cat
       }
     }
-  });
-  return all;
-};
+  })
+  return all
+}

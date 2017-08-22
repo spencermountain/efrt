@@ -70,8 +70,8 @@ module.exports = function (obj) {
     }
     for (var i = 0; i < arr.length; i++) {
       var k = arr[i];
-      if (all[k] !== undefined) {
-        if (typeof all[k] === 'string') {
+      if (all.hasOwnProperty(k) === true) {
+        if (Array.isArray(all[k]) === false) {
           all[k] = [all[k], cat];
         } else {
           all[k].push(cat);

@@ -4,7 +4,8 @@
 <head>
   <meta charset="utf-8">
   <title>efrt Demo</title>
-  <script type="text/javascript" src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>
+  <!-- <script type="text/javascript" src="https://unpkg.com/efrt@latest/builds/efrt.js"></script> -->
+  <script type="text/javascript" src="../builds/efrt.js"></script>
   <style>
     #words {
       font-size: 15px;
@@ -111,49 +112,49 @@ Sioux City, Cedar City, Dodge City, what a pity.
   </div>
 </body>
 <script type="text/javascript" language="javascript">
-  var trieHard = window.trieHard;
-  window.compressed = ''
+var trieHard = window.trieHard
+window.compressed = ''
 
-  function findWord() {
-    var str = document.getElementById('word').value || '';
-    str = str.toLowerCase().replace(/'/, '')
+function findWord() {
+  var str = document.getElementById('word').value || ''
+  str = str.toLowerCase().replace(/'/, '')
 
-    var start = new Date();
-    var trie = efrt.unpack(window.compressed || '')
-    var end = new Date()
-    var unpck = (end.getTime() - start.getTime())
-    document.getElementById('unpack').innerText = 'unpacked in  ' + unpck + 'ms'
+  var start = new Date()
+  var trie = efrt.unpack(window.compressed || '')
+  var end = new Date()
+  var unpck = end.getTime() - start.getTime()
+  document.getElementById('unpack').innerText = 'unpacked in  ' + unpck + 'ms'
 
-    var start = new Date();
-    var bool = trie.hasOwnProperty(str)
-    var end = new Date()
-    var ms = (end.getTime() - start.getTime())
-    document.getElementById('found').innerText = bool
-    document.getElementById('foundTime').innerText = 'queried in - ' + ms + 'ms'
+  var start = new Date()
+  var bool = trie.hasOwnProperty(str)
+  var end = new Date()
+  var ms = end.getTime() - start.getTime()
+  document.getElementById('found').innerText = bool
+  document.getElementById('foundTime').innerText = 'queried in - ' + ms + 'ms'
+}
+
+function compress() {
+  var str = document.getElementById('words').value || ''
+  //normalize it a bit
+  str = str.toLowerCase().replace(/'/, '')
+  var words = str.split(/,?\W+/g)
+
+  var start = new Date()
+  window.compressed = efrt.pack(words)
+  var end = new Date()
+  var ms = end.getTime() - start.getTime()
+
+  document.getElementById('result').innerText = compressed
+  var percentage = 0
+  if (str.length > 1) {
+    percentage = (str.length - compressed.length) / str.length
+    percentage = parseInt(percentage * 100)
   }
-
-  function compress() {
-    var str = document.getElementById('words').value || '';
-    //normalize it a bit
-    str = str.toLowerCase().replace(/'/, '')
-    var words = str.split(/,?\W+/g)
-
-    var start = new Date();
-    window.compressed = efrt.pack(words)
-    var end = new Date()
-    var ms = (end.getTime() - start.getTime())
-
-    document.getElementById('result').innerText = compressed;
-    var percentage = 0
-    if (str.length > 1) {
-      percentage = ((str.length - compressed.length) / str.length)
-      percentage = parseInt(percentage * 100)
-    }
-    document.getElementById('length').innerText = str.length + ' chars to ' + compressed.length + '  (down ' + percentage + '%) in ' + ms + 'ms'
-    findWord()
-  }
-  compress();//fire!
-
+  document.getElementById('length').innerText =
+    str.length + ' chars to ' + compressed.length + '  (down ' + percentage + '%) in ' + ms + 'ms'
+  findWord()
+}
+compress() //fire!
 </script>
 
 </html>

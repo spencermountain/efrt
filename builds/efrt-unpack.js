@@ -1,4 +1,4 @@
-/* efrt trie-compression v1.1.0  github.com/nlp-compromise/efrt  - MIT */
+/* efrt trie-compression v1.1.1  github.com/nlp-compromise/efrt  - MIT */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.unpack = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
 const BASE = 36;
@@ -56,35 +56,35 @@ module.exports = {
 };
 
 },{}],2:[function(_dereq_,module,exports){
-'use strict';
-const unpack = _dereq_('./unpack');
+'use strict'
+const unpack = _dereq_('./unpack')
 
 module.exports = function(obj) {
   if (typeof obj === 'string') {
-    obj = JSON.parse(obj); //weee!
+    obj = JSON.parse(obj) //weee!
   }
-  let all = {};
+  let all = {}
   Object.keys(obj).forEach(function(cat) {
-    let arr = unpack(obj[cat]);
+    let arr = unpack(obj[cat])
     //special case, for botched-boolean
     if (cat === 'true') {
-      cat = true;
+      cat = true
     }
     for (var i = 0; i < arr.length; i++) {
-      let k = arr[i];
-      if (all[k] !== undefined) {
-        if (typeof all[k] === 'string') {
-          all[k] = [all[k], cat];
+      let k = arr[i]
+      if (all.hasOwnProperty(k) === true) {
+        if (Array.isArray(all[k]) === false) {
+          all[k] = [all[k], cat]
         } else {
-          all[k].push(cat);
+          all[k].push(cat)
         }
       } else {
-        all[k] = cat;
+        all[k] = cat
       }
     }
-  });
-  return all;
-};
+  })
+  return all
+}
 
 },{"./unpack":4}],3:[function(_dereq_,module,exports){
 'use strict';
