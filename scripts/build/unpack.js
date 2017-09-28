@@ -34,4 +34,6 @@ cmd += ' >> ' + path.unpackmin;
 console.log(cmd);
 exec(cmd);
 
-exec('rollup -c');
+// exec('rollup -c');
+
+exec('mv ./builds/efrt-unpack.min.js ./unpackLib/efrt-unpack.min.js');

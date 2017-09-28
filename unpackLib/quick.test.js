@@ -1,4 +1,4 @@
-var unpack = require('../builds/efrt-unpack.js');
+var unpack = require('./efrt-unpack.min.js');
 var test = require('tape');
 
 test('unpack works:', function(t) {

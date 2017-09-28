@@ -2,8 +2,8 @@
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt-unpack",
   "description": "compressed-trie data-structure",
-  "version": "1.1.0",
-  "main": "../builds/efrt-unpack.js",
+  "version": "1.1.1",
+  "main": "./efrt-unpack.min.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/nlp-compromise/efrt.git"

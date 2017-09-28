@@ -11,10 +11,6 @@
 
 <div align="center">
   <code>npm install efrt</code>
-  <br/>
-  (or alternatively:)
-  <br/>
-  <code>npm install efrt-unpack</code>
 </div>
 
 if your data looks like this:
@@ -43,15 +39,15 @@ obj['bedfordshire'];//'England'
 
 <h1 align="center">Yep,</h1>
 
-**efrt** packs category-type data into a *[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)* format, so that redundancies in the data are shared, and nothing is repeated. 
+**efrt** packs category-type data into a *[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)* format, so that redundancies in the data are shared, and nothing is repeated.
 
 By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without hassle or overhead.
 
-The whole library is **8kb**, the unpack half is barely **2.5kb**. 
+The whole library is **8kb**, the unpack half is barely **2.5kb**.
 
 it is based on:
 * 😍 [tamper](https://nytimes.github.io/tamper/) by the [NYTimes](https://github.com/NYTimes/)
-* 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss), 
+* 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss),
 * 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
 <h3 align="center">
@@ -87,7 +83,7 @@ console.log(obj.tomato)
 ```
 the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 
-*efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side. 
+*efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
 ## Performance
