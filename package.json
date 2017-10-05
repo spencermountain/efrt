@@ -2,7 +2,7 @@
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
   "description": "neato compression of key-value data",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "main": "./builds/efrt.js",
   "repository": {
     "type": "git",
@@ -17,11 +17,10 @@
   "files": [
     "builds/"
   ],
-  "dependencies": {
-    "codacy-coverage": "^2.0.3",
-    "nyc": "^11.2.1"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "nyc": "^11.2.1",
+    "codacy-coverage": "^2.0.3",
     "babel-preset-es2015": "6.9.0",
     "babelify": "7.3.0",
     "browserify": "13.0.1",
