@@ -53,7 +53,12 @@ const pack = function(obj) {
     let t = new Trie(flat[k]);
     flat[k] = t.pack();
   });
-  flat = JSON.stringify(flat, null, 0);
-  return flat;
+  // flat = JSON.stringify(flat, null, 0);
+
+  return Object.keys(flat).map((k) => {
+    return k + ':' + flat[k];
+  }).join('|');
+
+// return flat;
 };
 module.exports = pack;
