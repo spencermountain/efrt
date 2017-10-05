@@ -1,6 +1,6 @@
 const fns = require('./fns');
 const pack = require('./pack');
-const NOT_ALLOWED = new RegExp('[0-9A-Z,;!]'); //characters banned from entering the trie
+const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]'); //characters banned from entering the trie
 
 module.exports = {
   // Insert words from one big string, or from an array.
@@ -39,7 +39,8 @@ module.exports = {
   },
 
   _insert: function(word, node) {
-    let prefix, next;
+    let prefix,
+      next;
 
     // Duplicate word entry - ignore
     if (word.length === 0) {
@@ -65,7 +66,7 @@ module.exports = {
       }
       next = {};
       next[prop.slice(prefix.length)] = node[prop];
-      this.addTerminal(next, (word = word.slice(prefix.length)));
+      this.addTerminal(next, word = word.slice(prefix.length));
       delete node[prop];
       node[prefix] = next;
       this.wordCount++;
@@ -179,7 +180,10 @@ module.exports = {
 
   // Remove intermediate singleton nodes by hoisting into their parent
   collapseChains: function(node) {
-    let prop, props, child, i;
+    let prop,
+      props,
+      child,
+      i;
     if (this.visited(node)) {
       return;
     }

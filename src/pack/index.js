@@ -56,7 +56,7 @@ const pack = function(obj) {
   // flat = JSON.stringify(flat, null, 0);
 
   return Object.keys(flat).map((k) => {
-    return k + ':' + flat[k];
+    return k + '¦' + flat[k];
   }).join('|');
 
 // return flat;

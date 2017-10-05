@@ -1,4 +1,4 @@
-/* efrt trie-compression v1.1.1  github.com/nlp-compromise/efrt  - MIT */
+/* efrt trie-compression v2.0.0  github.com/nlp-compromise/efrt  - MIT */
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.efrt = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
 
@@ -212,8 +212,13 @@ var pack = function pack(obj) {
     var t = new Trie(flat[k]);
     flat[k] = t.pack();
   });
-  flat = JSON.stringify(flat, null, 0);
-  return flat;
+  // flat = JSON.stringify(flat, null, 0);
+
+  return Object.keys(flat).map(function (k) {
+    return k + '¦' + flat[k];
+  }).join('|');
+
+  // return flat;
 };
 module.exports = pack;
 
@@ -224,7 +229,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var fns = _dereq_('./fns');
 var _pack = _dereq_('./pack');
-var NOT_ALLOWED = new RegExp('[0-9A-Z,;!]'); //characters banned from entering the trie
+var NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]'); //characters banned from entering the trie
 
 module.exports = {
   // Insert words from one big string, or from an array.
@@ -464,6 +469,7 @@ var Histogram = _dereq_('./histogram');
 var encoding = _dereq_('../encoding');
 var config = {
   NODE_SEP: ';',
+  KEY_VAL: ':',
   STRING_SEP: ',',
   TERMINAL_PREFIX: '!',
   BASE: 36
@@ -613,7 +619,7 @@ var pack = function pack(self) {
   }
   // Prepend symbols
   for (var _sym = self.symCount - 1; _sym >= 0; _sym--) {
-    self.nodes.unshift(encoding.toAlphaCode(_sym) + ':' + encoding.toAlphaCode(self.nodeCount - self.histAbs[_sym][0] - 1));
+    self.nodes.unshift(encoding.toAlphaCode(_sym) + config.KEY_VAL + encoding.toAlphaCode(self.nodeCount - self.histAbs[_sym][0] - 1));
   }
 
   return self.nodes.join(config.NODE_SEP);
@@ -662,10 +668,13 @@ module.exports = Trie;
 
 var unpack = _dereq_('./unpack');
 
-module.exports = function (obj) {
-  if (typeof obj === 'string') {
-    obj = JSON.parse(obj); //weee!
-  }
+module.exports = function (str) {
+  //turn the weird string into a key-value object again
+  var obj = str.split('|').reduce(function (h, s) {
+    var arr = s.split('¦');
+    h[arr[0]] = arr[1];
+    return h;
+  }, {});
   var all = {};
   Object.keys(obj).forEach(function (cat) {
     var arr = unpack(obj[cat]);

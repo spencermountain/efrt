@@ -3,6 +3,7 @@ const Histogram = require('./histogram');
 const encoding = require('../encoding');
 const config = {
   NODE_SEP: ';',
+  KEY_VAL: ':',
   STRING_SEP: ',',
   TERMINAL_PREFIX: '!',
   BASE: 36
@@ -40,7 +41,8 @@ const config = {
 // separated by ',' characters.
 
 const nodeLine = function(self, node) {
-  let line = '', sep = '';
+  let line = '',
+    sep = '';
 
   if (self.isTerminal(node)) {
     line += config.TERMINAL_PREFIX;
@@ -96,7 +98,8 @@ const symbolCount = function(self) {
   self.histAbs = self.histAbs.highest(config.BASE);
   let savings = [];
   savings[-1] = 0;
-  let best = 0, sCount = 0;
+  let best = 0,
+    sCount = 0;
   let defSize = 3 + encoding.toAlphaCode(self.nodeCount).length;
   for (let sym = 0; sym < config.BASE; sym++) {
     if (self.histAbs[sym] === undefined) {
@@ -151,7 +154,7 @@ const pack = function(self) {
   // Prepend symbols
   for (let sym = self.symCount - 1; sym >= 0; sym--) {
     self.nodes.unshift(
-      encoding.toAlphaCode(sym) + ':' + encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1)
+      encoding.toAlphaCode(sym) + config.KEY_VAL + encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1)
     );
   }
 

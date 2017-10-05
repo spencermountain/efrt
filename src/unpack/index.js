@@ -4,7 +4,7 @@ const unpack = require('./unpack');
 module.exports = function(str) {
   //turn the weird string into a key-value object again
   let obj = str.split('|').reduce((h, s) => {
-    let arr = s.split(':');
+    let arr = s.split('¦');
     h[arr[0]] = arr[1];
     return h;
   }, {});

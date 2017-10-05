@@ -9,7 +9,7 @@ test('cached-match-every-name:', function(t) {
   var ptrie = efrt.unpack(str);
   for (var i = 0; i < names.length; i++) {
     var has = ptrie.hasOwnProperty(names[i]);
-    t.equal(has, true, "trie has '" + names[i] + "'");
+    t.equal(has, true, 'trie has \'' + names[i] + '\'');
   }
   t.equal(ptrie.hasOwnProperty('woodstock'), false, 'no-false-positive');
 
@@ -24,7 +24,7 @@ test('cached-match-every-country:', function(t) {
   var ptrie = efrt.unpack(str);
   for (var i = 0; i < countries.length; i++) {
     var has = ptrie.hasOwnProperty(countries[i]);
-    t.equal(has, true, "trie has '" + countries[i] + "'");
+    t.equal(has, true, 'trie has \'' + countries[i] + '\'');
   }
   t.equal(ptrie.hasOwnProperty('woodstock'), false, 'no-false-positive');
 

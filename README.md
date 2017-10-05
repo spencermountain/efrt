@@ -7,6 +7,12 @@
   <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
     <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
   </a>
+  <a href="https://www.codacy.com/app/spencerkelly86/efrt">
+    <img src="https://api.codacy.com/project/badge/grade/fc03e2761c8c471c8f84141abf2704de" />
+  </a>
+  <a href="https://www.codacy.com/app/spencerkelly86/efrt">
+    <img src="https://api.codacy.com/project/badge/Coverage/fc03e2761c8c471c8f84141abf2704de" />
+  </a>
 </div>
 
 <div align="center">
@@ -29,7 +35,7 @@ var data = {
 you can compress it like this:
 ```js
 var str = efrt.pack(data);
-//'{"England":"b0che1;ambridge0edford0uckingham0;shire","Scotland":"a0banff1;berdeen0rgyll0yr0;shire"}'
+//'England:b0che1;ambridge0edford0uckingham0;shire|Scotland:a0banff1;berdeen0rgyll0yr0;shire'
 ```
 then \_very!\_ quickly flip it back into:
 ```js
@@ -81,7 +87,11 @@ var obj=efrt.unpack(str)
 console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
+## Reserved characters
 the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
+```js
+specialChars = new RegExp('[0-9A-Z,;!:|¦]')
+```
 
 *efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
