@@ -12,21 +12,22 @@
     "test": "node ./scripts/test.js",
     "testBuild": "TESTENV=prod node ./scripts/test.js",
     "build": "node ./scripts/build/index.js",
-    "watch": "node ./scripts/watch.js"
+    "watch": "amble ./scratch"
   },
   "files": [
     "builds/"
   ],
   "dependencies": {},
   "devDependencies": {
-    "nyc": "^11.2.1",
-    "codacy-coverage": "^2.0.3",
+    "amble": "0.0.4",
     "babel-preset-es2015": "6.9.0",
     "babelify": "7.3.0",
     "browserify": "13.0.1",
+    "codacy-coverage": "^2.0.3",
     "derequire": "^2.0.3",
     "eslint": "^3.17.1",
     "gaze": "^1.1.2",
+    "nyc": "^11.2.1",
     "shelljs": "^0.7.2",
     "tap-spec": "4.1.1",
     "tape": "4.6.0",

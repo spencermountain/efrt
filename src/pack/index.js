@@ -44,7 +44,15 @@ const pack = function(obj) {
       return h;
     }
     //normal string/boolean version
-    h[val] = h[val] || [];
+    if (h.hasOwnProperty(val) === false) {
+      //basically h[val]=[]  - support reserved words
+      Object.defineProperty(h, val, {
+        writable: true,
+        enumerable: true,
+        configurable: true,
+        value: []
+      });
+    }
     h[val].push(k);
     return h;
   }, {});
