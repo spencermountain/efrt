@@ -56,6 +56,8 @@ it is based on:
 * 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss),
 * 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
+<a href="https://monolithpl.github.io/trie-compiler/">Benchmarks!</a>
+
 <h3 align="center">
   <a href="https://rawgit.com/nlp-compromise/efrt/master/demo/index.html">Demo!</a>
 </h3>
@@ -143,5 +145,7 @@ npm install efrt-unpack
   trie.hasOwnProperty('miles davis');
 </script>
 ```
+
+Thanks to [John Resig](https://johnresig.com/) for his fun [trie-compression post](https://johnresig.com/blog/javascript-trie-performance-analysis/) on his blog, and [Wiktor Jakubczyc](https://github.com/monolithpl) for his performance analysis work
 
 MIT
