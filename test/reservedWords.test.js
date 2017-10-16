@@ -56,7 +56,7 @@ var reserved = [
   'throw',
   'throws',
   'transient',
-  'true',
+  // 'true',
   'try',
   'typeof',
   'var',
@@ -67,19 +67,14 @@ var reserved = [
   'yeild',
   // '__prototype__',
   '&&',
-  // '||',
-  // '|',
   '\'',
   '&',
-  // 'Math.PI',
-  // 12e34,
   '#§$%',
   'π',
   'привет',
   // 'hasOwnProperty',
   'café',
   '$$$',
-  // 1e2,
   '{}',
   '[]',
   'constructor',
@@ -87,12 +82,11 @@ var reserved = [
   ')&@)^',
   ' -@%@',
   '-constructor',
-  // '#!^@#$',
   '..('
 ];
 
+//support reserved words
 test('reserved words as keys:', function(t) {
-  //basically h[val]=[]  - support reserved words
   var asKeys = reserved.reduce((h, str) => {
     Object.defineProperty(h, str, {
       writable: true,
@@ -108,6 +102,22 @@ test('reserved words as keys:', function(t) {
   var unpacked = efrt.unpack(str);
   reserved.forEach((key) => {
     t.equal(unpacked.hasOwnProperty(key), true, 'has ' + key);
+  });
+  t.end();
+});
+
+//support reserved words
+test('reserved words as values:', function(t) {
+  var asValues = reserved.reduce((h, w) => {
+    h['word' + w] = w;
+    return h;
+  }, {});
+  var str = efrt.pack(asValues);
+  t.equal(typeof str, 'string', 'packed-string');
+
+  var unpacked = efrt.unpack(str);
+  reserved.forEach((word) => {
+    t.equal(unpacked['word' + word], word, 'has ' + word);
   });
   t.end();
 });
