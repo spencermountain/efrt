@@ -24,11 +24,6 @@ exec(cmd)
 
 const banner = '/* efrt v' + pkg.version + '\n   github.com/nlp-compromise/efrt\n   MIT\n*/\n'
 
-//es5.min (uglify)
-// cmd = lib.uglify + ' ' + path.es5 + ' --mangle --compress '
-// cmd += ' >> ' + path.es5min
-// exec(cmd)
-
 const code = fs.readFileSync(path.es5).toString()
 
 const result = terser.minify(code, {

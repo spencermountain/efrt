@@ -2,7 +2,7 @@
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
   "description": "neato compression of key-value data",
-  "version": "2.0.3",
+  "version": "2.1.0",
   "main": "./builds/efrt.js",
   "repository": {
     "type": "git",

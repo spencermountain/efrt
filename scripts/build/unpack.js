@@ -32,11 +32,6 @@ exec(cmd)
 const banner =
   '/* efrt-unpack v' + pkg.version + '\n   github.com/nlp-compromise/efrt\n   MIT\n*/\n'
 
-//unpacker min (uglify)
-// cmd = lib.uglify + ' ' + path.unpack5 + ' --mangle --compress '
-// cmd += ' >> ' + path.unpackmin
-// exec(cmd)
-
 const code = fs.readFileSync(path.unpack5).toString()
 
 const result = terser.minify(code, {
@@ -49,7 +44,5 @@ const result = terser.minify(code, {
   }
 })
 fs.writeFileSync(path.unpackmin, result.code)
-
-// exec('rollup -c');
 
 exec('mv ./builds/efrt-unpack.min.js ./unpackLib/efrt-unpack.min.js')
