@@ -1,28 +1,26 @@
-'use strict';
-
 const commonPrefix = function(w1, w2) {
-  var len = Math.min(w1.length, w2.length);
+  let len = Math.min(w1.length, w2.length)
   while (len > 0) {
-    var prefix = w1.slice(0, len);
+    const prefix = w1.slice(0, len)
     if (prefix === w2.slice(0, len)) {
-      return prefix;
+      return prefix
     }
-    len -= 1;
+    len -= 1
   }
-  return '';
-};
+  return ''
+}
 
 /* Sort elements and remove duplicates from array (modified in place) */
 const unique = function(a) {
-  a.sort();
+  a.sort()
   for (let i = 1; i < a.length; i++) {
     if (a[i - 1] === a[i]) {
-      a.splice(i, 1);
+      a.splice(i, 1)
     }
   }
-};
+}
 
 module.exports = {
   commonPrefix: commonPrefix,
   unique: unique
-};
+}
