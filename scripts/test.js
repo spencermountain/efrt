@@ -1,6 +1,6 @@
-require('shelljs/global');
-var tape = '"node_modules/.bin/tape"';
-var tapSpec = '"node_modules/.bin/tap-spec" --color';
+require('shelljs/global')
+const tape = '"node_modules/.bin/tape"'
+const tapSpec = '"node_modules/.bin/tap-spec" --color'
 
 //the quotations here are strangely-important
-exec(tape + ' "./test/**/*.test.js" | ' + tapSpec);
+exec(tape + ' "./test/**/*.test.js" | ' + tapSpec)

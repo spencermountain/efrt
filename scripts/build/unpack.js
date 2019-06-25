@@ -1,39 +1,48 @@
-require('shelljs/global');
+require('shelljs/global')
+const fs = require('fs')
+const pkg = require('../../package.json')
+const terser = require('terser')
 //--do just half of the library now
-var lib = {
+const lib = {
   browserify: '"node_modules/.bin/browserify"',
   derequire: '"node_modules/.bin/derequire"',
-  uglify: '"node_modules/.bin/uglifyjs"',
-// babili: '"node_modules/.bin/babili"'
-};
+  uglify: '"node_modules/.bin/uglifyjs"'
+  // babili: '"node_modules/.bin/babili"'
+}
 //final build locations
-var path = {
+const path = {
   unpack6: './builds/efrt-unpack.js',
   unpack5: './builds/efrt-unpack.es5.js',
   unpackmin: './builds/efrt-unpack.min.js'
-};
+}
 
 // //es6 (browserify + derequire)
-cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
-cmd += ' | ' + lib.derequire;
-cmd += ' >> ' + path.unpack6;
-console.log(cmd);
-exec(cmd);
+cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack'
+cmd += ' | ' + lib.derequire
+cmd += ' >> ' + path.unpack6
+exec(cmd)
 
 //es5 (browserify + derequire)
-cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack';
-cmd += ' -t [ babelify --presets [ es2015 ] ]';
-cmd += ' | ' + lib.derequire;
-cmd += ' >> ' + path.unpack5;
-console.log(cmd);
-exec(cmd);
+cmd = lib.browserify + ' "./src/unpack/index.js" --standalone unpack'
+cmd += ' -t [ babelify --presets [ @babel/preset-env ] ]'
+cmd += ' | ' + lib.derequire
+cmd += ' >> ' + path.unpack5
+exec(cmd)
 
-//unpacker min (uglify)
-cmd = lib.uglify + ' ' + path.unpack5 + ' --mangle --compress ';
-cmd += ' >> ' + path.unpackmin;
-console.log(cmd);
-exec(cmd);
+const banner =
+  '/* efrt-unpack v' + pkg.version + '\n   github.com/nlp-compromise/efrt\n   MIT\n*/\n'
 
-// exec('rollup -c');
+const code = fs.readFileSync(path.unpack5).toString()
 
-exec('mv ./builds/efrt-unpack.min.js ./unpackLib/efrt-unpack.min.js');
+const result = terser.minify(code, {
+  output: {
+    beautify: false,
+    preamble: banner
+  },
+  compress: {
+    passes: 2
+  }
+})
+fs.writeFileSync(path.unpackmin, result.code)
+
+exec('mv ./builds/efrt-unpack.min.js ./unpackLib/efrt-unpack.min.js')

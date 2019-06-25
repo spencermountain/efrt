@@ -22,7 +22,7 @@ module.exports = [
   'chile',
   'comoros',
   'congo-brazzaville',
-  'cote d\'ivoire',
+  "cote d'ivoire",
   'cuba',
   'curacao',
   'denmark',
@@ -108,5 +108,5 @@ module.exports = [
   'wales',
   'wallis and futuna',
   'yemen',
-  'zimbabwe',
-];
+  'zimbabwe'
+]

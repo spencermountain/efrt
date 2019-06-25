@@ -783,5 +783,5 @@ module.exports = [
   'yuuto',
   'zachary',
   'zahid',
-  'zoran',
-];
+  'zoran'
+]
