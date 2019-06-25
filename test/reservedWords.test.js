@@ -1,7 +1,7 @@
-var test = require('tape');
-const efrt = require('./lib/efrt');
+const test = require('tape')
+const efrt = require('./lib/efrt')
 
-var reserved = [
+const reserved = [
   'abstract',
   'boolean',
   'break',
@@ -67,7 +67,7 @@ var reserved = [
   'yeild',
   // '__prototype__',
   '&&',
-  '\'',
+  "'",
   '&',
   '#§$%',
   'π',
@@ -83,41 +83,41 @@ var reserved = [
   ' -@%@',
   '-constructor',
   '..('
-];
+]
 
 //support reserved words
 test('reserved words as keys:', function(t) {
-  var asKeys = reserved.reduce((h, str) => {
+  const asKeys = reserved.reduce((h, str) => {
     Object.defineProperty(h, str, {
       writable: true,
       enumerable: true,
       configurable: true,
       value: 'HardWord'
-    });
-    return h;
-  }, {});
-  var str = efrt.pack(asKeys);
-  t.equal(typeof str, 'string', 'packed-string');
+    })
+    return h
+  }, {})
+  const str = efrt.pack(asKeys)
+  t.equal(typeof str, 'string', 'packed-string')
 
-  var unpacked = efrt.unpack(str);
-  reserved.forEach((key) => {
-    t.equal(unpacked.hasOwnProperty(key), true, 'has ' + key);
-  });
-  t.end();
-});
+  const unpacked = efrt.unpack(str)
+  reserved.forEach(key => {
+    t.equal(unpacked.hasOwnProperty(key), true, 'has ' + key)
+  })
+  t.end()
+})
 
 //support reserved words
 test('reserved words as values:', function(t) {
-  var asValues = reserved.reduce((h, w) => {
-    h['word' + w] = w;
-    return h;
-  }, {});
-  var str = efrt.pack(asValues);
-  t.equal(typeof str, 'string', 'packed-string');
+  const asValues = reserved.reduce((h, w) => {
+    h['word' + w] = w
+    return h
+  }, {})
+  const str = efrt.pack(asValues)
+  t.equal(typeof str, 'string', 'packed-string')
 
-  var unpacked = efrt.unpack(str);
-  reserved.forEach((word) => {
-    t.equal(unpacked['word' + word], word, 'has ' + word);
-  });
-  t.end();
-});
+  const unpacked = efrt.unpack(str)
+  reserved.forEach(word => {
+    t.equal(unpacked['word' + word], word, 'has ' + word)
+  })
+  t.end()
+})
