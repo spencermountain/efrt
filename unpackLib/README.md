@@ -8,8 +8,10 @@ npm install efrt-unpack
 ```html
 <script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
 <script>
-  var trie=unpack(compressedStuff);
-  trie.hasOwnProperty('miles davis');
+  const compressedTrie = 'true¦denmark,o0scandanavia;h0ntar0;io'
+  const p = unpack(compressedTrie)
+  console.log(p.hasOwnProperty('ohio'))
+  // true
 </script>
 ```
 

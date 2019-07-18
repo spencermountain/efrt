@@ -8,10 +8,10 @@
     <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
   </a>
   <a href="https://www.codacy.com/app/spencerkelly86/efrt">
-    <img src="https://api.codacy.com/project/badge/grade/fc03e2761c8c471c8f84141abf2704de" />
-  </a>
-  <a href="https://www.codacy.com/app/spencerkelly86/efrt">
     <img src="https://api.codacy.com/project/badge/Coverage/fc03e2761c8c471c8f84141abf2704de" />
+  </a>
+  <a href="https://unpkg.com/efrt/builds/efrt.min.js">
+     <img src="https://badge-size.herokuapp.com/spencermountain/efrt/master/builds/efrt.min.js" />
   </a>
 </div>
 
@@ -49,7 +49,7 @@ obj['bedfordshire'];//'England'
 
 By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without hassle or overhead.
 
-The whole library is **8kb**, the unpack half is barely **2.5kb**.
+The whole library is **8kb**, the unpack half is barely **2kb**.
 
 it is based on:
 * 😍 [tamper](https://nytimes.github.io/tamper/) by the [NYTimes](https://github.com/NYTimes/)
@@ -89,6 +89,29 @@ var obj=efrt.unpack(str)
 console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
+
+---
+
+you can also use it to compress an array of strings:
+```js
+const data = [
+  'january',
+  'february',
+  'april',
+  'june',
+  'july',
+  'august',
+  'september',
+  'october',
+  'november',
+  'december'
+]
+const packd = efrt.pack(data)
+// true¦a6dec4febr3j1ma0nov4octo5sept4;rch,y;an1u0;ly,ne;uary;em0;ber;pril,ugust
+const sameArray = Object.keys(efrt.unpack(packd))
+// same thing !
+```
+
 ## Reserved characters
 the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 ```js
