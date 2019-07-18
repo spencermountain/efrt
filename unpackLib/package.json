@@ -9,7 +9,7 @@
     "url": "git://github.com/nlp-compromise/efrt.git"
   },
   "scripts": {
-    "test": "../node_modules/.bin/tape ./quick.test.js | '../node_modules/.bin/tap-spec' --color"
+    "test": "../node_modules/.bin/tape ./quick.test.js | '../node_modules/.bin/tap-dancer' --color"
   },
   "files": [
     "efrt-unpack.min.js"
