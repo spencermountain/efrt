@@ -4,14 +4,14 @@
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
   </a>
-  <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
-    <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
-  </a>
-  <a href="https://www.codacy.com/app/spencerkelly86/efrt">
-    <img src="https://api.codacy.com/project/badge/grade/fc03e2761c8c471c8f84141abf2704de" />
-  </a>
   <a href="https://www.codacy.com/app/spencerkelly86/efrt">
     <img src="https://api.codacy.com/project/badge/Coverage/fc03e2761c8c471c8f84141abf2704de" />
+  </a>
+  <a href="https://unpkg.com/efrt/builds/efrt.min.js">
+     <img src="https://badge-size.herokuapp.com/spencermountain/efrt/master/builds/efrt.min.js" />
+  </a>
+  <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
+    <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
   </a>
 </div>
 
@@ -49,7 +49,7 @@ obj['bedfordshire'];//'England'
 
 By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without hassle or overhead.
 
-The whole library is **8kb**, the unpack half is barely **2.5kb**.
+The whole library is **8kb**, the unpack half is barely **2kb**.
 
 it is based on:
 * 😍 [tamper](https://nytimes.github.io/tamper/) by the [NYTimes](https://github.com/NYTimes/)
@@ -89,6 +89,31 @@ var obj=efrt.unpack(str)
 console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
+
+---
+<h5 align="left">
+or, an Array:
+</h5>
+if you pass it an array of strings, it just creates an object with `true` values:
+```js
+const data = [
+  'january',
+  'february',
+  'april',
+  'june',
+  'july',
+  'august',
+  'september',
+  'october',
+  'november',
+  'december'
+]
+const packd = efrt.pack(data)
+// true¦a6dec4febr3j1ma0nov4octo5sept4;rch,y;an1u0;ly,ne;uary;em0;ber;pril,ugust
+const sameArray = Object.keys(efrt.unpack(packd))
+// same thing !
+```
+
 ## Reserved characters
 the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
 ```js
@@ -99,7 +124,7 @@ specialChars = new RegExp('[0-9A-Z,;!:|¦]')
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
 ## Performance
-*efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually cool.
+*efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually fine:
 ```js
 var compressed = efrt.pack(skateboarders);//1k words (on a macbook)
 var trie = efrt.unpack(compressed)

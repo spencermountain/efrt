@@ -2,16 +2,17 @@
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
   "description": "neato compression of key-value data",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "main": "./builds/efrt.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/nlp-compromise/efrt.git"
   },
   "scripts": {
-    "test": "node ./scripts/test.js",
-    "testb": "TESTENV=prod node ./scripts/test.js",
-    "build": "node ./scripts/build/index.js",
+    "build": "rollup -c && node ./scripts/filesize.js",
+    "filesize": "node ./scripts/filesize.js",
+    "test": "tape \"./tests/*.test.js\" | tap-dancer",
+    "testb": "TESTENV=prod tape \"./tests/*.test.js\" | tap-dancer",
     "watch": "amble ./scratch"
   },
   "files": [
@@ -26,20 +27,16 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "7.4.5",
-    "@babel/preset-env": "7.4.5",
+    "@babel/core": "7.5.5",
+    "@babel/preset-env": "7.5.5",
     "amble": "0.0.7",
-    "babelify": "10.0.0",
-    "browserify": "16.2.3",
-    "codacy-coverage": "3.4.0",
-    "derequire": "^2.0.3",
-    "eslint": "6.0.1",
-    "gaze": "^1.1.2",
-    "nyc": "14.1.1",
-    "shelljs": "0.8.3",
-    "tap-spec": "5.0.0",
-    "tape": "4.10.2",
-    "terser": "^4.0.0"
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "10.0.1",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "5.2.0",
+    "rollup-plugin-terser": "5.1.1",
+    "tap-dancer": "^0.2.0",
+    "tape": "4.11.0"
   },
   "license": "MIT"
 }
