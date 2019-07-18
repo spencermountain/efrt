@@ -11,6 +11,9 @@
   "scripts": {
     "test": "../node_modules/.bin/tape ./quick.test.js | '../node_modules/.bin/tap-spec' --color"
   },
+  "files": [
+    "efrt-unpack.min.js"
+  ],
   "dependencies": {},
   "devDependencies": {},
   "license": "MIT"
