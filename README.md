@@ -4,14 +4,14 @@
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
   </a>
-  <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
-    <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
-  </a>
   <a href="https://www.codacy.com/app/spencerkelly86/efrt">
     <img src="https://api.codacy.com/project/badge/Coverage/fc03e2761c8c471c8f84141abf2704de" />
   </a>
   <a href="https://unpkg.com/efrt/builds/efrt.min.js">
      <img src="https://badge-size.herokuapp.com/spencermountain/efrt/master/builds/efrt.min.js" />
+  </a>
+  <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
+    <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
   </a>
 </div>
 
@@ -91,8 +91,10 @@ console.log(obj.tomato)
 ```
 
 ---
-
-you can also use it to compress an array of strings:
+<h5 align="left">
+or, an Array:
+</h5>
+if you pass it an array of strings, it just creates an object with `true` values:
 ```js
 const data = [
   'january',
@@ -122,7 +124,7 @@ specialChars = new RegExp('[0-9A-Z,;!:|¦]')
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
 ## Performance
-*efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually cool.
+*efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually fine:
 ```js
 var compressed = efrt.pack(skateboarders);//1k words (on a macbook)
 var trie = efrt.unpack(compressed)
