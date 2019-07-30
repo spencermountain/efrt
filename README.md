@@ -91,10 +91,13 @@ console.log(obj.tomato)
 ```
 
 ---
+
 <h5 align="left">
 or, an Array:
 </h5>
+
 if you pass it an array of strings, it just creates an object with `true` values:
+
 ```js
 const data = [
   'january',
