@@ -18,9 +18,21 @@ export default [
     input: 'src/index.js',
     output: [
       {
+        file: 'builds/efrt.js',
+        format: 'umd',
+        name: 'efrt'
+      }
+    ],
+    plugins: [resolve(), json(), commonjs()]
+  },
+  {
+    input: 'src/index.js',
+    output: [
+      {
         file: 'builds/efrt.min.js',
-        format: 'cjs',
-        sourcemap: true
+        format: 'umd',
+        sourcemap: true,
+        name: 'efrt'
       }
     ],
     plugins: [resolve(), json(), commonjs(), terser()]
@@ -30,11 +42,13 @@ export default [
     output: [
       {
         file: 'builds/efrt-unpack.min.js',
-        format: 'cjs'
+        format: 'umd',
+        name: 'efrt'
       },
       {
         file: 'unpackLib/efrt-unpack.min.js',
-        format: 'cjs'
+        format: 'umd',
+        name: 'efrt'
       }
     ],
     plugins: [resolve(), json(), commonjs(), terser()]
