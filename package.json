@@ -1,12 +1,12 @@
 {
-  "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "name": "efrt",
   "description": "neato compression of key-value data",
   "version": "2.2.1",
   "main": "./builds/efrt.js",
+  "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
   "repository": {
     "type": "git",
-    "url": "git://github.com/nlp-compromise/efrt.git"
+    "url": "git://github.com/spencermountain/efrt.git"
   },
   "scripts": {
     "build": "rollup -c && node ./scripts/filesize.js",
