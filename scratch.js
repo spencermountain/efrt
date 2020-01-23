@@ -1,23 +1,67 @@
 'use strict'
-const efrt = require('./src')
-// const unpack = require('./builds/efrt-unpack.es6');
+// const efrt = require('./src')
+const efrt = require('./builds/efrt')
 // let words = require('./test/data/countries');
 
 const data = [
-  'january',
-  'february',
-  'march',
-  'april',
-  'may',
-  'june',
-  'july',
-  'august',
-  'september',
-  'october',
-  'november',
-  'december'
+  'better',
+  'earlier',
+  'sounds',
+  'a few',
+  'here',
+  'no doubt',
+  'is',
+  'are',
+  'was',
+  'were',
+  'am',
+  'if',
+  'unless',
+  'said',
+  'had',
+  'been',
+  'began',
+  'came',
+  'did',
+  'meant',
+  'went',
+  'taken',
+  'going',
+  'being',
+  'according',
+  'resulting',
+  'developing',
+  'staining',
+  'not',
+  'non',
+  'never',
+  'no',
+  'where',
+  'why',
+  'when',
+  'who',
+  'whom',
+  'whose',
+  'what',
+  'which',
+  "how's",
+  'how come',
+  'ad hominem',
+  'banking',
+  'body',
+  'boyfriend',
+  'breakfast',
+  'canary',
+  'ceiling',
+  'chocolate',
+  'city',
+  'civil war',
+  'credit card',
+  'death',
+  'dinner',
+  'documentary'
 ]
 const packd = efrt.pack(data)
 console.log(packd, '\n')
-const arr = Object.keys(efrt.unpack(packd))
-console.log(arr)
+// const arr = Object.keys(efrt.unpack(packd))
+// console.log(arr)
