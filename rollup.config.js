@@ -1,7 +1,10 @@
 import { terser } from 'rollup-plugin-terser'
 import babel from 'rollup-plugin-babel'
+import { version } from './package.json'
+const banner = '/* efrt ' + version + ' MIT */'
 
 export default [
+  //cjs
   {
     input: 'src/index.js',
     output: [
@@ -13,6 +16,7 @@ export default [
     ],
     plugins: []
   },
+  // cjs min
   {
     input: 'src/index.js',
     output: [
@@ -30,6 +34,7 @@ export default [
       terser()
     ]
   },
+  // unpack cjs min
   {
     input: 'src/unpack/index.js',
     output: [
@@ -51,5 +56,20 @@ export default [
       }),
       terser()
     ]
+  },
+  // mjs min
+  {
+    input: 'src/index.js',
+    output: [{ banner: banner, file: 'builds/efrt.mjs', format: 'esm' }],
+    plugins: [terser()]
+  },
+  // mjs-unpack min
+  {
+    input: 'src/unpack/index.js',
+    output: [
+      { banner: banner, file: 'builds/efrt-unpack.mjs', format: 'esm' },
+      { banner: banner, file: 'unpackLib/efrt-unpack.mjs', format: 'esm' }
+    ],
+    plugins: [terser()]
   }
 ]

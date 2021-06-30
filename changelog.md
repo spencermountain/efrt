@@ -1,6 +1,6 @@
 ## 2.3.0 [June 2021]
 
-- support new es module exports property
+- support es modules exports
 - remove mapfile
 - update deps
 

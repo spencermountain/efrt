@@ -705,8 +705,11 @@
     return all
   };
 
+  var _version = '2.3.0';
+
   exports.pack = pack;
   exports.unpack = unpack;
+  exports.version = _version;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -3,6 +3,7 @@
   "description": "neato compression of key-value data",
   "version": "2.3.0",
   "main": "./builds/efrt.js",
+  "unpkg": "./builds/efrt.min.js",
   "module": "./builds/efrt.mjs",
   "type": "module",
   "sideEffects": false,
@@ -13,6 +14,7 @@
       "default": "./builds/efrt.js"
     },
     "./unpack": {
+      "import": "./builds/efrt-unpack.mjs",
       "default": "./builds/efrt-unpack.min.js"
     }
   },
@@ -22,7 +24,7 @@
     "url": "git://github.com/spencermountain/efrt.git"
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "node ./scripts/version.js && rollup -c ",
     "test": "tape-es \"./tests/*.test.js\" | tap-dancer",
     "testb": "TESTENV=prod tape \"./tests/*.test.js\" | tap-dancer",
     "watch": "amble ./scratch"
