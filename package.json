@@ -26,7 +26,7 @@
   "scripts": {
     "build": "node ./scripts/version.js && rollup -c ",
     "test": "tape-es \"./tests/*.test.js\" | tap-dancer",
-    "testb": "TESTENV=prod tape \"./tests/*.test.js\" | tap-dancer",
+    "testb": "TESTENV=prod tape-es \"./tests/*.test.js\" | tap-dancer",
     "watch": "amble ./scratch"
   },
   "files": [
