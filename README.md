@@ -20,6 +20,7 @@
 </div>
 
 if your data looks like this:
+
 ```js
 var data = {
   bedfordshire: 'England',
@@ -30,31 +31,38 @@ var data = {
   cheshire: 'England',
   ayrshire: 'Scotland',
   banffshire: 'Scotland'
-};
+}
 ```
+
 you can compress it like this:
+
 ```js
-var str = efrt.pack(data);
+import { pack } from 'efrt'
+var str = pack(data)
 //'England:b0che1;ambridge0edford0uckingham0;shire|Scotland:a0banff1;berdeen0rgyll0yr0;shire'
 ```
+
 then \_very!\_ quickly flip it back into:
+
 ```js
-var obj = efrt.unpack(str);
-obj['bedfordshire'];//'England'
+import { unpack } from 'efrt'
+var obj = unpack(str)
+obj['bedfordshire'] //'England'
 ```
 
 <h1 align="center">Yep,</h1>
 
-**efrt** packs category-type data into a *[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)* format, so that redundancies in the data are shared, and nothing is repeated.
+**efrt** packs category-type data into a _[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)_ format, so that redundancies in the data are shared, and nothing is repeated.
 
-By doing this clever-stuff ahead-of-time, **efrt** lets you ship *much more* data to the client-side, without hassle or overhead.
+By doing this clever-stuff ahead-of-time, **efrt** lets you ship _much more_ data to the client-side, without hassle or overhead.
 
 The whole library is **8kb**, the unpack half is barely **2kb**.
 
 it is based on:
-* 😍 [tamper](https://nytimes.github.io/tamper/) by the [NYTimes](https://github.com/NYTimes/)
-* 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss),
-* 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
+
+- 😍 [tamper](https://nytimes.github.io/tamper/) by the [NYTimes](https://github.com/NYTimes/)
+- 💝 [lookups](https://github.com/mckoss/lookups) by [Mike Koss](https://github.com/mckoss),
+- 💓 [bits.js](http://stevehanov.ca/blog/index.php?id=120) by [Steve Hanov](https://twitter.com/smhanov)
 
 <a href="https://monolithpl.github.io/trie-compiler/">Benchmarks!</a>
 
@@ -66,13 +74,13 @@ it is based on:
 Basically,
 </h5>
 
-* get a js object into very compact form
-* reduce filesize/bandwidth a bunch
-* ensure the unpacking time is negligible
-* keep word-lookups on critical-path
+- get a js object into very compact form
+- reduce filesize/bandwidth a bunch
+- ensure the unpacking time is negligible
+- keep word-lookups on critical-path
 
 ```js
-var efrt = require('efrt')
+import { pack, unpack } from 'efrt' // const {pack, unpack} = require('efrt')
 
 var foods = {
   strawberry: 'fruit',
@@ -81,11 +89,11 @@ var foods = {
   tomato: ['fruit', 'vegetable'],
   cucumber: 'vegetable',
   pepper: 'vegetable'
-};
-var str = efrt.pack(foods);
+}
+var str = pack(foods)
 //'{"fruit":"bl0straw1tomato;ack0ue0;berry","vegetable":"cucumb0pepp0tomato;er"}'
 
-var obj=efrt.unpack(str)
+var obj = unpack(str)
 console.log(obj.tomato)
 //['fruit', 'vegetable']
 ```
@@ -111,26 +119,30 @@ const data = [
   'november',
   'december'
 ]
-const packd = efrt.pack(data)
+const packd = pack(data)
 // true¦a6dec4febr3j1ma0nov4octo5sept4;rch,y;an1u0;ly,ne;uary;em0;ber;pril,ugust
-const sameArray = Object.keys(efrt.unpack(packd))
+const sameArray = Object.keys(unpack(packd))
 // same thing !
 ```
 
 ## Reserved characters
-the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and *some punctuation* (semicolon, comma, exclamation-mark) are not (yet) supported.
+
+the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and _some punctuation_ (semicolon, comma, exclamation-mark) are not (yet) supported.
+
 ```js
 specialChars = new RegExp('[0-9A-Z,;!:|¦]')
 ```
 
-*efrt* is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
+_efrt_ is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
 ## Performance
-*efrt* is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually fine:
+
+_efrt_ is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually fine:
+
 ```js
-var compressed = efrt.pack(skateboarders);//1k words (on a macbook)
-var trie = efrt.unpack(compressed)
+var compressed = pack(skateboarders) //1k words (on a macbook)
+var trie = unpack(compressed)
 // unpacking-step: 5.1ms
 
 trie.hasOwnProperty('tony hawk')
@@ -138,39 +150,46 @@ trie.hasOwnProperty('tony hawk')
 ```
 
 ## Size
+
 `efrt` will pack filesize down as much as possible, depending upon the redundancy of the prefixes/suffixes in the words, and the size of the list.
-* list of countries - `1.5k -> 0.8k` *(46% compressed)*
-* all adverbs in wordnet - `58k -> 24k` *(58% compressed)*
-* all adjectives in wordnet - `265k -> 99k` *(62% compressed)*
-* all nouns in wordnet - `1,775k -> 692k` *(61% compressed)*
+
+- list of countries - `1.5k -> 0.8k` _(46% compressed)_
+- all adverbs in wordnet - `58k -> 24k` _(58% compressed)_
+- all adjectives in wordnet - `265k -> 99k` _(62% compressed)_
+- all nouns in wordnet - `1,775k -> 692k` _(61% compressed)_
 
 but there are some things to consider:
-* bigger files compress further (see [🎈 birthday problem](https://en.wikipedia.org/wiki/Birthday_problem))
-* using efrt will reduce gains from gzip compression, which most webservers quietly use
-* english is more suffix-redundant than prefix-redundant, so non-english words may benefit from other styles
+
+- bigger files compress further (see [🎈 birthday problem](https://en.wikipedia.org/wiki/Birthday_problem))
+- using efrt will reduce gains from gzip compression, which most webservers quietly use
+- english is more suffix-redundant than prefix-redundant, so non-english words may benefit from other styles
 
 Assuming your data has a low _category-to-data ratio_, you will hit-breakeven with at about 250 keys. If your data is in the thousands, you can very be confident about saving your users some considerable bandwidth.
 
 ## Use
+
 **IE9+**
+
 ```html
 <script src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>
 <script>
-  var smaller=efrt.pack(['larry','curly','moe'])
-  var trie=efrt.unpack(smaller)
+  var smaller = efrt.pack(['larry', 'curly', 'moe'])
+  var trie = efrt.unpack(smaller)
   console.log(trie['moe'])
 </script>
 ```
 
-if you're doing the second step in the client, you can load just the unpack-half of the library(~3k):
+if you're doing the second step in the client, you can load just the CJS unpack-half of the library(~3k):
+
 ```bash
 npm install efrt-unpack
 ```
+
 ```html
 <script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
 <script>
-  var trie=unpack(compressedStuff);
-  trie.hasOwnProperty('miles davis');
+  var trie = unpack(compressedStuff)
+  trie.hasOwnProperty('miles davis')
 </script>
 ```
 

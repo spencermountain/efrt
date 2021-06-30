@@ -1,5 +1,6 @@
-const Histogram = require('./histogram')
-const encoding = require('../encoding')
+import Histogram from './histogram.js'
+import encoding from '../encoding.js'
+
 const config = {
   NODE_SEP: ';',
   KEY_VAL: ':',
@@ -7,9 +8,7 @@ const config = {
   TERMINAL_PREFIX: '!',
   BASE: 36
 }
-
 // Return packed representation of Trie as a string.
-
 // Return packed representation of Trie as a string.
 //
 // Each node of the Trie is output on a single line.
@@ -38,15 +37,12 @@ const config = {
 // with a (relative!) line number of the node that string references.
 // Terminal strings (those without child node references) are
 // separated by ',' characters.
-
-const nodeLine = function(self, node) {
+const nodeLine = function (self, node) {
   let line = '',
     sep = ''
-
   if (self.isTerminal(node)) {
     line += config.TERMINAL_PREFIX
   }
-
   const props = self.nodeProps(node)
   for (let i = 0; i < props.length; i++) {
     const prop = props[i]
@@ -74,7 +70,7 @@ const nodeLine = function(self, node) {
   return line
 }
 
-const analyzeRefs = function(self, node) {
+const analyzeRefs = function (self, node) {
   if (self.visited(node)) {
     return
   }
@@ -93,7 +89,7 @@ const analyzeRefs = function(self, node) {
   }
 }
 
-const symbolCount = function(self) {
+const symbolCount = function (self) {
   self.histAbs = self.histAbs.highest(config.BASE)
   const savings = []
   savings[-1] = 0
@@ -117,7 +113,7 @@ const symbolCount = function(self) {
   return sCount
 }
 
-const numberNodes = function(self, node) {
+const numberNodes = function (self, node) {
   // Topological sort into nodes array
   if (node._n !== undefined) {
     return
@@ -130,7 +126,7 @@ const numberNodes = function(self, node) {
   self.nodes.unshift(node)
 }
 
-const pack = function(self) {
+const pack = function (self) {
   self.nodes = []
   self.nodeCount = 0
   self.syms = {}
@@ -138,13 +134,10 @@ const pack = function(self) {
   self.pos = 0
   // Make sure we've combined all the common suffixes
   self.optimize()
-
   self.histAbs = new Histogram()
   self.histRel = new Histogram()
-
   numberNodes(self, self.root)
   self.nodeCount = self.nodes.length
-
   self.prepDFS()
   analyzeRefs(self, self.root)
   self.symCount = symbolCount(self)
@@ -162,8 +155,7 @@ const pack = function(self) {
         encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1)
     )
   }
-
   return self.nodes.join(config.NODE_SEP)
 }
 
-module.exports = pack
+export default pack

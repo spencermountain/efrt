@@ -1,7 +1,6 @@
-const encoding = require('../encoding')
+import encoding from '../encoding.js'
 
-//the symbols are at the top of the array.
-module.exports = function(t) {
+const symbols = function (t) {
   //... process these lines
   const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)')
   for (let i = 0; i < t.nodes.length; i++) {
@@ -15,3 +14,4 @@ module.exports = function(t) {
   //remove from main node list
   t.nodes = t.nodes.slice(t.symCount, t.nodes.length)
 }
+export default symbols

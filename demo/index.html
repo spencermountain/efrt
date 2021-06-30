@@ -1,67 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>efrt Demo</title>
+    <!-- <script type="text/javascript" src="https://unpkg.com/efrt@latest/builds/efrt.js"></script> -->
+    <script type="text/javascript" src="../builds/efrt.js"></script>
+    <style>
+      #words {
+        font-size: 15px;
+        height: 200px;
+        width: 60%;
+        color: 'grey';
+        margin-left: 10%;
+        margin-top: 6%;
+      }
 
-<head>
-  <meta charset="utf-8">
-  <title>efrt Demo</title>
-  <!-- <script type="text/javascript" src="https://unpkg.com/efrt@latest/builds/efrt.js"></script> -->
-  <script type="text/javascript" src="../builds/efrt.js"></script>
-  <style>
-    #words {
-      font-size: 15px;
-      height: 200px;
-      width: 60%;
-      color: 'grey';
-      margin-left: 10%;
-      margin-top: 6%;
-    }
+      #word {
+        font-size: 25px;
+        color: 'grey';
+      }
 
-    #word {
-      font-size: 25px;
-      color: 'grey';
-    }
+      #result {
+        position: relative;
+        color: silver;
+        font-size: 15px;
+        display: inline-block;
+        width: 80%;
+        padding: 20px;
+        margin: 20px;
+        border: 1px solid lightgrey;
+      }
 
-    #result {
-      position: relative;
-      color: silver;
-      font-size: 15px;
-      display: inline-block;
-      width: 80%;
-      padding: 20px;
-      margin: 20px;
-      border: 1px solid lightgrey;
-    }
+      #nothing {
+        color: darkred;
+      }
 
-    #nothing {
-      color: darkred
-    }
+      #found {
+        font-size: 50px;
+        margin-left: 25px;
+        color: steelblue;
+      }
 
-    #found {
-      font-size: 50px;
-      margin-left: 25px;
-      color: steelblue;
-    }
+      #logo {
+        position: absolute;
+        top: 50px;
+        left: 50px;
+      }
 
-    #logo {
-      position: absolute;
-      top: 50px;
-      left: 50px;
-    }
+      h3 {
+        color: grey;
+      }
+    </style>
+  </head>
 
-    h3 {
-      color: grey;
-    }
-  </style>
-</head>
-
-<body style="position:relative; width:100%; height:100%; ">
-  <div id="logo">
-    demo of <a style='text-decoration:none; color:steelblue' href="https://github.com/nlp-compromise/efrt">efrt</a>
-    <div style='color:lightgrey; font-size:12px;'>trie-based compression of a word list</div>
-  </div>
-  <div id="">
-    <h3>(english, ASCII) words to compress:</h3>
-    <textarea type="text" id="words" onKeyPress="compress()" onKeyUp="compress()">
+  <body style="position: relative; width: 100%; height: 100%">
+    <div id="logo">
+      demo of
+      <a
+        style="text-decoration: none; color: steelblue"
+        href="https://github.com/nlp-compromise/efrt"
+        >efrt</a
+      >
+      <div style="color: lightgrey; font-size: 12px">trie-based compression of a word list</div>
+    </div>
+    <div id="">
+      <h3>(english, ASCII) words to compress:</h3>
+      <textarea type="text" id="words" onKeyPress="compress()" onKeyUp="compress()">
 I've been to
 Reno, Chicago, Fargo, Minnesota,
 Buffalo, Toronto, Winslow, Sarasota,
@@ -93,68 +97,79 @@ Chaska, Nebraska, Alaska, Opelika,
 Baraboo, Waterloo, Kalamazoo, Kansas City,
 Sioux City, Cedar City, Dodge City, what a pity.
       </textarea>
-    <div>compressed form:</div>
-    <div id="length"></div>
-    <textarea id="result"></textarea>
-    <p>
-    </p>
-    <div style='margin:75px;'>
-      query it:
-      <ul>
-        <input type="text" id="word" onKeyPress="findWord()" onKeyUp="findWord()" value="parkersburg" />
-        <div id="found"></div>
-        <div style="margin-left:200px;">
-          <div id="unpack"></div>
-          <div id="foundTime"></div>
-        </div>
-      </ul>
+      <div>compressed form:</div>
+      <div id="length"></div>
+      <textarea id="result"></textarea>
+      <p></p>
+      <div style="margin: 75px">
+        query it:
+        <ul>
+          <input
+            type="text"
+            id="word"
+            onKeyPress="findWord()"
+            onKeyUp="findWord()"
+            value="parkersburg"
+          />
+          <div id="found"></div>
+          <div style="margin-left: 200px">
+            <div id="unpack"></div>
+            <div id="foundTime"></div>
+          </div>
+        </ul>
+      </div>
     </div>
-  </div>
-</body>
-<script type="text/javascript" language="javascript">
-var trieHard = window.trieHard
-window.compressed = ''
+  </body>
+  <script type="text/javascript" language="javascript">
+    var trieHard = window.trieHard
+    window.compressed = ''
 
-function findWord() {
-  var str = document.getElementById('word').value || ''
-  str = str.toLowerCase().replace(/'/, '')
+    function findWord() {
+      var str = document.getElementById('word').value || ''
+      str = str.toLowerCase().replace(/'/, '')
 
-  var start = new Date()
-  var trie = efrt.unpack(window.compressed || '')
-  var end = new Date()
-  var unpck = end.getTime() - start.getTime()
-  document.getElementById('unpack').innerText = 'unpacked in  ' + unpck + 'ms'
+      var start = new Date()
+      var trie = efrt.unpack(window.compressed || '')
+      var end = new Date()
+      var unpck = end.getTime() - start.getTime()
+      document.getElementById('unpack').innerText = 'unpacked in  ' + unpck + 'ms'
 
-  var start = new Date()
-  var bool = trie.hasOwnProperty(str)
-  var end = new Date()
-  var ms = end.getTime() - start.getTime()
-  document.getElementById('found').innerText = bool
-  document.getElementById('foundTime').innerText = 'queried in - ' + ms + 'ms'
-}
+      var start = new Date()
+      var bool = trie.hasOwnProperty(str)
+      var end = new Date()
+      var ms = end.getTime() - start.getTime()
+      document.getElementById('found').innerText = bool
+      document.getElementById('foundTime').innerText = 'queried in - ' + ms + 'ms'
+    }
 
-function compress() {
-  var str = document.getElementById('words').value || ''
-  //normalize it a bit
-  str = str.toLowerCase().replace(/'/, '')
-  var words = str.split(/,?\W+/g)
+    function compress() {
+      var str = document.getElementById('words').value || ''
+      //normalize it a bit
+      str = str.toLowerCase().replace(/'/, '')
+      var words = str.split(/,?\W+/g)
 
-  var start = new Date()
-  window.compressed = efrt.pack(words)
-  var end = new Date()
-  var ms = end.getTime() - start.getTime()
+      var start = new Date()
+      window.compressed = efrt.pack(words)
+      var end = new Date()
+      var ms = end.getTime() - start.getTime()
 
-  document.getElementById('result').innerText = compressed
-  var percentage = 0
-  if (str.length > 1) {
-    percentage = (str.length - compressed.length) / str.length
-    percentage = parseInt(percentage * 100)
-  }
-  document.getElementById('length').innerText =
-    str.length + ' chars to ' + compressed.length + '  (down ' + percentage + '%) in ' + ms + 'ms'
-  findWord()
-}
-compress() //fire!
-</script>
-
+      document.getElementById('result').innerText = compressed
+      var percentage = 0
+      if (str.length > 1) {
+        percentage = (str.length - compressed.length) / str.length
+        percentage = parseInt(percentage * 100)
+      }
+      document.getElementById('length').innerText =
+        str.length +
+        ' chars to ' +
+        compressed.length +
+        '  (down ' +
+        percentage +
+        '%) in ' +
+        ms +
+        'ms'
+      findWord()
+    }
+    compress() //fire!
+  </script>
 </html>

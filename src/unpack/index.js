@@ -1,6 +1,6 @@
-const unpack = require('./unpack')
+import traverse from './traverse.js'
 
-module.exports = function(str) {
+const unpack = function (str) {
   //turn the weird string into a key-value object again
   const obj = str.split('|').reduce((h, s) => {
     const arr = s.split('¦')
@@ -8,8 +8,8 @@ module.exports = function(str) {
     return h
   }, {})
   const all = {}
-  Object.keys(obj).forEach(function(cat) {
-    const arr = unpack(obj[cat])
+  Object.keys(obj).forEach(function (cat) {
+    const arr = traverse(obj[cat])
     //special case, for botched-boolean
     if (cat === 'true') {
       cat = true
@@ -29,3 +29,5 @@ module.exports = function(str) {
   })
   return all
 }
+
+export default unpack

@@ -1,8 +1,7 @@
-'use strict'
-const test = require('tape')
-const efrt = require('./lib/efrt')
+import test from 'tape'
+import efrt from './_lib.js'
 
-test('uncompressable-array', function(t) {
+test('uncompressable-array', function (t) {
   const arr = ['a', 'b', 'c', 'd', 'e', 'f']
   const str = efrt.pack(arr)
   const ptrie = efrt.unpack(str)
@@ -14,7 +13,7 @@ test('uncompressable-array', function(t) {
   t.end()
 })
 
-test('very-compressable-array', function(t) {
+test('very-compressable-array', function (t) {
   const arr = [
     'aaa',
     'aa',
@@ -47,7 +46,7 @@ test('very-compressable-array', function(t) {
   t.end()
 })
 
-test('tricky-subsets', function(t) {
+test('tricky-subsets', function (t) {
   const arr = [
     'cool',
     'coolish',
@@ -77,7 +76,7 @@ test('tricky-subsets', function(t) {
   t.end()
 })
 
-test('prefix-match-regression', function(t) {
+test('prefix-match-regression', function (t) {
   const arr = ['reno', 'chicago', 'fargo']
   const str = efrt.pack(arr)
   const trie = efrt.unpack(str)
@@ -89,7 +88,7 @@ test('prefix-match-regression', function(t) {
   t.end()
 })
 
-test('prefix-match-regression2', function(t) {
+test('prefix-match-regression2', function (t) {
   const arr = ['chicago', 'fargo', 'chaska']
   const str = efrt.pack(arr)
   const trie = efrt.unpack(str)

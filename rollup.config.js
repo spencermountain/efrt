@@ -1,19 +1,7 @@
-import commonjs from 'rollup-plugin-commonjs'
-import json from 'rollup-plugin-json'
 import { terser } from 'rollup-plugin-terser'
-import resolve from 'rollup-plugin-node-resolve'
+import babel from 'rollup-plugin-babel'
 
 export default [
-  {
-    input: 'src/index.js',
-    output: [
-      {
-        file: 'builds/efrt.mjs',
-        format: 'esm'
-      }
-    ],
-    plugins: [resolve(), json(), commonjs()]
-  },
   {
     input: 'src/index.js',
     output: [
@@ -23,7 +11,7 @@ export default [
         name: 'efrt'
       }
     ],
-    plugins: [resolve(), json(), commonjs()]
+    plugins: []
   },
   {
     input: 'src/index.js',
@@ -31,11 +19,16 @@ export default [
       {
         file: 'builds/efrt.min.js',
         format: 'umd',
-        sourcemap: true,
         name: 'efrt'
       }
     ],
-    plugins: [resolve(), json(), commonjs(), terser()]
+    plugins: [
+      babel({
+        babelrc: false,
+        presets: ['@babel/preset-env']
+      }),
+      terser()
+    ]
   },
   {
     input: 'src/unpack/index.js',
@@ -51,6 +44,12 @@ export default [
         name: 'efrt'
       }
     ],
-    plugins: [resolve(), json(), commonjs(), terser()]
+    plugins: [
+      babel({
+        babelrc: false,
+        presets: ['@babel/preset-env']
+      }),
+      terser()
+    ]
   }
 ]

@@ -1,10 +1,10 @@
-const fns = require('./fns')
-const pack = require('./pack')
+import fns from './fns.js'
+import pack from './pack.js'
 const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]') //characters banned from entering the trie
 
-module.exports = {
+const methods = {
   // Insert words from one big string, or from an array.
-  insertWords: function(words) {
+  insertWords: function (words) {
     if (words === undefined) {
       return
     }
@@ -22,7 +22,7 @@ module.exports = {
     }
   },
 
-  insert: function(word) {
+  insert: function (word) {
     this._insert(word, this.root)
     const lastWord = this.lastWord
     this.lastWord = word
@@ -38,7 +38,7 @@ module.exports = {
     }
   },
 
-  _insert: function(word, node) {
+  _insert: function (word, node) {
     let prefix, next
 
     // Duplicate word entry - ignore
@@ -65,7 +65,7 @@ module.exports = {
       }
       next = {}
       next[prop.slice(prefix.length)] = node[prop]
-      this.addTerminal(next, word = word.slice(prefix.length))
+      this.addTerminal(next, (word = word.slice(prefix.length)))
       delete node[prop]
       node[prefix] = next
       this.wordCount++
@@ -83,7 +83,7 @@ module.exports = {
   // Note - don't prematurely share suffixes - these
   // terminals may become split and joined with other
   // nodes in this part of the tree.
-  addTerminal: function(node, prop) {
+  addTerminal: function (node, prop) {
     if (prop.length <= 1) {
       node[prop] = 1
       return
@@ -96,7 +96,7 @@ module.exports = {
   // Well ordered list of properties in a node (string or object properties)
   // Use nodesOnly==true to return only properties of child nodes (not
   // terminal strings.
-  nodeProps: function(node, nodesOnly) {
+  nodeProps: function (node, nodesOnly) {
     const props = []
     for (const prop in node) {
       if (prop !== '' && prop[0] !== '_') {
@@ -109,7 +109,7 @@ module.exports = {
     return props
   },
 
-  optimize: function() {
+  optimize: function () {
     this.combineSuffixNode(this.root)
     this.prepDFS()
     this.countDegree(this.root)
@@ -118,7 +118,7 @@ module.exports = {
   },
 
   // Convert Trie to a DAWG by sharing identical nodes
-  combineSuffixNode: function(node) {
+  combineSuffixNode: function (node) {
     // Frozen node - can't change.
     if (node._c) {
       return node
@@ -151,11 +151,11 @@ module.exports = {
     return node
   },
 
-  prepDFS: function() {
+  prepDFS: function () {
     this.vCur++
   },
 
-  visited: function(node) {
+  visited: function (node) {
     if (node._v === this.vCur) {
       return true
     }
@@ -163,7 +163,7 @@ module.exports = {
     return false
   },
 
-  countDegree: function(node) {
+  countDegree: function (node) {
     if (node._d === undefined) {
       node._d = 0
     }
@@ -178,7 +178,7 @@ module.exports = {
   },
 
   // Remove intermediate singleton nodes by hoisting into their parent
-  collapseChains: function(node) {
+  collapseChains: function (node) {
     let prop, props, child, i
     if (this.visited(node)) {
       return
@@ -204,13 +204,13 @@ module.exports = {
     }
   },
 
-  isTerminal: function(node) {
+  isTerminal: function (node) {
     return !!node['']
   },
 
   // Find highest node in Trie that is on the path to word
   // and that is NOT on the path to other.
-  uniqueNode: function(word, other, node) {
+  uniqueNode: function (word, other, node) {
     const props = this.nodeProps(node, true)
     for (let i = 0; i < props.length; i++) {
       const prop = props[i]
@@ -224,7 +224,8 @@ module.exports = {
     return undefined
   },
 
-  pack: function() {
+  pack: function () {
     return pack(this)
   }
 }
+export default methods

@@ -1,11 +1,9 @@
-'use strict'
-const test = require('tape')
-const names = require('./data/maleNames')
-const countries = require('./data/countries')
-const adjectives = require('./data/adjectives')
-const efrt = require('./lib/efrt')
+import test from 'tape'
+import efrt from './_lib.js'
+import names from './data/maleNames.js'
+import countries from './data/countries.js'
 
-test('match-every-name:', function(t) {
+test('match-every-name:', function (t) {
   const str = efrt.pack(names)
   const ptrie = efrt.unpack(str)
   for (let i = 0; i < names.length; i++) {
@@ -16,7 +14,7 @@ test('match-every-name:', function(t) {
   t.end()
 })
 
-test('match-every-country:', function(t) {
+test('match-every-country:', function (t) {
   const str = efrt.pack(countries)
   const ptrie = efrt.unpack(str)
   for (let i = 0; i < countries.length; i++) {
@@ -41,10 +39,9 @@ test('match-every-country:', function(t) {
 //   t.end();
 // });
 
-test('test prefixes:', function(t) {
+test('test prefixes:', function (t) {
   const compressed = efrt.pack(countries)
   const ptrie = efrt.unpack(compressed)
-
   for (let i = 0; i < countries.length; i++) {
     const str = countries[i]
     for (let o = 1; o < str.length - 1; o++) {

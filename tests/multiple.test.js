@@ -1,8 +1,7 @@
-'use strict'
-const test = require('tape')
-const efrt = require('./lib/efrt')
+import test from 'tape'
+import efrt from './_lib.js'
 
-test('support array of values:', function(t) {
+test('support array of values:', function (t) {
   const foods = {
     strawberry: 'fruit',
     blueberry: 'fruit',
@@ -12,7 +11,6 @@ test('support array of values:', function(t) {
     pepper: ['vegetable', 'spicy'],
     salad: ['fruit', 'vegetable', 'sour']
   }
-
   const packd = efrt.pack(foods)
   const obj = efrt.unpack(packd)
   t.deepEqual(obj.tomato, ['fruit', 'vegetable'], 'tomato is both')

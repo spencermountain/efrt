@@ -1,4 +1,4 @@
-const commonPrefix = function(w1, w2) {
+const commonPrefix = function (w1, w2) {
   let len = Math.min(w1.length, w2.length)
   while (len > 0) {
     const prefix = w1.slice(0, len)
@@ -11,7 +11,7 @@ const commonPrefix = function(w1, w2) {
 }
 
 /* Sort elements and remove duplicates from array (modified in place) */
-const unique = function(a) {
+const unique = function (a) {
   a.sort()
   for (let i = 1; i < a.length; i++) {
     if (a[i - 1] === a[i]) {
@@ -20,7 +20,7 @@ const unique = function(a) {
   }
 }
 
-module.exports = {
-  commonPrefix: commonPrefix,
-  unique: unique
+export default {
+  commonPrefix,
+  unique
 }

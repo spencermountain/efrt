@@ -1,6 +1,7 @@
-'use strict'
-// const efrt = require('./src')
-const efrt = require('./builds/efrt')
+import { pack, unpack } from './src/index.js'
+// import efrt from './src/index.js'
+// console.log(efrt)
+// const efrt = require('./builds/efrt')
 // let words = require('./test/data/countries');
 
 const data = [
@@ -61,7 +62,7 @@ const data = [
   'dinner',
   'documentary'
 ]
-const packd = efrt.pack(data)
+const packd = pack(data)
 console.log(packd, '\n')
-// const arr = Object.keys(efrt.unpack(packd))
-// console.log(arr)
+const arr = Object.keys(unpack(packd))
+console.log(arr)

@@ -1,24 +1,24 @@
-const Trie = require('./trie')
+import Trie from './trie.js'
 
-const isArray = function(input) {
+const isArray = function (input) {
   return Object.prototype.toString.call(input) === '[object Array]'
 }
 
-const handleFormats = function(input) {
+const handleFormats = function (input) {
   //null
   if (input === null || input === undefined) {
     return {}
   }
   //string
   if (typeof input === 'string') {
-    return input.split(/ +/g).reduce(function(h, str) {
+    return input.split(/ +/g).reduce(function (h, str) {
       h[str] = true
       return h
     }, {})
   }
   //array
   if (isArray(input)) {
-    return input.reduce(function(h, str) {
+    return input.reduce(function (h, str) {
       h[str] = true
       return h
     }, {})
@@ -28,10 +28,10 @@ const handleFormats = function(input) {
 }
 
 //turn an array into a compressed string
-const pack = function(obj) {
+const pack = function (obj) {
   obj = handleFormats(obj)
   //pivot into categories:
-  const flat = Object.keys(obj).reduce(function(h, k) {
+  const flat = Object.keys(obj).reduce(function (h, k) {
     const val = obj[k]
     //array version-
     //put it in several buckets
@@ -56,18 +56,15 @@ const pack = function(obj) {
     return h
   }, {})
   //pack each into a compressed string
-  Object.keys(flat).forEach(function(k) {
+  Object.keys(flat).forEach(function (k) {
     const t = new Trie(flat[k])
     flat[k] = t.pack()
   })
-  // flat = JSON.stringify(flat, null, 0);
 
   return Object.keys(flat)
-    .map(k => {
+    .map((k) => {
       return k + '¦' + flat[k]
     })
     .join('|')
-
-  // return flat;
 }
-module.exports = pack
+export default pack

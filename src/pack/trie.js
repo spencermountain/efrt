@@ -1,4 +1,4 @@
-const methods = require('./methods')
+import methods from './methods.js'
 /*
  A JavaScript implementation of a Trie search datastructure.
 Each node of the Trie is an Object that can contain the following properties:
@@ -16,7 +16,7 @@ Each node of the Trie is an Object that can contain the following properties:
       '_v': Visited in DFS.
       '_g': For singleton nodes, the name of it's single property.
  */
-const Trie = function(words) {
+const Trie = function (words) {
   this.root = {}
   this.lastWord = ''
   this.suffixes = {}
@@ -26,7 +26,9 @@ const Trie = function(words) {
   this.insertWords(words)
   this.vCur = 0
 }
-Object.keys(methods).forEach(function(k) {
+
+Object.keys(methods).forEach(function (k) {
   Trie.prototype[k] = methods[k]
 })
-module.exports = Trie
+
+export default Trie

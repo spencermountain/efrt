@@ -1,8 +1,8 @@
-const parseSymbols = require('./symbols')
-const encoding = require('../encoding')
+import parseSymbols from './symbols.js'
+import encoding from '../encoding.js'
 
 // References are either absolute (symbol) or relative (1 - based)
-const indexFromRef = function(trie, ref, index) {
+const indexFromRef = function (trie, ref, index) {
   const dnode = encoding.fromAlphaCode(ref)
   if (dnode < trie.symCount) {
     return trie.syms[dnode]
@@ -10,7 +10,7 @@ const indexFromRef = function(trie, ref, index) {
   return index + dnode + 1 - trie.symCount
 }
 
-const toArray = function(trie) {
+const toArray = function (trie) {
   const all = []
   const crawl = (index, pref) => {
     let node = trie.nodes[index]
@@ -25,7 +25,6 @@ const toArray = function(trie) {
       if (!str) {
         continue
       }
-
       const have = pref + str
       //branch's end
       if (ref === ',' || ref === undefined) {
@@ -41,9 +40,9 @@ const toArray = function(trie) {
 }
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
-const unpack = function(str) {
+const unpack = function (str) {
   const trie = {
-    nodes: str.split(';'), //that's all ;)!
+    nodes: str.split(';'),
     syms: [],
     symCount: 0
   }
@@ -54,4 +53,4 @@ const unpack = function(str) {
   return toArray(trie)
 }
 
-module.exports = unpack
+export default unpack

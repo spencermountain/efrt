@@ -1,24 +1,20 @@
 <html>
+  <body>
+    <div>efrt unpacking demo</div>
+    <pre id="result" />
 
-<body>
-  <div>efrt unpacking demo</div>
-  <pre id="result" />
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"
+    ></script>
 
-  <script type="text/javascript" src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
-
-  <script type="text/javascript">
-    var compressed = '{"true":"cool0;! cat,.com,a0;ge,mungo"}';
-    var trie = unpack(compressed);
-    var attempt = [
-      'miles davis',
-      'cool.com',
-      'cool'
-    ].map(function (str) {
-      return str + ' -> ' + trie.hasOwnProperty(str)
-    })
-    document.getElementById('result').innerText = attempt.join('\n')
-  </script>
-
-</body>
-
+    <script type="text/javascript">
+      var compressed = '{"true":"cool0;! cat,.com,a0;ge,mungo"}'
+      var trie = unpack(compressed)
+      var attempt = ['miles davis', 'cool.com', 'cool'].map(function (str) {
+        return str + ' -> ' + trie.hasOwnProperty(str)
+      })
+      document.getElementById('result').innerText = attempt.join('\n')
+    </script>
+  </body>
 </html>

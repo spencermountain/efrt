@@ -1,5 +1,5 @@
-const test = require('tape')
-const efrt = require('./lib/efrt')
+import test from 'tape'
+import efrt from './_lib.js'
 
 const reserved = [
   'abstract',
@@ -86,7 +86,7 @@ const reserved = [
 ]
 
 //support reserved words
-test('reserved words as keys:', function(t) {
+test('reserved words as keys:', function (t) {
   const asKeys = reserved.reduce((h, str) => {
     Object.defineProperty(h, str, {
       writable: true,
@@ -98,25 +98,23 @@ test('reserved words as keys:', function(t) {
   }, {})
   const str = efrt.pack(asKeys)
   t.equal(typeof str, 'string', 'packed-string')
-
   const unpacked = efrt.unpack(str)
-  reserved.forEach(key => {
+  reserved.forEach((key) => {
     t.equal(unpacked.hasOwnProperty(key), true, 'has ' + key)
   })
   t.end()
 })
 
 //support reserved words
-test('reserved words as values:', function(t) {
+test('reserved words as values:', function (t) {
   const asValues = reserved.reduce((h, w) => {
     h['word' + w] = w
     return h
   }, {})
   const str = efrt.pack(asValues)
   t.equal(typeof str, 'string', 'packed-string')
-
   const unpacked = efrt.unpack(str)
-  reserved.forEach(word => {
+  reserved.forEach((word) => {
     t.equal(unpacked['word' + word], word, 'has ' + word)
   })
   t.end()
