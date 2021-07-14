@@ -21,30 +21,7 @@ export default [
     input: 'src/index.js',
     output: [
       {
-        file: 'builds/efrt.min.js',
-        format: 'umd',
-        name: 'efrt'
-      }
-    ],
-    plugins: [
-      babel({
-        babelrc: false,
-        presets: ['@babel/preset-env']
-      }),
-      terser()
-    ]
-  },
-  // unpack cjs min
-  {
-    input: 'src/unpack/index.js',
-    output: [
-      {
-        file: 'builds/efrt-unpack.min.js',
-        format: 'umd',
-        name: 'efrt'
-      },
-      {
-        file: 'unpackLib/efrt-unpack.min.js',
+        file: 'builds/efrt.min.cjs',
         format: 'umd',
         name: 'efrt'
       }
@@ -63,13 +40,29 @@ export default [
     output: [{ banner: banner, file: 'builds/efrt.mjs', format: 'esm' }],
     plugins: [terser()]
   },
-  // mjs-unpack min
+  // unpack cjs min
   {
     input: 'src/unpack/index.js',
     output: [
-      { banner: banner, file: 'builds/efrt-unpack.mjs', format: 'esm' },
-      { banner: banner, file: 'unpackLib/efrt-unpack.mjs', format: 'esm' }
+      {
+        file: 'builds/efrt-unpack.min.cjs',
+        format: 'umd',
+        name: 'efrt'
+      }
     ],
+    plugins: [
+      babel({
+        babelrc: false,
+        presets: ['@babel/preset-env']
+      }),
+      terser()
+    ]
+  },
+
+  // unpack mjs min
+  {
+    input: 'src/unpack/index.js',
+    output: [{ banner: banner, file: 'builds/efrt-unpack.mjs', format: 'esm' }],
     plugins: [terser()]
   }
 ]

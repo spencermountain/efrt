@@ -1,9 +1,9 @@
 {
   "name": "efrt",
   "description": "neato compression of key-value data",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "main": "./builds/efrt.cjs",
-  "unpkg": "./builds/efrt.min.js",
+  "unpkg": "./builds/efrt.min.cjs",
   "module": "./builds/efrt.mjs",
   "type": "module",
   "sideEffects": false,
@@ -15,7 +15,7 @@
     },
     "./unpack": {
       "import": "./builds/efrt-unpack.mjs",
-      "default": "./builds/efrt-unpack.min.js"
+      "default": "./builds/efrt-unpack.min.cjs"
     }
   },
   "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
