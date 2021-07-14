@@ -9,7 +9,7 @@ export default [
     input: 'src/index.js',
     output: [
       {
-        file: 'builds/efrt.js',
+        file: 'builds/efrt.cjs',
         format: 'umd',
         name: 'efrt'
       }

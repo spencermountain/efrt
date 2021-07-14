@@ -1,3 +1,7 @@
+## 2.3.1 [June 2021]
+
+- use .cjs for commonjs file
+
 ## 2.3.0 [June 2021]
 
 - support es modules exports
