@@ -1,5 +1,4 @@
 import { terser } from 'rollup-plugin-terser'
-import babel from 'rollup-plugin-babel'
 import { version } from './package.json'
 const banner = '/* efrt ' + version + ' MIT */'
 
@@ -27,10 +26,6 @@ export default [
       }
     ],
     plugins: [
-      babel({
-        babelrc: false,
-        presets: ['@babel/preset-env']
-      }),
       terser()
     ]
   },
@@ -51,10 +46,6 @@ export default [
       }
     ],
     plugins: [
-      babel({
-        babelrc: false,
-        presets: ['@babel/preset-env']
-      }),
       terser()
     ]
   },

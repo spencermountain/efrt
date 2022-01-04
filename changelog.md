@@ -1,3 +1,7 @@
+## 2.4.0 [Jan 2022]
+- point package 'main' at ./src/index.js for tree-shaking
+- remove babel dependency
+
 ## 2.3.1 [June 2021]
 
 - use .cjs for commonjs file
