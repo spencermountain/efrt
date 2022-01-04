@@ -8,7 +8,7 @@ export default [
     input: 'src/index.js',
     output: [
       {
-        file: 'builds/efrt.cjs',
+        file: 'builds/efrt.js',
         format: 'umd',
         name: 'efrt'
       }
@@ -20,7 +20,7 @@ export default [
     input: 'src/index.js',
     output: [
       {
-        file: 'builds/efrt.min.cjs',
+        file: 'builds/efrt.min.js',
         format: 'umd',
         name: 'efrt'
       }
@@ -40,7 +40,7 @@ export default [
     input: 'src/unpack/index.js',
     output: [
       {
-        file: 'builds/efrt-unpack.min.cjs',
+        file: 'builds/efrt-unpack.min.js',
         format: 'umd',
         name: 'efrt'
       }

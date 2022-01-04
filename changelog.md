@@ -1,6 +1,8 @@
 ## 2.4.0 [Jan 2022]
+- fix empty-array runtime error on unpack
 - point package 'main' at ./src/index.js for tree-shaking
 - remove babel dependency
+- use .js for cjs builds
 
 ## 2.3.1 [June 2021]
 

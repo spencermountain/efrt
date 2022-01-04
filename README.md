@@ -4,9 +4,6 @@
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
   </a>
-  <a href="https://www.codacy.com/app/spencerkelly86/efrt">
-    <img src="https://api.codacy.com/project/badge/Coverage/fc03e2761c8c471c8f84141abf2704de" />
-  </a>
   <a href="https://unpkg.com/efrt/builds/efrt.min.js">
      <img src="https://badge-size.herokuapp.com/spencermountain/efrt/master/builds/efrt.min.js" />
   </a>

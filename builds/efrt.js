@@ -676,6 +676,9 @@
   };
 
   const unpack = function (str) {
+    if (!str) {
+      return {}
+    }
     //turn the weird string into a key-value object again
     const obj = str.split('|').reduce((h, s) => {
       const arr = s.split('¦');
@@ -705,7 +708,7 @@
     return all
   };
 
-  var _version = '2.3.2';
+  var _version = '2.4.0';
 
   exports.pack = pack;
   exports.unpack = unpack;

@@ -62,7 +62,7 @@ const data = [
   'dinner',
   'documentary'
 ]
-const packd = pack(data)
+const packd = pack([])
 console.log(packd, '\n')
 const arr = Object.keys(unpack(packd))
 console.log(arr)

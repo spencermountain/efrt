@@ -1,6 +1,9 @@
 import traverse from './traverse.js'
 
 const unpack = function (str) {
+  if (!str) {
+    return {}
+  }
   //turn the weird string into a key-value object again
   const obj = str.split('|').reduce((h, s) => {
     const arr = s.split('¦')
