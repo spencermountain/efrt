@@ -1,20 +1,19 @@
 {
   "name": "efrt",
   "description": "neato compression of key-value data",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "main": "./src/index.js",
   "unpkg": "./builds/efrt.min.js",
-  "module": "./builds/efrt.mjs",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
       "require": "./builds/efrt.js",
-      "import": "./builds/efrt.mjs",
+      "import": "./src/index.js",
       "default": "./builds/efrt.js"
     },
     "./unpack": {
-      "import": "./builds/efrt-unpack.mjs",
+      "import": "./src/unpack/index.js",
       "default": "./builds/efrt-unpack.min.js"
     }
   },
