@@ -171,7 +171,7 @@ Assuming your data has a low _category-to-data ratio_, you will hit-breakeven wi
 **IE9+**
 
 ```html
-<script src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>
+<script src="https://unpkg.com/efrt@latest/builds/efrt.min.cjs"></script>
 <script>
   var smaller = efrt.pack(['larry', 'curly', 'moe'])
   var trie = efrt.unpack(smaller)
@@ -181,12 +181,12 @@ Assuming your data has a low _category-to-data ratio_, you will hit-breakeven wi
 
 if you're doing the second step in the client, you can load just the CJS unpack-half of the library(~3k):
 
-```bash
-npm install efrt-unpack
+```js
+const unpack = require('efrt/unpack') // node/cjs
 ```
 
 ```html
-<script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
+<script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.cjs"></script>
 <script>
   var trie = unpack(compressedStuff)
   trie.hasOwnProperty('miles davis')
