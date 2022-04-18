@@ -1,3 +1,6 @@
+## 2.6.0 [Apr 2022]
+- give commonjs build a .cjs extension
+
 ## 2.4.0 [Jan 2022]
 - fix empty-array runtime error on unpack
 - point package 'main' at ./src/index.js for tree-shaking

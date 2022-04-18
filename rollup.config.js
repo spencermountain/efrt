@@ -6,28 +6,14 @@ export default [
   //cjs
   {
     input: 'src/index.js',
-    output: [
-      {
-        file: 'builds/efrt.js',
-        format: 'umd',
-        name: 'efrt'
-      }
-    ],
+    output: [{ file: 'builds/efrt.cjs', format: 'umd', name: 'efrt' }],
     plugins: []
   },
   // cjs min
   {
     input: 'src/index.js',
-    output: [
-      {
-        file: 'builds/efrt.min.js',
-        format: 'umd',
-        name: 'efrt'
-      }
-    ],
-    plugins: [
-      terser()
-    ]
+    output: [{ file: 'builds/efrt.min.js', format: 'umd', name: 'efrt' }],
+    plugins: [terser()]
   },
   // mjs min
   {
@@ -38,16 +24,8 @@ export default [
   // unpack cjs min
   {
     input: 'src/unpack/index.js',
-    output: [
-      {
-        file: 'builds/efrt-unpack.min.js',
-        format: 'umd',
-        name: 'efrt'
-      }
-    ],
-    plugins: [
-      terser()
-    ]
+    output: [{ file: 'builds/efrt-unpack.min.js', format: 'umd', name: 'efrt' }],
+    plugins: [terser()]
   },
 
   // unpack mjs min
