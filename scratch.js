@@ -5,16 +5,7 @@ import { pack, unpack } from './src/index.js'
 // let words = require('./test/data/countries');
 
 const data = [
-  "Brian Vollmer",
-  "Brian Wansink",
-  "Brice Marden",
-  "Brideless Groom",
-  "Bridge Constructor Portal",
-  "Bridge Protocol Data Unit",
-  "Bridget Kearney",
-  "Bridget Malcolm",
-  "Bridgewater State University",
-  "Bridie",
+  "a_c",
 ]
 const packd = pack(data)
 console.log(packd, '\n')

@@ -60,7 +60,6 @@ const pack = function (obj) {
     const t = new Trie(flat[k])
     flat[k] = t.pack()
   })
-
   return Object.keys(flat)
     .map((k) => {
       return k + '¦' + flat[k]
