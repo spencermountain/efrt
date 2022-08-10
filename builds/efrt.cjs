@@ -280,6 +280,14 @@
   };
 
   const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]'); //characters banned from entering the trie
+  // reserved propery names
+  const internal = {
+    _d: true,
+    _v: true,
+    _c: true,
+    _g: true,
+    _n: true,
+  };
 
   const methods = {
     // Insert words from one big string, or from an array.
@@ -378,7 +386,8 @@
     nodeProps: function (node, nodesOnly) {
       const props = [];
       for (const prop in node) {
-        if (prop !== '' && (prop[0] !== '_' || prop === '_')) {
+        // is it a usuable prop, or a special reserved one?
+        if (prop !== '' && !internal.hasOwnProperty(prop)) {
           if (!nodesOnly || typeof node[prop] === 'object') {
             props.push(prop);
           }
@@ -707,7 +716,7 @@
     return all
   };
 
-  var _version = '2.6.0';
+  var _version = '2.7.0';
 
   exports.pack = pack;
   exports.unpack = unpack;
