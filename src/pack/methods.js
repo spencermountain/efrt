@@ -1,6 +1,14 @@
 import fns from './fns.js'
 import pack from './pack.js'
 const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]') //characters banned from entering the trie
+// reserved propery names
+const internal = {
+  _d: true,
+  _v: true,
+  _c: true,
+  _g: true,
+  _n: true,
+}
 
 const methods = {
   // Insert words from one big string, or from an array.
@@ -65,7 +73,7 @@ const methods = {
       }
       next = {}
       next[prop.slice(prefix.length)] = node[prop]
-      this.addTerminal(next, (word = word.slice(prefix.length)))
+      this.addTerminal(next, word = word.slice(prefix.length))
       delete node[prop]
       node[prefix] = next
       this.wordCount++
@@ -99,7 +107,8 @@ const methods = {
   nodeProps: function (node, nodesOnly) {
     const props = []
     for (const prop in node) {
-      if (prop !== '' && prop[0] !== '_') {
+      // is it a usuable prop, or a special reserved one?
+      if (prop !== '' && !internal.hasOwnProperty(prop)) {
         if (!nodesOnly || typeof node[prop] === 'object') {
           props.push(prop)
         }
@@ -179,11 +188,11 @@ const methods = {
 
   // Remove intermediate singleton nodes by hoisting into their parent
   collapseChains: function (node) {
-    let prop, props, child, i
+    let prop, child, i
     if (this.visited(node)) {
       return
     }
-    props = this.nodeProps(node)
+    const props = this.nodeProps(node)
     for (i = 0; i < props.length; i++) {
       prop = props[i]
       child = node[prop]

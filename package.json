@@ -1,7 +1,7 @@
 {
   "name": "efrt",
   "description": "neato compression of key-value data",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "main": "./src/index.js",
   "unpkg": "./builds/efrt.min.js",
   "type": "module",
@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "node ./scripts/version.js && rollup -c ",
-    "test": "tape-es \"./tests/*.test.js\" | tap-dancer",
+    "test": "tape \"./tests/*.test.js\" | tap-dancer",
     "testb": "TESTENV=prod tape-es \"./tests/*.test.js\" | tap-dancer",
     "watch": "amble ./scratch"
   },
@@ -44,11 +44,10 @@
   },
   "devDependencies": {
     "amble": "1.3.0",
-    "rollup": "2.70.2",
+    "rollup": "2.77.2",
     "rollup-plugin-terser": "7.0.2",
     "tap-dancer": "0.3.4",
-    "tape": "5.5.3",
-    "tape-es": "1.2.17"
+    "tape": "5.5.3"
   },
   "license": "MIT"
 }

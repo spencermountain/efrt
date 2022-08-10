@@ -4,18 +4,7 @@ import { pack, unpack } from './src/index.js'
 // const efrt = require('./builds/efrt')
 // let words = require('./test/data/countries');
 
-const data = [
-  "Brian Vollmer",
-  "Brian Wansink",
-  "Brice Marden",
-  "Brideless Groom",
-  "Bridge Constructor Portal",
-  "Bridge Protocol Data Unit",
-  "Bridget Kearney",
-  "Bridget Malcolm",
-  "Bridgewater State University",
-  "Bridie",
-]
+const data = ['cool_hat', 'cooles']
 const packd = pack(data)
 console.log(packd, '\n')
 const arr = Object.keys(unpack(packd))

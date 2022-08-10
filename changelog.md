@@ -1,3 +1,6 @@
+## 2.7.0 [Apr 2022]
+- fix for underscore character support
+
 ## 2.6.0 [Apr 2022]
 - give commonjs build a .cjs extension
 
