@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as build from '../builds/efrt.mjs'
 import * as src from '../src/index.js'
 let lib = src

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import shelljs from 'shelljs'
 const exec = shelljs.exec
 const nyc = './node_modules/nyc/bin/nyc.js'

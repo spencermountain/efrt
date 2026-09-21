@@ -1,3 +1,4 @@
+/* eslint-disable no-empty */
 const BASE = 36
 const seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 

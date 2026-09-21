@@ -73,6 +73,7 @@
     Histogram.prototype[k] = methods$1[k];
   });
 
+  /* eslint-disable no-empty */
   const BASE = 36;
   const seq = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -721,7 +722,5 @@
   exports.pack = pack;
   exports.unpack = unpack;
   exports.version = _version;
-
-  Object.defineProperty(exports, '__esModule', { value: true });
 
 }));

@@ -1,6 +1,11 @@
-import { terser } from 'rollup-plugin-terser'
-import { version } from './package.json'
-const banner = '/* efrt ' + version + ' MIT */'
+/* eslint-disable no-console */
+import terser from '@rollup/plugin-terser'
+import fs from 'node:fs'
+
+const pkg = JSON.parse(fs.readFileSync('./package.json').toString())
+console.log('\n 📦  - running rollup..\n')
+
+const banner = `/* spencermountain/${pkg.name} ${pkg.version} ${pkg.license} */`
 
 export default [
   //cjs
