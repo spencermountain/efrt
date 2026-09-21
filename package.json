@@ -17,11 +17,8 @@
       "default": "./builds/efrt-unpack.min.js"
     }
   },
-  "author": "Spencer Kelly <spencermountain@gmail.com> (http://spencermounta.in)",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/spencermountain/efrt.git"
-  },
+  "author": "Spencer Kelly <spencermountain@gmail.com> (https://spencermountain.dev)",
+  "repository": "github:spencermountain/efrt",
   "scripts": {
     "build": "node ./scripts/version.js && rollup -c ",
     "test": "tape \"./tests/*.test.js\" | tap-dancer",
@@ -48,5 +45,8 @@
     "tap-dancer": "0.4.0",
     "tape": "5.10.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "eslint": "^10.11.0"
+  }
 }
