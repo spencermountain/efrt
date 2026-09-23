@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 console.log('\n\n----\n')
 const buildsDir = path.join(__dirname, '../builds')
 const doFile = function (file) {
