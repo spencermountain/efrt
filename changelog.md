@@ -6,7 +6,6 @@
 - **[change]** - Packed-input validation, iterative decoding, and a documented key-length limit.
 - **[update]** - dependencies
 
-
 ## 2.7.0 [Apr 2022]
 - **[fix]** - underscore character support
 

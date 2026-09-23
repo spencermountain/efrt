@@ -41,7 +41,7 @@
     "eslint": "10.11.0",
     "rollup": "4.63.4",
     "rollup-plugin-filesize-check": "2.0.1",
-    "tap-dancer": "0.3.4",
+    "tap-dancer": "0.4.2",
     "tape": "5.10.2"
   },
   "unpkg": "./builds/efrt.min.js",
