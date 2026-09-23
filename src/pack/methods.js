@@ -1,14 +1,7 @@
 import fns from './fns.js'
 import pack from './pack.js'
-const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]') //characters banned from entering the trie
-// reserved propery names
-const internal = {
-  _d: true,
-  _v: true,
-  _c: true,
-  _g: true,
-  _n: true,
-}
+import { normalizeKey, unsupportedChars } from './keys.js'
+import createNode from './node.js'
 
 const methods = {
   // Insert words from one big string, or from an array.
@@ -20,11 +13,11 @@ const methods = {
       words = words.split(/[^a-zA-Z]+/)
     }
     for (let i = 0; i < words.length; i++) {
-      words[i] = words[i].toLowerCase()
+      words[i] = normalizeKey(words[i])
     }
     fns.unique(words)
     for (let i = 0; i < words.length; i++) {
-      if (words[i].match(NOT_ALLOWED) === null) {
+      if (!unsupportedChars.test(words[i])) {
         this.insert(words[i])
       }
     }
@@ -55,7 +48,7 @@ const methods = {
     }
 
     // Do any existing props share a common prefix?
-    const keys = Object.keys(node)
+    const keys = Object.keys(node.edges)
     for (let i = 0; i < keys.length; i++) {
       const prop = keys[i]
       prefix = fns.commonPrefix(word, prop)
@@ -63,19 +56,19 @@ const methods = {
         continue
       }
       // Prop is a proper prefix - recurse to child node
-      if (prop === prefix && typeof node[prop] === 'object') {
-        this._insert(word.slice(prefix.length), node[prop])
+      if (prop === prefix && typeof node.edges[prop] === 'object') {
+        this._insert(word.slice(prefix.length), node.edges[prop])
         return
       }
       // Duplicate terminal string - ignore
-      if (prop === word && typeof node[prop] === 'number') {
+      if (prop === word && typeof node.edges[prop] === 'number') {
         return
       }
-      next = {}
-      next[prop.slice(prefix.length)] = node[prop]
+      next = createNode()
+      next.edges[prop.slice(prefix.length)] = node.edges[prop]
       this.addTerminal(next, word = word.slice(prefix.length))
-      delete node[prop]
-      node[prefix] = next
+      delete node.edges[prop]
+      node.edges[prefix] = next
       this.wordCount++
       return
     }
@@ -93,11 +86,11 @@ const methods = {
   // nodes in this part of the tree.
   addTerminal: function (node, prop) {
     if (prop.length <= 1) {
-      node[prop] = 1
+      node.edges[prop] = 1
       return
     }
-    const next = {}
-    node[prop[0]] = next
+    const next = createNode()
+    node.edges[prop[0]] = next
     this.addTerminal(next, prop.slice(1))
   },
 
@@ -106,10 +99,9 @@ const methods = {
   // terminal strings.
   nodeProps: function (node, nodesOnly) {
     const props = []
-    for (const prop in node) {
-      // is it a usuable prop, or a special reserved one?
-      if (prop !== '' && !internal.hasOwnProperty(prop)) {
-        if (!nodesOnly || typeof node[prop] === 'object') {
+    for (const prop in node.edges) {
+      if (prop !== '') {
+        if (!nodesOnly || typeof node.edges[prop] === 'object') {
           props.push(prop)
         }
       }
@@ -141,10 +133,10 @@ const methods = {
     const props = this.nodeProps(node)
     for (let i = 0; i < props.length; i++) {
       const prop = props[i]
-      if (typeof node[prop] === 'object') {
-        node[prop] = this.combineSuffixNode(node[prop])
+      if (typeof node.edges[prop] === 'object') {
+        node.edges[prop] = this.combineSuffixNode(node.edges[prop])
         sig.push(prop)
-        sig.push(node[prop]._c)
+        sig.push(node.edges[prop]._c)
       } else {
         sig.push(prop)
       }
@@ -182,7 +174,7 @@ const methods = {
     }
     const props = this.nodeProps(node, true)
     for (let i = 0; i < props.length; i++) {
-      this.countDegree(node[props[i]])
+      this.countDegree(node.edges[props[i]])
     }
   },
 
@@ -195,16 +187,16 @@ const methods = {
     const props = this.nodeProps(node)
     for (i = 0; i < props.length; i++) {
       prop = props[i]
-      child = node[prop]
+      child = node.edges[prop]
       if (typeof child !== 'object') {
         continue
       }
       this.collapseChains(child)
       // Hoist the singleton child's single property to the parent
       if (child._g !== undefined && (child._d === 1 || child._g.length === 1)) {
-        delete node[prop]
+        delete node.edges[prop]
         prop += child._g
-        node[prop] = child[child._g]
+        node.edges[prop] = child.edges[child._g]
       }
     }
     // Identify singleton nodes
@@ -214,7 +206,7 @@ const methods = {
   },
 
   isTerminal: function (node) {
-    return !!node['']
+    return !!node.edges['']
   },
 
   // Find highest node in Trie that is on the path to word
@@ -225,9 +217,9 @@ const methods = {
       const prop = props[i]
       if (prop === word.slice(0, prop.length)) {
         if (prop !== other.slice(0, prop.length)) {
-          return node[prop]
+          return node.edges[prop]
         }
-        return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node[prop])
+        return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node.edges[prop])
       }
     }
     return undefined

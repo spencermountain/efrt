@@ -1,4 +1,5 @@
 import Trie from './trie.js'
+import { validateKeys } from './keys.js'
 
 const isArray = function (input) {
   return Object.prototype.toString.call(input) === '[object Array]'
@@ -14,47 +15,41 @@ const handleFormats = function (input) {
     return input.split(/ +/g).reduce(function (h, str) {
       h[str] = true
       return h
-    }, {})
+    }, Object.create(null))
   }
   //array
   if (isArray(input)) {
     return input.reduce(function (h, str) {
       h[str] = true
       return h
-    }, {})
+    }, Object.create(null))
   }
   //object
   return input
 }
 
 //turn an array into a compressed string
-const pack = function (obj) {
+const pack = function (obj, options = {}) {
+  if (options.strict && isArray(obj) && obj.some((key) => typeof key !== 'string')) {
+    throw new TypeError('efrt strict: array keys must be strings')
+  }
   obj = handleFormats(obj)
+  if (options.strict) {
+    validateKeys(obj)
+  }
   //pivot into categories:
   const flat = Object.keys(obj).reduce(function (h, k) {
-    const val = obj[k]
-    //array version-
-    //put it in several buckets
-    if (isArray(val)) {
-      for (let i = 0; i < val.length; i++) {
-        h[val[i]] = h[val[i]] || []
-        h[val[i]].push(k)
+    const values = isArray(obj[k]) ? obj[k] : [obj[k]]
+    for (let i = 0; i < values.length; i++) {
+      const cat = String(values[i])
+      if (/[|¦]/.test(cat)) {
+        throw new TypeError('efrt categories cannot contain | or ¦')
       }
-      return h
+      h[cat] = h[cat] || []
+      h[cat].push(k)
     }
-    //normal string/boolean version
-    if (h.hasOwnProperty(val) === false) {
-      //basically h[val]=[]  - support reserved words
-      Object.defineProperty(h, val, {
-        writable: true,
-        enumerable: true,
-        configurable: true,
-        value: []
-      })
-    }
-    h[val].push(k)
     return h
-  }, {})
+  }, Object.create(null))
   //pack each into a compressed string
   Object.keys(flat).forEach(function (k) {
     const t = new Trie(flat[k])

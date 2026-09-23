@@ -46,20 +46,21 @@ const nodeLine = function (self, node) {
   const props = self.nodeProps(node)
   for (let i = 0; i < props.length; i++) {
     const prop = props[i]
-    if (typeof node[prop] === 'number') {
+    const child = node.edges[prop]
+    if (typeof child === 'number') {
       line += sep + prop
       sep = config.STRING_SEP
       continue
     }
-    if (self.syms[node[prop]._n]) {
-      line += sep + prop + self.syms[node[prop]._n]
+    if (self.syms[child._n]) {
+      line += sep + prop + self.syms[child._n]
       sep = ''
       continue
     }
-    let ref = encoding.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount)
+    let ref = encoding.toAlphaCode(node._n - child._n - 1 + self.symCount)
     // Large reference to smaller string suffix -> duplicate suffix
-    if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
-      ref = node[prop]._g
+    if (child._g && ref.length >= child._g.length && node.edges[child._g] === 1) {
+      ref = child._g
       line += sep + prop + ref
       sep = config.STRING_SEP
       continue
@@ -77,15 +78,16 @@ const analyzeRefs = function (self, node) {
   const props = self.nodeProps(node, true)
   for (let i = 0; i < props.length; i++) {
     const prop = props[i]
-    const ref = node._n - node[prop]._n - 1
+    const child = node.edges[prop]
+    const ref = node._n - child._n - 1
     // Count the number of single-character relative refs
     if (ref < config.BASE) {
       self.histRel.add(ref)
     }
     // Count the number of characters saved by converting an absolute
     // reference to a one-character symbol.
-    self.histAbs.add(node[prop]._n, encoding.toAlphaCode(ref).length - 1)
-    analyzeRefs(self, node[prop])
+    self.histAbs.add(child._n, encoding.toAlphaCode(ref).length - 1)
+    analyzeRefs(self, child)
   }
 }
 
@@ -120,10 +122,10 @@ const numberNodes = function (self, node) {
   }
   const props = self.nodeProps(node, true)
   for (let i = 0; i < props.length; i++) {
-    numberNodes(self, node[props[i]]) //recursive
+    numberNodes(self, node.edges[props[i]]) //recursive
   }
   node._n = self.pos++
-  self.nodes.unshift(node)
+  self.nodes.push(node)
 }
 
 const pack = function (self) {
@@ -137,6 +139,7 @@ const pack = function (self) {
   self.histAbs = new Histogram()
   self.histRel = new Histogram()
   numberNodes(self, self.root)
+  self.nodes.reverse()
   self.nodeCount = self.nodes.length
   self.prepDFS()
   analyzeRefs(self, self.root)

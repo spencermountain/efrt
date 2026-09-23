@@ -130,6 +130,37 @@ the keys of the object are normalized. Spaces/unicode are good, but numbers, cas
 specialChars = new RegExp('[0-9A-Z,;!:|¦]')
 ```
 
+For input validation, use `pack(data, { strict: true })`. It throws a `TypeError`
+for empty or unsupported keys, non-string array entries, or distinct keys that
+become identical after lowercasing:
+
+```js
+pack(['apple1'], { strict: true }) // throws: unsupported key "apple1"
+pack({ Apple: 'fruit', apple: 'company' }, { strict: true }) // throws: normalization collision
+pack(['Apple', 'Apple'], { strict: true }) // valid: exact duplicates are allowed
+```
+
+Strict mode still lowercases keys and uses the category semantics below. Without
+this option, unsupported keys are silently dropped and normalization collisions
+are merged, preserving the existing behavior. Underscores are supported, including
+names such as `_c`, `_d`, `_v`, `_g`, and `_n`: trie metadata is stored separately
+from word fragments.
+
+Category values cannot contain `|` or `¦`; `pack()` throws a `TypeError`
+instead of producing an ambiguous packed string. Categories use the existing
+string-based format: values are converted to strings, except the category
+`"true"` decodes as boolean `true` (also used for arrays of words). Consequently,
+`false` decodes as `"false"`, numbers decode as strings, and the string `"true"`
+cannot be distinguished from boolean `true`. Category arrays represent membership
+in multiple categories, not a general-purpose array serialization format.
+
+Keys are limited to 1,024 UTF-16 code units after lowercasing. Longer keys throw
+a `RangeError` to bound recursive trie construction. `unpack()` validates the
+packed syntax and references and throws a `SyntaxError` for malformed data;
+its traversal is iterative, so deeply nested valid tries do not exhaust the call
+stack. Empty strings, `null`, and `undefined` unpack to `{}`; other non-string
+inputs throw a `TypeError`.
+
 _efrt_ is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
@@ -165,10 +196,10 @@ Assuming your data has a low _category-to-data ratio_, you will hit-breakeven wi
 
 ## Use
 
-**IE9+**
+**Browser script tags**
 
 ```html
-<script src="https://unpkg.com/efrt@latest/builds/efrt.min.cjs"></script>
+<script src="https://unpkg.com/efrt@latest/builds/efrt.min.js"></script>
 <script>
   var smaller = efrt.pack(['larry', 'curly', 'moe'])
   var trie = efrt.unpack(smaller)
@@ -183,13 +214,24 @@ const unpack = require('efrt/unpack') // node/cjs
 ```
 
 ```html
-<script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.cjs"></script>
+<script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
 <script>
-  var trie = unpack(compressedStuff)
+  var trie = efrt(compressedStuff)
   trie.hasOwnProperty('miles davis')
 </script>
 ```
 
 Thanks to [John Resig](https://johnresig.com/) for his fun [trie-compression post](https://johnresig.com/blog/javascript-trie-performance-analysis/) on his blog, and [Wiktor Jakubczyc](https://github.com/monolithpl) for his performance analysis work
+
+## Development checks
+
+Run `npm run verify` after installing development dependencies. It rebuilds the
+bundles, runs lint and both test suites, and tests an actual npm tarball installed
+offline in a temporary consumer project. The package check covers ESM, CommonJS,
+standalone unpack, browser globals, and exported version consistency.
+
+GitHub Actions runs these checks on Node 22, 24, and 26. Test commands use the
+local `tap-dancer` reporter while preserving both test and reporter failures.
+Use `npm test -- --raw` or `npm run testb -- --raw` for unformatted TAP output.
 
 MIT

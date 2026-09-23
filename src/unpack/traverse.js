@@ -4,38 +4,66 @@ import encoding from '../encoding.js'
 // References are either absolute (symbol) or relative (1 - based)
 const indexFromRef = function (trie, ref, index) {
   const dnode = encoding.fromAlphaCode(ref)
-  if (dnode < trie.symCount) {
-    return trie.syms[dnode]
+  const target = dnode < trie.symCount ? trie.syms[dnode] : index + dnode + 1 - trie.symCount
+  // The encoder emits nodes in topological order. Every edge must point
+  // forward, which also rules out cycles before expansion starts.
+  if (!Number.isSafeInteger(target) || target <= index || target >= trie.nodes.length) {
+    throw new SyntaxError('Invalid efrt packed data: node reference')
   }
-  return index + dnode + 1 - trie.symCount
+  return target
+}
+
+const parseNodes = function (trie) {
+  return trie.nodes.map((node, index) => {
+    if (node === '' && trie.nodes.length !== 1) {
+      throw new SyntaxError('Invalid efrt packed data: empty node')
+    }
+    const terminal = node[0] === '!'
+    const body = terminal ? node.slice(1) : node
+    const edges = []
+    const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/g
+    let offset = 0
+    while (offset < body.length) {
+      const match = token.exec(body)
+      if (!match || match.index !== offset || (match[2] === ',' && token.lastIndex === body.length)) {
+        throw new SyntaxError('Invalid efrt packed data: node syntax')
+      }
+      const ref = match[2]
+      edges.push({
+        text: match[1],
+        target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
+      })
+      offset = token.lastIndex
+    }
+    return { terminal, edges }
+  })
 }
 
 const toArray = function (trie) {
+  const nodes = parseNodes(trie)
   const all = []
-  const crawl = (index, pref) => {
-    let node = trie.nodes[index]
-    if (node[0] === '!') {
-      all.push(pref)
-      node = node.slice(1) //ok, we tried. remove it.
+  const stack = [{ index: 0, pref: '', edge: -1 }]
+  while (stack.length) {
+    const frame = stack[stack.length - 1]
+    const node = nodes[frame.index]
+    if (frame.edge === -1) {
+      if (node.terminal) {
+        all.push(frame.pref)
+      }
+      frame.edge = 0
     }
-    const matches = node.split(/([A-Z0-9,]+)/g)
-    for (let i = 0; i < matches.length; i += 2) {
-      const str = matches[i]
-      const ref = matches[i + 1]
-      if (!str) {
-        continue
-      }
-      const have = pref + str
-      //branch's end
-      if (ref === ',' || ref === undefined) {
-        all.push(have)
-        continue
-      }
-      const newIndex = indexFromRef(trie, ref, index)
-      crawl(newIndex, have)
+    if (frame.edge === node.edges.length) {
+      stack.pop()
+      continue
+    }
+    const edge = node.edges[frame.edge++]
+    const word = frame.pref + edge.text
+    if (edge.target === -1) {
+      all.push(word)
+    } else {
+      stack.push({ index: edge.target, pref: word, edge: -1 })
     }
   }
-  crawl(0, '')
   return all
 }
 
