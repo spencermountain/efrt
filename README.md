@@ -142,8 +142,9 @@ pack(['Apple', 'Apple'], { strict: true }) // valid: exact duplicates are allowe
 
 Strict mode still lowercases keys and uses the category semantics below. Without
 this option, unsupported keys are silently dropped and normalization collisions
-are merged, preserving the existing behavior. Strict mode validates input keys;
-it does not resolve the known trie metadata collision for names such as `_c`.
+are merged, preserving the existing behavior. Underscores are supported, including
+names such as `_c`, `_d`, `_v`, `_g`, and `_n`: trie metadata is stored separately
+from word fragments.
 
 Category values cannot contain `|` or `¦`; `pack()` throws a `TypeError`
 instead of producing an ambiguous packed string. Categories use the existing
@@ -229,7 +230,8 @@ bundles, runs lint and both test suites, and tests an actual npm tarball install
 offline in a temporary consumer project. The package check covers ESM, CommonJS,
 standalone unpack, browser globals, and exported version consistency.
 
-GitHub Actions runs these checks on Node 22, 24, and 26. Test commands preserve
-the test process exit status without a shell reporter pipeline.
+GitHub Actions runs these checks on Node 22, 24, and 26. Test commands use the
+local `tap-dancer` reporter while preserving both test and reporter failures.
+Use `npm test -- --raw` or `npm run testb -- --raw` for unformatted TAP output.
 
 MIT

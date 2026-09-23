@@ -167,20 +167,21 @@
     const props = self.nodeProps(node);
     for (let i = 0; i < props.length; i++) {
       const prop = props[i];
-      if (typeof node[prop] === 'number') {
+      const child = node.edges[prop];
+      if (typeof child === 'number') {
         line += sep + prop;
         sep = config.STRING_SEP;
         continue
       }
-      if (self.syms[node[prop]._n]) {
-        line += sep + prop + self.syms[node[prop]._n];
+      if (self.syms[child._n]) {
+        line += sep + prop + self.syms[child._n];
         sep = '';
         continue
       }
-      let ref = encoding.toAlphaCode(node._n - node[prop]._n - 1 + self.symCount);
+      let ref = encoding.toAlphaCode(node._n - child._n - 1 + self.symCount);
       // Large reference to smaller string suffix -> duplicate suffix
-      if (node[prop]._g && ref.length >= node[prop]._g.length && node[node[prop]._g] === 1) {
-        ref = node[prop]._g;
+      if (child._g && ref.length >= child._g.length && node.edges[child._g] === 1) {
+        ref = child._g;
         line += sep + prop + ref;
         sep = config.STRING_SEP;
         continue
@@ -198,15 +199,16 @@
     const props = self.nodeProps(node, true);
     for (let i = 0; i < props.length; i++) {
       const prop = props[i];
-      const ref = node._n - node[prop]._n - 1;
+      const child = node.edges[prop];
+      const ref = node._n - child._n - 1;
       // Count the number of single-character relative refs
       if (ref < config.BASE) {
         self.histRel.add(ref);
       }
       // Count the number of characters saved by converting an absolute
       // reference to a one-character symbol.
-      self.histAbs.add(node[prop]._n, encoding.toAlphaCode(ref).length - 1);
-      analyzeRefs(self, node[prop]);
+      self.histAbs.add(child._n, encoding.toAlphaCode(ref).length - 1);
+      analyzeRefs(self, child);
     }
   };
 
@@ -241,7 +243,7 @@
     }
     const props = self.nodeProps(node, true);
     for (let i = 0; i < props.length; i++) {
-      numberNodes(self, node[props[i]]); //recursive
+      numberNodes(self, node.edges[props[i]]); //recursive
     }
     node._n = self.pos++;
     self.nodes.push(node);
@@ -306,13 +308,10 @@
     });
   };
 
-  // reserved propery names
-  const internal = {
-    _d: true,
-    _v: true,
-    _c: true,
-    _g: true,
-    _n: true,
+  // Word fragments live only in edges; metadata fields belong to the wrapper.
+  // Even fragments such as "_c", "edges", and "__proto__" are ordinary keys.
+  const createNode = function () {
+    return { edges: Object.create(null) }
   };
 
   const methods = {
@@ -360,7 +359,7 @@
       }
 
       // Do any existing props share a common prefix?
-      const keys = Object.keys(node);
+      const keys = Object.keys(node.edges);
       for (let i = 0; i < keys.length; i++) {
         const prop = keys[i];
         prefix = fns.commonPrefix(word, prop);
@@ -368,19 +367,19 @@
           continue
         }
         // Prop is a proper prefix - recurse to child node
-        if (prop === prefix && typeof node[prop] === 'object') {
-          this._insert(word.slice(prefix.length), node[prop]);
+        if (prop === prefix && typeof node.edges[prop] === 'object') {
+          this._insert(word.slice(prefix.length), node.edges[prop]);
           return
         }
         // Duplicate terminal string - ignore
-        if (prop === word && typeof node[prop] === 'number') {
+        if (prop === word && typeof node.edges[prop] === 'number') {
           return
         }
-        next = Object.create(null);
-        next[prop.slice(prefix.length)] = node[prop];
+        next = createNode();
+        next.edges[prop.slice(prefix.length)] = node.edges[prop];
         this.addTerminal(next, word = word.slice(prefix.length));
-        delete node[prop];
-        node[prefix] = next;
+        delete node.edges[prop];
+        node.edges[prefix] = next;
         this.wordCount++;
         return
       }
@@ -398,11 +397,11 @@
     // nodes in this part of the tree.
     addTerminal: function (node, prop) {
       if (prop.length <= 1) {
-        node[prop] = 1;
+        node.edges[prop] = 1;
         return
       }
-      const next = Object.create(null);
-      node[prop[0]] = next;
+      const next = createNode();
+      node.edges[prop[0]] = next;
       this.addTerminal(next, prop.slice(1));
     },
 
@@ -411,10 +410,9 @@
     // terminal strings.
     nodeProps: function (node, nodesOnly) {
       const props = [];
-      for (const prop in node) {
-        // is it a usuable prop, or a special reserved one?
-        if (prop !== '' && !internal.hasOwnProperty(prop)) {
-          if (!nodesOnly || typeof node[prop] === 'object') {
+      for (const prop in node.edges) {
+        if (prop !== '') {
+          if (!nodesOnly || typeof node.edges[prop] === 'object') {
             props.push(prop);
           }
         }
@@ -446,10 +444,10 @@
       const props = this.nodeProps(node);
       for (let i = 0; i < props.length; i++) {
         const prop = props[i];
-        if (typeof node[prop] === 'object') {
-          node[prop] = this.combineSuffixNode(node[prop]);
+        if (typeof node.edges[prop] === 'object') {
+          node.edges[prop] = this.combineSuffixNode(node.edges[prop]);
           sig.push(prop);
-          sig.push(node[prop]._c);
+          sig.push(node.edges[prop]._c);
         } else {
           sig.push(prop);
         }
@@ -487,7 +485,7 @@
       }
       const props = this.nodeProps(node, true);
       for (let i = 0; i < props.length; i++) {
-        this.countDegree(node[props[i]]);
+        this.countDegree(node.edges[props[i]]);
       }
     },
 
@@ -500,16 +498,16 @@
       const props = this.nodeProps(node);
       for (i = 0; i < props.length; i++) {
         prop = props[i];
-        child = node[prop];
+        child = node.edges[prop];
         if (typeof child !== 'object') {
           continue
         }
         this.collapseChains(child);
         // Hoist the singleton child's single property to the parent
         if (child._g !== undefined && (child._d === 1 || child._g.length === 1)) {
-          delete node[prop];
+          delete node.edges[prop];
           prop += child._g;
-          node[prop] = child[child._g];
+          node.edges[prop] = child.edges[child._g];
         }
       }
       // Identify singleton nodes
@@ -519,7 +517,7 @@
     },
 
     isTerminal: function (node) {
-      return !!node['']
+      return !!node.edges['']
     },
 
     // Find highest node in Trie that is on the path to word
@@ -530,9 +528,9 @@
         const prop = props[i];
         if (prop === word.slice(0, prop.length)) {
           if (prop !== other.slice(0, prop.length)) {
-            return node[prop]
+            return node.edges[prop]
           }
-          return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node[prop])
+          return this.uniqueNode(word.slice(prop.length), other.slice(prop.length), node.edges[prop])
         }
       }
       return undefined
@@ -545,7 +543,8 @@
 
   /*
    A JavaScript implementation of a Trie search datastructure.
-  Each node of the Trie is an Object that can contain the following properties:
+  Each node has an edges dictionary separate from its metadata.
+  The edges dictionary contains:
         '' - If present (with value == 1), the node is a Terminal Node - the prefix
             leading to this node is a word in the dictionary.
         numeric properties (value == 1) - the property name is a terminal string
@@ -553,6 +552,7 @@
         Object properties - the property name is one or more characters to be consumed
             from the prefix of the test string, with the remainder to be checked in
             the child node.
+  The node wrapper contains only edges and the following metadata:
         '_c': A unique name for the node (starting from 1), used in combining Suffixes.
         '_n': Created when packing the Trie, the sequential node number
             (in pre-order traversal).
@@ -561,7 +561,7 @@
         '_g': For singleton nodes, the name of it's single property.
    */
   const Trie = function (words) {
-    this.root = Object.create(null);
+    this.root = createNode();
     this.lastWord = '';
     this.suffixes = Object.create(null);
     this.suffixCounts = Object.create(null);
@@ -779,7 +779,7 @@
     return all
   };
 
-  var _version = '2.7.0';
+  var _version = '2.8.0';
 
   exports.pack = pack;
   exports.unpack = unpack;

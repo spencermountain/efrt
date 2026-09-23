@@ -17,6 +17,7 @@ for (const decode of [esm.unpack, unpack, cjs.unpack, unpackCjs]) {
   assert.throws(() => decode('fruit¦0:0;a0'), SyntaxError)
 }
 for (const library of [esm, cjs]) {
+  assert.deepStrictEqual(library.unpack(library.pack(['_c'], { strict: true })), { _c: true })
   assert.throws(() => library.pack(['apple1'], { strict: true }), /unsupported key/)
   assert.throws(() => library.pack(['Apple', 'apple'], { strict: true }), /both normalize/)
 }
@@ -29,4 +30,8 @@ for (const filename of ['efrt.min.js', 'efrt-unpack.min.js']) {
   runInNewContext(readFileSync(new URL('builds/' + filename, packageRoot), 'utf8'), context)
   const decode = filename === 'efrt.min.js' ? context.efrt.unpack : context.efrt
   assert.strictEqual(JSON.stringify(decode(packed)), JSON.stringify(data))
+  assert.strictEqual(decode('true¦_c')._c, true)
+  if (filename === 'efrt.min.js') {
+    assert.strictEqual(context.efrt.pack(['_c']), 'true¦_c')
+  }
 }

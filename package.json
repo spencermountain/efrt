@@ -25,8 +25,8 @@
   },
   "scripts": {
     "build": "node ./scripts/version.js && rollup -c ",
-    "test": "tape \"./tests/*.test.js\" | tap-dancer",
-    "testb": "node scripts/test-build.js | tap-dancer",
+    "test": "node scripts/test.js",
+    "testb": "node scripts/test.js --prod",
     "test:package": "node scripts/test-package.js",
     "verify": "npm run build && npm run lint && npm test && npm run testb && npm run test:package",
     "watch": "node --watch ./scratch",
@@ -41,6 +41,7 @@
     "eslint": "10.11.0",
     "rollup": "4.63.4",
     "rollup-plugin-filesize-check": "2.0.1",
+    "tap-dancer": "0.3.4",
     "tape": "5.10.2"
   },
   "unpkg": "./builds/efrt.min.js",

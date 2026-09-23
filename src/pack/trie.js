@@ -1,7 +1,9 @@
 import methods from './methods.js'
+import createNode from './node.js'
 /*
  A JavaScript implementation of a Trie search datastructure.
-Each node of the Trie is an Object that can contain the following properties:
+Each node has an edges dictionary separate from its metadata.
+The edges dictionary contains:
       '' - If present (with value == 1), the node is a Terminal Node - the prefix
           leading to this node is a word in the dictionary.
       numeric properties (value == 1) - the property name is a terminal string
@@ -9,6 +11,7 @@ Each node of the Trie is an Object that can contain the following properties:
       Object properties - the property name is one or more characters to be consumed
           from the prefix of the test string, with the remainder to be checked in
           the child node.
+The node wrapper contains only edges and the following metadata:
       '_c': A unique name for the node (starting from 1), used in combining Suffixes.
       '_n': Created when packing the Trie, the sequential node number
           (in pre-order traversal).
@@ -17,7 +20,7 @@ Each node of the Trie is an Object that can contain the following properties:
       '_g': For singleton nodes, the name of it's single property.
  */
 const Trie = function (words) {
-  this.root = Object.create(null)
+  this.root = createNode()
   this.lastWord = ''
   this.suffixes = Object.create(null)
   this.suffixCounts = Object.create(null)

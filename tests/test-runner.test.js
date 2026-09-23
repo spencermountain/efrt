@@ -15,7 +15,7 @@ test('both test commands preserve a nonzero exit after passing TAP', function (t
       type: 'module', scripts: { test: pkg.scripts.test, testb: pkg.scripts.testb }
     }))
     symlinkSync(fileURLToPath(new URL('../node_modules', import.meta.url)), join(work, 'node_modules'), 'junction')
-    copyFileSync(new URL('../scripts/test-build.js', import.meta.url), join(work, 'scripts/test-build.js'))
+    copyFileSync(new URL('../scripts/test.js', import.meta.url), join(work, 'scripts/test.js'))
     writeFileSync(join(work, 'tests/exit.test.js'), [
       "import { writeSync } from 'node:fs'",
       "writeSync(1, 'TAP version 13\\nok 1 - passing assertion\\n1..1\\n# pass  1\\n')",
@@ -24,7 +24,9 @@ test('both test commands preserve a nonzero exit after passing TAP', function (t
     for (const script of ['test', 'testb']) {
       const result = spawnSync('npm', ['run', script], { cwd: work, encoding: 'utf8' })
       t.equal(result.status, 7, script + ' preserves child exit status')
-      t.ok(result.stdout.includes('# pass  1'), script + ' emitted passing TAP before failure')
+      const raw = spawnSync('npm', ['run', script, '--', '--raw'], { cwd: work, encoding: 'utf8' })
+      t.equal(raw.status, 7, script + ' preserves child exit status in raw mode')
+      t.ok(raw.stdout.includes('# pass  1'), script + ' emitted passing TAP before failure')
     }
   } finally {
     rmSync(work, { recursive: true, force: true })
