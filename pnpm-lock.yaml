@@ -18,9 +18,12 @@ importers:
       rollup:
         specifier: 4.63.4
         version: 4.63.4
+      rollup-plugin-filesize-check:
+        specifier: 2.0.1
+        version: 2.0.1(rollup@4.63.4)
       tap-dancer:
-        specifier: 0.4.0
-        version: 0.4.0
+        specifier: 0.4.2
+        version: 0.4.2
       tape:
         specifier: 5.10.2
         version: 5.10.2
@@ -868,6 +871,12 @@ packages:
     engines: {node: '>= 0.4'}
     hasBin: true
 
+  rollup-plugin-filesize-check@2.0.1:
+    resolution: {integrity: sha512-B8iv8MMXwZs9/5axHCmowUEhMWrUrLoJ+FjC7j4m2bKI7yh3OiZy7mos/FTNT1T6MtHulRaufNf9+zAXMYwkLQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      rollup: '>=2.78.0'
+
   rollup@4.63.4:
     resolution: {integrity: sha512-4U0liVayNIoLp3GFl1FcI8561WepLnZ1rqfraGh7S9B3Ur5F9S283y8Futii7RUU2C/97tOBmBy7nYvhoiOpbQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
@@ -960,9 +969,9 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  tap-dancer@0.4.0:
-    resolution: {integrity: sha512-njF4CU+QyafCf9osgXFp/6tkOsWrH6nwOGyqGkhT1d8T26iB/AiTVtOb+aVeAE7WNkID5raStAcrQqvj0JXWfQ==}
-    engines: {node: 20 || >=22}
+  tap-dancer@0.4.2:
+    resolution: {integrity: sha512-fc+aXvCColauoRlS1QMJtQqCHWFw+0Ck2KVCbvycDs6DdWHa8V2V0yhsfBp4TyrJsfUksDAGfw1/Ukf+rEyjQA==}
+    engines: {node: '>=18'}
     hasBin: true
 
   tap-parser@18.3.4:
@@ -2004,6 +2013,10 @@ snapshots:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
+  rollup-plugin-filesize-check@2.0.1(rollup@4.63.4):
+    dependencies:
+      rollup: 4.63.4
+
   rollup@4.63.4:
     dependencies:
       '@types/estree': 1.0.9
@@ -2155,7 +2168,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  tap-dancer@0.4.0:
+  tap-dancer@0.4.2:
     dependencies:
       tap-parser: 18.3.4
 

@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 import terser from '@rollup/plugin-terser'
+import sizeCheck from 'rollup-plugin-filesize-check'
+
 import fs from 'node:fs'
 
 const pkg = JSON.parse(fs.readFileSync('./package.json').toString())
@@ -18,7 +20,14 @@ export default [
   {
     input: 'src/index.js',
     output: [{ file: 'builds/efrt.min.js', format: 'umd', name: 'efrt' }],
-    plugins: [terser()]
+    plugins: [
+      terser(),
+      sizeCheck({
+        expect: 6, // sizes in kb
+        warn: 2, // acceptable change (+/-)
+        throw: 10 // unacceptable change (+/-)
+      })
+    ]
   },
   // mjs min
   {

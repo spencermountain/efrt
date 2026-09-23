@@ -1,11 +1,11 @@
 {
   "name": "efrt",
-  "description": "neato compression of key-value data",
   "version": "2.7.0",
-  "main": "./src/index.js",
-  "unpkg": "./builds/efrt.min.js",
+  "description": "neato compression of key-value data",
+  "license": "MIT",
+  "repository": "github:spencermountain/efrt",
+  "author": "Spencer Kelly <spencermountain@gmail.com> (https://spencermountain.dev)",
   "type": "module",
-  "sideEffects": false,
   "exports": {
     ".": {
       "require": "./builds/efrt.cjs",
@@ -17,8 +17,11 @@
       "default": "./builds/efrt-unpack.min.js"
     }
   },
-  "author": "Spencer Kelly <spencermountain@gmail.com> (https://spencermountain.dev)",
-  "repository": "github:spencermountain/efrt",
+  "main": "./src/index.js",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=12.0.0"
+  },
   "scripts": {
     "build": "node ./scripts/version.js && rollup -c ",
     "test": "tape \"./tests/*.test.js\" | tap-dancer",
@@ -30,23 +33,21 @@
     "builds/",
     "src/"
   ],
-  "engines": {
-    "node": ">=12.0.0"
+  "dependencies": {
+    "eslint": "^10.11.0"
   },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "rollup": "4.63.4",
+    "rollup-plugin-filesize-check": "2.0.1",
+    "tap-dancer": "0.4.2",
+    "tape": "5.10.2"
+  },
+  "unpkg": "./builds/efrt.min.js",
   "prettier": {
     "trailingComma": "none",
     "semi": false,
     "singleQuote": true,
     "printWidth": 100
-  },
-  "devDependencies": {
-    "@rollup/plugin-terser": "^1.0.0",
-    "rollup": "4.63.4",
-    "tap-dancer": "0.4.0",
-    "tape": "5.10.2"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "eslint": "^10.11.0"
   }
 }
