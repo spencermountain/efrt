@@ -1,33 +1,40 @@
+## 2.8.0 [Sep 2026]
+- **[change]** - Safer handling of prototype-related names.
+- **[change]** - Category delimiter validation and documented value coercion.
+- **[fix]** - Working CommonJS unpack export.
+- **[change]** - reduce development dependencies.
+- **[change]** - Packed-input validation, iterative decoding, and a documented key-length limit.
+- **[update]** - dependencies
+
+
 ## 2.7.0 [Apr 2022]
-- fix for underscore character support
+- **[fix]** - underscore character support
 
 ## 2.6.0 [Apr 2022]
-- give commonjs build a .cjs extension
+- **[change]** - give commonjs build a .cjs extension
 
 ## 2.4.0 [Jan 2022]
-- fix empty-array runtime error on unpack
-- point package 'main' at ./src/index.js for tree-shaking
-- remove babel dependency
-- use .js for cjs builds
+- **[fix]** - empty-array runtime error on unpack
+- **[change]** - point package 'main' at ./src/index.js for tree-shaking
+- **[change]** - remove babel dependency
+- **[change]** - use .js for cjs builds
 
 ## 2.3.1 [June 2021]
-
-- use .cjs for commonjs file
+- **[change]** - use .cjs for commonjs file
 
 ## 2.3.0 [June 2021]
-
-- support es modules exports
-- remove mapfile
-- update deps
+- **[change]** - support es modules exports
+- **[change]** - remove mapfile
+- **[update]** - deps
 
 ## 2.0.0
 
-pack now returns a flat string, instead of an object. This avoids all the quoting/encoding and stuff the JSON was doing. Breaking-change.
+- **[breaking]** - pack now returns a flat string, instead of an object. This avoids all the quoting/encoding and stuff the JSON was doing. Breaking-change.
 
 ### 1.1.1
 
-fixes reserved-word issue in firefox for 'watch'
+- **[fix]** - reserved-word issue in firefox for 'watch'
 
 ### 1.1.0
 
-- adds support for object inputs, instead of just arrays
+- **[change]** - adds support for object inputs, instead of just arrays

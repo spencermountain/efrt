@@ -1,5 +1,5 @@
 const Histogram = function () {
-  this.counts = {}
+  this.counts = Object.create(null)
 }
 
 const methods = {

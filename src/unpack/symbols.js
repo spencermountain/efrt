@@ -1,17 +1,21 @@
 import encoding from '../encoding.js'
 
 const symbols = function (t) {
-  //... process these lines
-  const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)')
+  const reSymbol = /^([0-9A-Z]+):([0-9A-Z]+)$/
   for (let i = 0; i < t.nodes.length; i++) {
-    const m = reSymbol.exec(t.nodes[i])
-    if (!m) {
-      t.symCount = i
+    if (!t.nodes[i].includes(':')) {
       break
     }
-    t.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2])
+    const m = reSymbol.exec(t.nodes[i])
+    if (!m || m[0].length !== t.nodes[i].length || encoding.fromAlphaCode(m[1]) !== i) {
+      throw new SyntaxError('Invalid efrt packed data: symbol definition')
+    }
+    t.syms.push(encoding.fromAlphaCode(m[2]))
   }
-  //remove from main node list
-  t.nodes = t.nodes.slice(t.symCount, t.nodes.length)
+  t.symCount = t.syms.length
+  t.nodes = t.nodes.slice(t.symCount)
+  if (!t.nodes.length || t.syms.some((index) => !Number.isSafeInteger(index) || index >= t.nodes.length)) {
+    throw new SyntaxError('Invalid efrt packed data: symbol target')
+  }
 }
 export default symbols

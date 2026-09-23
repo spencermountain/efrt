@@ -123,7 +123,7 @@ const numberNodes = function (self, node) {
     numberNodes(self, node[props[i]]) //recursive
   }
   node._n = self.pos++
-  self.nodes.unshift(node)
+  self.nodes.push(node)
 }
 
 const pack = function (self) {
@@ -137,6 +137,7 @@ const pack = function (self) {
   self.histAbs = new Histogram()
   self.histRel = new Histogram()
   numberNodes(self, self.root)
+  self.nodes.reverse()
   self.nodeCount = self.nodes.length
   self.prepDFS()
   analyzeRefs(self, self.root)

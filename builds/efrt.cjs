@@ -5,25 +5,24 @@
 })(this, (function (exports) { 'use strict';
 
   const commonPrefix = function (w1, w2) {
-    let len = Math.min(w1.length, w2.length);
-    while (len > 0) {
-      const prefix = w1.slice(0, len);
-      if (prefix === w2.slice(0, len)) {
-        return prefix
-      }
-      len -= 1;
+    const len = Math.min(w1.length, w2.length);
+    let end = 0;
+    while (end < len && w1[end] === w2[end]) {
+      end++;
     }
-    return ''
+    return w1.slice(0, end)
   };
 
   /* Sort elements and remove duplicates from array (modified in place) */
   const unique = function (a) {
     a.sort();
-    for (let i = 1; i < a.length; i++) {
-      if (a[i - 1] === a[i]) {
-        a.splice(i, 1);
+    let count = 0;
+    for (let i = 0; i < a.length; i++) {
+      if (count === 0 || a[count - 1] !== a[i]) {
+        a[count++] = a[i];
       }
     }
+    a.length = count;
   };
 
   var fns = {
@@ -32,7 +31,7 @@
   };
 
   const Histogram = function () {
-    this.counts = {};
+    this.counts = Object.create(null);
   };
 
   const methods$1 = {
@@ -245,7 +244,7 @@
       numberNodes(self, node[props[i]]); //recursive
     }
     node._n = self.pos++;
-    self.nodes.unshift(node);
+    self.nodes.push(node);
   };
 
   const pack$1 = function (self) {
@@ -259,6 +258,7 @@
     self.histAbs = new Histogram();
     self.histRel = new Histogram();
     numberNodes(self, self.root);
+    self.nodes.reverse();
     self.nodeCount = self.nodes.length;
     self.prepDFS();
     analyzeRefs(self, self.root);
@@ -280,7 +280,32 @@
     return self.nodes.join(config.NODE_SEP)
   };
 
-  const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]'); //characters banned from entering the trie
+  const unsupportedChars = /[0-9A-Z,;!:|¦]/;
+
+  const normalizeKey = function (key) {
+    const normalized = key.toLowerCase();
+    // Bound the depth of recursive trie construction and optimization.
+    if (normalized.length > 1024) {
+      throw new RangeError('efrt keys cannot exceed 1024 UTF-16 code units')
+    }
+    return normalized
+  };
+
+  const validateKeys = function (obj) {
+    const seen = new Map();
+    Object.keys(obj).forEach((key) => {
+      const normalized = normalizeKey(key);
+      if (!normalized || unsupportedChars.test(normalized)) {
+        throw new TypeError('efrt strict: unsupported key ' + JSON.stringify(key))
+      }
+      if (seen.has(normalized)) {
+        throw new TypeError('efrt strict: keys ' + JSON.stringify(seen.get(normalized)) +
+          ' and ' + JSON.stringify(key) + ' both normalize to ' + JSON.stringify(normalized))
+      }
+      seen.set(normalized, key);
+    });
+  };
+
   // reserved propery names
   const internal = {
     _d: true,
@@ -300,11 +325,11 @@
         words = words.split(/[^a-zA-Z]+/);
       }
       for (let i = 0; i < words.length; i++) {
-        words[i] = words[i].toLowerCase();
+        words[i] = normalizeKey(words[i]);
       }
       fns.unique(words);
       for (let i = 0; i < words.length; i++) {
-        if (words[i].match(NOT_ALLOWED) === null) {
+        if (!unsupportedChars.test(words[i])) {
           this.insert(words[i]);
         }
       }
@@ -351,7 +376,7 @@
         if (prop === word && typeof node[prop] === 'number') {
           return
         }
-        next = {};
+        next = Object.create(null);
         next[prop.slice(prefix.length)] = node[prop];
         this.addTerminal(next, word = word.slice(prefix.length));
         delete node[prop];
@@ -376,7 +401,7 @@
         node[prop] = 1;
         return
       }
-      const next = {};
+      const next = Object.create(null);
       node[prop[0]] = next;
       this.addTerminal(next, prop.slice(1));
     },
@@ -536,10 +561,10 @@
         '_g': For singleton nodes, the name of it's single property.
    */
   const Trie = function (words) {
-    this.root = {};
+    this.root = Object.create(null);
     this.lastWord = '';
-    this.suffixes = {};
-    this.suffixCounts = {};
+    this.suffixes = Object.create(null);
+    this.suffixCounts = Object.create(null);
     this.cNext = 1;
     this.wordCount = 0;
     this.insertWords(words);
@@ -564,47 +589,41 @@
       return input.split(/ +/g).reduce(function (h, str) {
         h[str] = true;
         return h
-      }, {})
+      }, Object.create(null))
     }
     //array
     if (isArray(input)) {
       return input.reduce(function (h, str) {
         h[str] = true;
         return h
-      }, {})
+      }, Object.create(null))
     }
     //object
     return input
   };
 
   //turn an array into a compressed string
-  const pack = function (obj) {
+  const pack = function (obj, options = {}) {
+    if (options.strict && isArray(obj) && obj.some((key) => typeof key !== 'string')) {
+      throw new TypeError('efrt strict: array keys must be strings')
+    }
     obj = handleFormats(obj);
+    if (options.strict) {
+      validateKeys(obj);
+    }
     //pivot into categories:
     const flat = Object.keys(obj).reduce(function (h, k) {
-      const val = obj[k];
-      //array version-
-      //put it in several buckets
-      if (isArray(val)) {
-        for (let i = 0; i < val.length; i++) {
-          h[val[i]] = h[val[i]] || [];
-          h[val[i]].push(k);
+      const values = isArray(obj[k]) ? obj[k] : [obj[k]];
+      for (let i = 0; i < values.length; i++) {
+        const cat = String(values[i]);
+        if (/[|¦]/.test(cat)) {
+          throw new TypeError('efrt categories cannot contain | or ¦')
         }
-        return h
+        h[cat] = h[cat] || [];
+        h[cat].push(k);
       }
-      //normal string/boolean version
-      if (h.hasOwnProperty(val) === false) {
-        //basically h[val]=[]  - support reserved words
-        Object.defineProperty(h, val, {
-          writable: true,
-          enumerable: true,
-          configurable: true,
-          value: []
-        });
-      }
-      h[val].push(k);
       return h
-    }, {});
+    }, Object.create(null));
     //pack each into a compressed string
     Object.keys(flat).forEach(function (k) {
       const t = new Trie(flat[k]);
@@ -618,55 +637,87 @@
   };
 
   const symbols = function (t) {
-    //... process these lines
-    const reSymbol = new RegExp('([0-9A-Z]+):([0-9A-Z]+)');
+    const reSymbol = /^([0-9A-Z]+):([0-9A-Z]+)$/;
     for (let i = 0; i < t.nodes.length; i++) {
-      const m = reSymbol.exec(t.nodes[i]);
-      if (!m) {
-        t.symCount = i;
+      if (!t.nodes[i].includes(':')) {
         break
       }
-      t.syms[encoding.fromAlphaCode(m[1])] = encoding.fromAlphaCode(m[2]);
+      const m = reSymbol.exec(t.nodes[i]);
+      if (!m || m[0].length !== t.nodes[i].length || encoding.fromAlphaCode(m[1]) !== i) {
+        throw new SyntaxError('Invalid efrt packed data: symbol definition')
+      }
+      t.syms.push(encoding.fromAlphaCode(m[2]));
     }
-    //remove from main node list
-    t.nodes = t.nodes.slice(t.symCount, t.nodes.length);
+    t.symCount = t.syms.length;
+    t.nodes = t.nodes.slice(t.symCount);
+    if (!t.nodes.length || t.syms.some((index) => !Number.isSafeInteger(index) || index >= t.nodes.length)) {
+      throw new SyntaxError('Invalid efrt packed data: symbol target')
+    }
   };
 
   // References are either absolute (symbol) or relative (1 - based)
   const indexFromRef = function (trie, ref, index) {
     const dnode = encoding.fromAlphaCode(ref);
-    if (dnode < trie.symCount) {
-      return trie.syms[dnode]
+    const target = dnode < trie.symCount ? trie.syms[dnode] : index + dnode + 1 - trie.symCount;
+    // The encoder emits nodes in topological order. Every edge must point
+    // forward, which also rules out cycles before expansion starts.
+    if (!Number.isSafeInteger(target) || target <= index || target >= trie.nodes.length) {
+      throw new SyntaxError('Invalid efrt packed data: node reference')
     }
-    return index + dnode + 1 - trie.symCount
+    return target
+  };
+
+  const parseNodes = function (trie) {
+    return trie.nodes.map((node, index) => {
+      if (node === '' && trie.nodes.length !== 1) {
+        throw new SyntaxError('Invalid efrt packed data: empty node')
+      }
+      const terminal = node[0] === '!';
+      const body = terminal ? node.slice(1) : node;
+      const edges = [];
+      const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/g;
+      let offset = 0;
+      while (offset < body.length) {
+        const match = token.exec(body);
+        if (!match || match.index !== offset || (match[2] === ',' && token.lastIndex === body.length)) {
+          throw new SyntaxError('Invalid efrt packed data: node syntax')
+        }
+        const ref = match[2];
+        edges.push({
+          text: match[1],
+          target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
+        });
+        offset = token.lastIndex;
+      }
+      return { terminal, edges }
+    })
   };
 
   const toArray = function (trie) {
+    const nodes = parseNodes(trie);
     const all = [];
-    const crawl = (index, pref) => {
-      let node = trie.nodes[index];
-      if (node[0] === '!') {
-        all.push(pref);
-        node = node.slice(1); //ok, we tried. remove it.
-      }
-      const matches = node.split(/([A-Z0-9,]+)/g);
-      for (let i = 0; i < matches.length; i += 2) {
-        const str = matches[i];
-        const ref = matches[i + 1];
-        if (!str) {
-          continue
+    const stack = [{ index: 0, pref: '', edge: -1 }];
+    while (stack.length) {
+      const frame = stack[stack.length - 1];
+      const node = nodes[frame.index];
+      if (frame.edge === -1) {
+        if (node.terminal) {
+          all.push(frame.pref);
         }
-        const have = pref + str;
-        //branch's end
-        if (ref === ',' || ref === undefined) {
-          all.push(have);
-          continue
-        }
-        const newIndex = indexFromRef(trie, ref, index);
-        crawl(newIndex, have);
+        frame.edge = 0;
       }
-    };
-    crawl(0, '');
+      if (frame.edge === node.edges.length) {
+        stack.pop();
+        continue
+      }
+      const edge = node.edges[frame.edge++];
+      const word = frame.pref + edge.text;
+      if (edge.target === -1) {
+        all.push(word);
+      } else {
+        stack.push({ index: edge.target, pref: word, edge: -1 });
+      }
+    }
     return all
   };
 
@@ -685,15 +736,21 @@
   };
 
   const unpack = function (str) {
-    if (!str) {
+    if (str === '' || str === null || str === undefined) {
       return {}
+    }
+    if (typeof str !== 'string') {
+      throw new TypeError('efrt unpack expects a string')
     }
     //turn the weird string into a key-value object again
     const obj = str.split('|').reduce((h, s) => {
       const arr = s.split('¦');
+      if (arr.length !== 2 || Object.prototype.hasOwnProperty.call(h, arr[0])) {
+        throw new SyntaxError('Invalid efrt packed data: category separator or duplicate category')
+      }
       h[arr[0]] = arr[1];
       return h
-    }, {});
+    }, Object.create(null));
     const all = {};
     Object.keys(obj).forEach(function (cat) {
       const arr = unpack$1(obj[cat]);
@@ -703,14 +760,19 @@
       }
       for (let i = 0; i < arr.length; i++) {
         const k = arr[i];
-        if (all.hasOwnProperty(k) === true) {
+        if (Object.prototype.hasOwnProperty.call(all, k)) {
           if (Array.isArray(all[k]) === false) {
             all[k] = [all[k], cat];
           } else {
             all[k].push(cat);
           }
         } else {
-          all[k] = cat;
+          Object.defineProperty(all, k, {
+            value: cat,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
         }
       }
     });

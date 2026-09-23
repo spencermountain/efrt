@@ -17,10 +17,10 @@ Each node of the Trie is an Object that can contain the following properties:
       '_g': For singleton nodes, the name of it's single property.
  */
 const Trie = function (words) {
-  this.root = {}
+  this.root = Object.create(null)
   this.lastWord = ''
-  this.suffixes = {}
-  this.suffixCounts = {}
+  this.suffixes = Object.create(null)
+  this.suffixCounts = Object.create(null)
   this.cNext = 1
   this.wordCount = 0
   this.insertWords(words)

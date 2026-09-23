@@ -23,7 +23,7 @@ export default [
     plugins: [
       terser(),
       sizeCheck({
-        expect: 6, // sizes in kb
+        expect: 8, // sizes in kb
         warn: 2, // acceptable change (+/-)
         throw: 10 // unacceptable change (+/-)
       })
@@ -35,7 +35,13 @@ export default [
     output: [{ banner: banner, file: 'builds/efrt.mjs', format: 'esm' }],
     plugins: [terser()]
   },
-  // unpack cjs min
+  // unpack cjs
+  {
+    input: 'src/unpack/index.js',
+    output: [{ file: 'builds/efrt-unpack.cjs', format: 'cjs' }],
+    plugins: [terser()]
+  },
+  // unpack browser min
   {
     input: 'src/unpack/index.js',
     output: [{ file: 'builds/efrt-unpack.min.js', format: 'umd', name: 'efrt' }],

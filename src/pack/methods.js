@@ -1,6 +1,6 @@
 import fns from './fns.js'
 import pack from './pack.js'
-const NOT_ALLOWED = new RegExp('[0-9A-Z,;!:|¦]') //characters banned from entering the trie
+import { normalizeKey, unsupportedChars } from './keys.js'
 // reserved propery names
 const internal = {
   _d: true,
@@ -20,11 +20,11 @@ const methods = {
       words = words.split(/[^a-zA-Z]+/)
     }
     for (let i = 0; i < words.length; i++) {
-      words[i] = words[i].toLowerCase()
+      words[i] = normalizeKey(words[i])
     }
     fns.unique(words)
     for (let i = 0; i < words.length; i++) {
-      if (words[i].match(NOT_ALLOWED) === null) {
+      if (!unsupportedChars.test(words[i])) {
         this.insert(words[i])
       }
     }
@@ -71,7 +71,7 @@ const methods = {
       if (prop === word && typeof node[prop] === 'number') {
         return
       }
-      next = {}
+      next = Object.create(null)
       next[prop.slice(prefix.length)] = node[prop]
       this.addTerminal(next, word = word.slice(prefix.length))
       delete node[prop]
@@ -96,7 +96,7 @@ const methods = {
       node[prop] = 1
       return
     }
-    const next = {}
+    const next = Object.create(null)
     node[prop[0]] = next
     this.addTerminal(next, prop.slice(1))
   },
