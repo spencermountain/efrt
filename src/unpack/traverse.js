@@ -1,5 +1,6 @@
 import parseSymbols from './symbols.js'
 import encoding from '../encoding.js'
+import parseDictionary from './dictionary.js'
 
 // References are either absolute (symbol) or relative (1 - based)
 const indexFromRef = function (trie, ref, index) {
@@ -30,8 +31,10 @@ const parseNodes = function (trie) {
         throw new SyntaxError('Invalid efrt packed data: node syntax')
       }
       const ref = match[2]
+      const text = trie.dictionary ? Array.from(match[1],
+        (char) => trie.dictionary[char] || char).join('') : match[1]
       edges.push({
-        text: match[1],
+        text,
         target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
       })
     }
@@ -43,7 +46,7 @@ const toArray = function (trie) {
   const nodes = parseNodes(trie)
   const all = []
   const stack = [{ index: 0, pref: '', edge: -1 }]
-  for (; stack.length;) {
+  for (; stack.length > 0;) {
     const frame = stack[stack.length - 1]
     const node = nodes[frame.index]
     if (frame.edge === -1) {
@@ -74,6 +77,7 @@ const unpack = function (str) {
     syms: [],
     symCount: 0
   }
+  parseDictionary(trie)
   //process symbols, if they have them
   if (str.match(':')) {
     parseSymbols(trie)

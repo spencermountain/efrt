@@ -226,8 +226,8 @@ const methods = {
     return undefined
   },
 
-  pack: function () {
-    return pack(this)
+  pack: function (useDictionary) {
+    return pack(this, useDictionary)
   }
 }
 export default methods

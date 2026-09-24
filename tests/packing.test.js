@@ -95,7 +95,11 @@ test('generated lexicons preserve words and category memberships', function (t) 
       }
       input[word] = [categories[random(categories.length)], categories[random(categories.length)]]
     }
-    const packed = efrt.pack(input, { strict: true })
+    const packed = efrt.pack(input, {
+      strict: true,
+      direction: ['prefix', 'suffix', 'auto'][sample % 3],
+      dictionary: sample % 2 === 0
+    })
     const decoded = efrt.unpack(Buffer.from(packed, 'utf8').toString('utf8'))
     // Memberships are sets: packing deduplicates repeated categories, and
     // the format's "true" category decodes as boolean true.

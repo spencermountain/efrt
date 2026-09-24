@@ -1,5 +1,7 @@
 import Histogram from './histogram.js'
 import encoding from '../encoding.js'
+import dictionary from './dictionary.js'
+import fns from './fns.js'
 
 const config = {
   NODE_SEP: ';',
@@ -37,7 +39,7 @@ const config = {
 // with a (relative!) line number of the node that string references.
 // Terminal strings (those without child node references) are
 // separated by ',' characters.
-const nodeLine = function (self, node) {
+const nodeLine = function (self, node, label = (text) => text) {
   let line = '',
     sep = ''
   if (self.isTerminal(node)) {
@@ -48,12 +50,12 @@ const nodeLine = function (self, node) {
     const prop = props[i]
     const child = node.edges[prop]
     if (typeof child === 'number') {
-      line += sep + prop
+      line += sep + label(prop)
       sep = config.STRING_SEP
       continue
     }
     if (self.syms[child._n]) {
-      line += sep + prop + self.syms[child._n]
+      line += sep + label(prop) + self.syms[child._n]
       sep = ''
       continue
     }
@@ -62,11 +64,11 @@ const nodeLine = function (self, node) {
     // to another node; checking the parent would silently truncate that path.
     if (child._g && ref.length >= child._g.length && child.edges[child._g] === 1) {
       ref = child._g
-      line += sep + prop + ref
+      line += sep + label(prop + ref)
       sep = config.STRING_SEP
       continue
     }
-    line += sep + prop + ref
+    line += sep + label(prop) + ref
     sep = ''
   }
   return line
@@ -129,7 +131,7 @@ const numberNodes = function (self, node) {
   self.nodes.push(node)
 }
 
-const pack = function (self) {
+const pack = function (self, useDictionary = false) {
   self.nodes = []
   self.nodeCount = 0
   self.syms = {}
@@ -148,18 +150,35 @@ const pack = function (self) {
   for (let sym = 0; sym < self.symCount; sym++) {
     self.syms[self.histAbs[sym][0]] = encoding.toAlphaCode(sym)
   }
-  for (let i = 0; i < self.nodeCount; i++) {
-    self.nodes[i] = nodeLine(self, self.nodes[i])
-  }
+  const labels = []
+  const lines = self.nodes.map((node) => nodeLine(self, node, (text) => {
+    if (useDictionary) {
+      labels.push(text)
+    }
+    return text
+  }))
+  const symbols = []
   // Prepend symbols
   for (let sym = self.symCount - 1; sym >= 0; sym--) {
-    self.nodes.unshift(
+    symbols.unshift(
       encoding.toAlphaCode(sym) +
         config.KEY_VAL +
         encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1)
     )
   }
-  return self.nodes.join(config.NODE_SEP)
+  const plain = symbols.concat(lines).join(config.NODE_SEP)
+  if (useDictionary) {
+    const dict = dictionary(labels)
+    if (dict.header) {
+      const encoded = dict.header + symbols.concat(
+        self.nodes.map((node) => nodeLine(self, node, dict.encode))
+      ).join(config.NODE_SEP)
+      if (fns.utf8Length(encoded) < fns.utf8Length(plain)) {
+        return encoded
+      }
+    }
+  }
+  return plain
 }
 
 export default pack

@@ -1,7 +1,7 @@
 import test from 'tape'
-import { createRequire } from 'module'
-import { readFileSync } from 'fs'
-import { runInNewContext } from 'vm'
+import { createRequire } from 'node:module'
+import { readFileSync } from 'node:fs'
+import { runInNewContext } from 'node:vm'
 import * as esm from 'efrt'
 import unpack from 'efrt/unpack'
 

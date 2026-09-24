@@ -122,6 +122,64 @@ const sameArray = Object.keys(unpack(packd))
 // same thing !
 ```
 
+## Packing direction
+
+`pack(data, { direction: 'auto' })` tries prefix-first and suffix-first packing
+for each category and chooses the smaller UTF-8 text output, including the
+direction marker. Ties keep prefix-first packing. This takes more packing work;
+it does not optimize for gzip or Brotli.
+
+```js
+const packed = pack(['singing', 'ringing', 'bringing', 'swinging'], {
+  direction: 'auto'
+})
+const words = unpack(packed) // direction is detected automatically
+```
+
+The default is `direction: 'prefix'`, preserving the existing output format.
+Use `direction: 'suffix'` to force suffix-first packing. These options also work
+with `strict: true`. Keys are lowercased before reversing, and Unicode code
+points stay intact.
+
+Suffix-first categories have a single `:` immediately after `¦`, for example
+`true¦:elppa` decodes to `{ apple: true }`. Prefix-first categories have no marker;
+both directions can appear in the same packed string. The updated unpacker reads
+both old and new output, but older unpackers cannot read suffix-marked data.
+
+## Fragment dictionaries
+
+Use `pack(data, { dictionary: true, direction: 'auto' })` to learn a small
+dictionary of repeated word fragments independently for each category. There
+is no built-in language list. Candidates come from Unicode code-point sequences
+in the trie's word labels, after prefix/suffix sharing. They never include node
+separators or references. Tokens are emitted in edge labels and resolved when
+those labels are decoded; this is not compression of the serialized trie syntax.
+
+The option defaults to `false`. When enabled, the packer counts the UTF-8 bytes
+of the definitions, header, and encoded trie, and uses the dictionary only if
+the complete representation is smaller. With `direction: 'auto'`, both directions
+are compared including their dictionaries. Packing takes additional time and
+memory; dictionaries are stored in the output rather than bundled with unpack.
+
+No new characters are reserved in input keys. Each dictionary chooses one-byte
+punctuation tokens absent from that category's original word labels. Literal
+punctuation stays supported; if no suitable tokens are available, packing falls
+back to the existing format. The existing reserved characters still apply.
+
+Dictionary output has a versioned header before the trie:
+
+```text
+category¦!1:TOKENS:FRAGMENT,FRAGMENT;TRIE
+category¦:!1:TOKENS:FRAGMENT,FRAGMENT;TRIE   (suffix-first)
+```
+
+Tokens correspond to fragments in order. For example,
+`true¦!1:#:ありがとう;a#,b#` decodes to the words `aありがとう` and `bありがとう`.
+Definitions are literal strings, not recursive token expressions. A header
+applies only to its category; marked and unmarked categories can be mixed.
+Older unpackers cannot read dictionary-marked output. The updated unpacker
+continues to accept the original format and suffix-first output.
+
 ## Reserved characters
 
 the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and _some punctuation_ (semicolon, comma, exclamation-mark) are not (yet) supported.

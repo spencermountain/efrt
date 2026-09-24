@@ -14,7 +14,7 @@ const symbols = function (t) {
   }
   t.symCount = t.syms.length
   t.nodes = t.nodes.slice(t.symCount)
-  if (!t.nodes.length || t.syms.some((index) => !Number.isSafeInteger(index) || index >= t.nodes.length)) {
+  if (t.nodes.length === 0 || t.syms.some((index) => !Number.isSafeInteger(index) || index >= t.nodes.length)) {
     throw new SyntaxError('Invalid efrt packed data: symbol target')
   }
 }

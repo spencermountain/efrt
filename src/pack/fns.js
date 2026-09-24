@@ -23,7 +23,26 @@ const unique = function (a) {
   a.length = count
 }
 
+// Measure the text as shipped in UTF-8, without depending on Node's Buffer.
+const utf8Length = function (str) {
+  let size = 0
+  for (const char of str) {
+    const point = char.codePointAt(0)
+    if (point < 0x80) {
+      size++
+    } else if (point < 0x800) {
+      size += 2
+    } else if (point < 0x10000) {
+      size += 3
+    } else {
+      size += 4
+    }
+  }
+  return size
+}
+
 export default {
   commonPrefix,
-  unique
+  unique,
+  utf8Length
 }
