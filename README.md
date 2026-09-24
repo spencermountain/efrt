@@ -159,7 +159,9 @@ a `RangeError` to bound recursive trie construction. `unpack()` validates the
 packed syntax and references and throws a `SyntaxError` for malformed data;
 its traversal is iterative, so deeply nested valid tries do not exhaust the call
 stack. Empty strings, `null`, and `undefined` unpack to `{}`; other non-string
-inputs throw a `TypeError`.
+inputs throw a `TypeError`. Duplicate words within a packed category produce
+only one membership in that category. Trie edges preserve complete Unicode
+code points, so valid Unicode keys, including emoji, survive UTF-8 transport.
 
 _efrt_ is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
 If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈

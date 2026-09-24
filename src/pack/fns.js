@@ -1,8 +1,12 @@
 const commonPrefix = function (w1, w2) {
   const len = Math.min(w1.length, w2.length)
   let end = 0
-  while (end < len && w1[end] === w2[end]) {
-    end++
+  for (; end < len;) {
+    const point = w1.codePointAt(end)
+    if (point !== w2.codePointAt(end)) {
+      break
+    }
+    end += point > 0xffff ? 2 : 1
   }
   return w1.slice(0, end)
 }

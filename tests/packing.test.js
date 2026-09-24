@@ -6,10 +6,29 @@ test('common prefixes include empty, identical, and unicode strings', function (
   for (const [left, right, expected] of [
     ['', 'apple', ''], ['apple', '', ''], ['apple', 'apple', 'apple'],
     ['apple', 'apply', 'appl'], ['apple', 'pear', ''], ['a', 'apple', 'a'],
-    ['café', 'cafés', 'café'], ['👍a', '👍b', '👍']
+    ['café', 'cafés', 'café'], ['👍a', '👍b', '👍'],
+    ['😀a', '😁b', ''], ['a😀', 'a😁', 'a'], ['😀', '😀a', '😀']
   ]) {
     t.equal(fns.commonPrefix(left, right), expected, left + '/' + right)
   }
+  t.end()
+})
+
+test('unicode words survive UTF-8 transport without splitting surrogate pairs', function (t) {
+  for (const words of [
+    ['😀', '😁'], ['😀a', '😁b'], ['a😀', 'b😀', 'a😁', 'b😁'],
+    ['😀', '😀a', '😀ab', '😁a', '😁ab'],
+    ['𐀀a', '𐀁a', '𠀀a', '𠀁a', 'café', 'éclair', '👍🏽', '👍🏻'],
+    ['😀'.repeat(512), '😁'.repeat(512)]
+  ]) {
+    const packed = efrt.pack(words, { strict: true })
+    const transported = Buffer.from(packed, 'utf8').toString('utf8')
+    t.equal(transported, packed, 'UTF-8 preserves the packed string')
+    t.deepEqual(Object.keys(efrt.unpack(transported)).sort(), words.slice().sort(),
+      'UTF-8 transport preserves every word')
+  }
+  t.deepEqual(efrt.unpack('true¦\ud83d0;\ude00,\ude01'), { '😀': true, '😁': true },
+    'previously packed surrogate fragments still decode in memory')
   t.end()
 })
 
@@ -64,7 +83,7 @@ test('generated lexicons preserve words and category memberships', function (t) 
     seed = (seed * 48271) % 2147483647
     return seed % limit
   }
-  const fragments = ['a', 'b', 'c', 'd', 'ef', 'ing', 'ed', '-', '_', ' ', 'é', '😀', '\n', '\u0000']
+  const fragments = ['a', 'b', 'c', 'd', 'ef', 'ing', 'ed', '-', '_', ' ', 'é', '😀', '😁', '𠀀', '\n', '\u0000']
   const categories = ['noun', 'verb', '__proto__', '', 'true']
   for (let sample = 0; sample < 200; sample++) {
     const input = Object.create(null)
@@ -76,7 +95,8 @@ test('generated lexicons preserve words and category memberships', function (t) 
       }
       input[word] = [categories[random(categories.length)], categories[random(categories.length)]]
     }
-    const decoded = efrt.unpack(efrt.pack(input, { strict: true }))
+    const packed = efrt.pack(input, { strict: true })
+    const decoded = efrt.unpack(Buffer.from(packed, 'utf8').toString('utf8'))
     // Memberships are sets: packing deduplicates repeated categories, and
     // the format's "true" category decodes as boolean true.
     const expected = Object.keys(input).sort().map((word) => [

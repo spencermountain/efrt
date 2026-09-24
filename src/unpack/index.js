@@ -27,8 +27,10 @@ const unpack = function (str) {
       const k = arr[i]
       if (Object.prototype.hasOwnProperty.call(all, k)) {
         if (Array.isArray(all[k]) === false) {
-          all[k] = [all[k], cat]
-        } else {
+          if (all[k] !== cat) {
+            all[k] = [all[k], cat]
+          }
+        } else if (!all[k].includes(cat)) {
           all[k].push(cat)
         }
       } else {

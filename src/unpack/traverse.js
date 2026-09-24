@@ -21,9 +21,10 @@ const parseNodes = function (trie) {
     const terminal = node[0] === '!'
     const body = terminal ? node.slice(1) : node
     const edges = []
-    const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/g
-    let offset = 0
-    while (offset < body.length) {
+    // Match only at the current offset. Searching later positions would
+    // repeatedly rescan a long malformed fragment before rejecting it.
+    const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/y
+    for (let offset = 0; offset < body.length; offset = token.lastIndex) {
       const match = token.exec(body)
       if (!match || match.index !== offset || (match[2] === ',' && token.lastIndex === body.length)) {
         throw new SyntaxError('Invalid efrt packed data: node syntax')
@@ -33,7 +34,6 @@ const parseNodes = function (trie) {
         text: match[1],
         target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
       })
-      offset = token.lastIndex
     }
     return { terminal, edges }
   })
@@ -43,7 +43,7 @@ const toArray = function (trie) {
   const nodes = parseNodes(trie)
   const all = []
   const stack = [{ index: 0, pref: '', edge: -1 }]
-  while (stack.length) {
+  for (; stack.length;) {
     const frame = stack[stack.length - 1]
     const node = nodes[frame.index]
     if (frame.edge === -1) {

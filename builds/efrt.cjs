@@ -7,8 +7,12 @@
   const commonPrefix = function (w1, w2) {
     const len = Math.min(w1.length, w2.length);
     let end = 0;
-    while (end < len && w1[end] === w2[end]) {
-      end++;
+    for (; end < len;) {
+      const point = w1.codePointAt(end);
+      if (point !== w2.codePointAt(end)) {
+        break
+      }
+      end += point > 0xffff ? 2 : 1;
     }
     return w1.slice(0, end)
   };
@@ -90,7 +94,7 @@
     let range = BASE;
     let s = '';
     for (; n >= range; n -= range, places++, range *= BASE) {}
-    while (places--) {
+    for (; places > 0; places--) {
       const d = n % BASE;
       s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
       n = (n - d) / BASE;
@@ -391,19 +395,20 @@
     },
 
     // Add a terminal string to node.
-    // If 2 characters or less, just add with value == 1.
-    // If more than 2 characters, point to shared node
+    // An empty suffix or one code point is stored directly as a terminal.
+    // Longer suffixes point to a shared node, without splitting surrogate pairs.
     // Note - don't prematurely share suffixes - these
     // terminals may become split and joined with other
     // nodes in this part of the tree.
     addTerminal: function (node, prop) {
-      if (prop.length <= 1) {
+      const width = prop.codePointAt(0) > 0xffff ? 2 : 1;
+      if (prop.length <= width) {
         node.edges[prop] = 1;
         return
       }
       const next = createNode();
-      node.edges[prop[0]] = next;
-      this.addTerminal(next, prop.slice(1));
+      node.edges[prop.slice(0, width)] = next;
+      this.addTerminal(next, prop.slice(width));
     },
 
     // Well ordered list of properties in a node (string or object properties)
@@ -676,9 +681,10 @@
       const terminal = node[0] === '!';
       const body = terminal ? node.slice(1) : node;
       const edges = [];
-      const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/g;
-      let offset = 0;
-      while (offset < body.length) {
+      // Match only at the current offset. Searching later positions would
+      // repeatedly rescan a long malformed fragment before rejecting it.
+      const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/y;
+      for (let offset = 0; offset < body.length; offset = token.lastIndex) {
         const match = token.exec(body);
         if (!match || match.index !== offset || (match[2] === ',' && token.lastIndex === body.length)) {
           throw new SyntaxError('Invalid efrt packed data: node syntax')
@@ -688,7 +694,6 @@
           text: match[1],
           target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
         });
-        offset = token.lastIndex;
       }
       return { terminal, edges }
     })
@@ -698,7 +703,7 @@
     const nodes = parseNodes(trie);
     const all = [];
     const stack = [{ index: 0, pref: '', edge: -1 }];
-    while (stack.length) {
+    for (; stack.length;) {
       const frame = stack[stack.length - 1];
       const node = nodes[frame.index];
       if (frame.edge === -1) {
@@ -763,8 +768,10 @@
         const k = arr[i];
         if (Object.prototype.hasOwnProperty.call(all, k)) {
           if (Array.isArray(all[k]) === false) {
-            all[k] = [all[k], cat];
-          } else {
+            if (all[k] !== cat) {
+              all[k] = [all[k], cat];
+            }
+          } else if (!all[k].includes(cat)) {
             all[k].push(cat);
           }
         } else {

@@ -1,5 +1,39 @@
 import test from 'tape'
+import { execFileSync } from 'node:child_process'
 import efrt from './_lib.js'
+
+test('duplicate packed words retain set membership within each category', function (t) {
+  for (const [packed, expected] of [
+    ['fruit¦apple,apple', { apple: 'fruit' }],
+    ['fruit¦a0a0;b', { ab: 'fruit' }],
+    ['fruit¦a0ab;!b', { a: 'fruit', ab: 'fruit' }],
+    ['true¦apple,apple', { apple: true }],
+    ['¦apple,apple', { apple: '' }],
+    ['fruit¦apple,apple|green¦apple,apple|true¦apple,apple',
+      { apple: ['fruit', 'green', true] }],
+    ['fruit¦__proto__,__proto__', JSON.parse('{"__proto__":"fruit"}')]
+  ]) {
+    t.deepEqual(efrt.unpack(packed), expected, packed)
+  }
+  t.end()
+})
+
+test('long malformed fragments are rejected without repeatedly rescanning', function (t) {
+  // Bound the regression in a child process: the old searching regex can
+  // spend minutes on this input. The timeout allows ample startup overhead.
+  const script = `
+    import assert from 'node:assert/strict'
+    import efrt from ${JSON.stringify(new URL('./_lib.js', import.meta.url).href)}
+    for (const suffix of ['!', ':', ',']) {
+      assert.throws(() => efrt.unpack('true¦' + 'a'.repeat(1000000) + suffix), SyntaxError)
+    }
+  `
+  t.doesNotThrow(() => execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+    timeout: 5000,
+    stdio: 'pipe'
+  }), 'rejects large malformed nodes within a bounded process')
+  t.end()
+})
 
 test('prototype names in categories and keys', function (t) {
   for (const category of ['constructor', 'hasOwnProperty', '__proto__', 'toString']) {
