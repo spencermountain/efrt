@@ -35,3 +35,57 @@ test('packing optimization retains the existing byte format', function (t) {
   }
   t.end()
 })
+
+test('suffix inlining never truncates a nonterminal singleton', function (t) {
+  // Enough distinct nodes to require a two-character reference. The path
+  // for fcfcfebeb has a singleton "eb" edge pointing to another node, while
+  // its parent also has a terminal "eb" edge. Only the child is relevant
+  // when deciding whether the remaining suffix can be written literally.
+  const words = [
+    'fafabcdcf', 'befadabab', 'dcbcbcdaf', 'dadebabaf', 'dabcdef',
+    'fcfcfebeb', 'def', 'bedcb', 'bcfebebeb', 'bebefabab', 'dafabcded',
+    'dcdcfcd', 'fcbedebcb', 'dabed', 'dcdadcd', 'dafafaf', 'bedafcbab',
+    'beb', 'fcfeb', 'bebeb', 'fafcdedeb', 'fafcbcfcf', 'dcb', 'dedcfcb',
+    'bcfab', 'debadadab', 'dcdcdcfcb', 'debedcfaf', 'fabafaf', 'fcd',
+    'debedad', 'fabefcb', 'befedcbed', 'defcb', 'fcded', 'dcbcb',
+    'bcb', 'fcbcb', 'daded'
+  ]
+  const decoded = efrt.unpack(efrt.pack(words, { strict: true }))
+  t.equal(decoded.fcfcfebeb, true, 'retains the entire shared suffix')
+  t.equal(Object.prototype.hasOwnProperty.call(decoded, 'fcfcfeb'), false,
+    'does not invent a truncated word')
+  t.deepEqual(Object.keys(decoded).sort(), words.slice().sort(), 'exact word set survives')
+  t.end()
+})
+
+test('generated lexicons preserve words and category memberships', function (t) {
+  let seed = 173
+  const random = function (limit) {
+    seed = (seed * 48271) % 2147483647
+    return seed % limit
+  }
+  const fragments = ['a', 'b', 'c', 'd', 'ef', 'ing', 'ed', '-', '_', ' ', 'é', '😀', '\n', '\u0000']
+  const categories = ['noun', 'verb', '__proto__', '', 'true']
+  for (let sample = 0; sample < 200; sample++) {
+    const input = Object.create(null)
+    for (let entry = 0; entry < 80; entry++) {
+      let word = ''
+      const length = 1 + random(10)
+      for (let i = 0; i < length; i++) {
+        word += fragments[random(fragments.length)]
+      }
+      input[word] = [categories[random(categories.length)], categories[random(categories.length)]]
+    }
+    const decoded = efrt.unpack(efrt.pack(input, { strict: true }))
+    // Memberships are sets: packing deduplicates repeated categories, and
+    // the format's "true" category decodes as boolean true.
+    const expected = Object.keys(input).sort().map((word) => [
+      word, [...new Set(input[word])].sort()
+    ])
+    const actual = Object.keys(decoded).sort().map((word) => [
+      word, [].concat(decoded[word]).map(String).sort()
+    ])
+    t.deepEqual(actual, expected, 'generated lexicon ' + sample)
+  }
+  t.end()
+})

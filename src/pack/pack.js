@@ -58,8 +58,9 @@ const nodeLine = function (self, node) {
       continue
     }
     let ref = encoding.toAlphaCode(node._n - child._n - 1 + self.symCount)
-    // Large reference to smaller string suffix -> duplicate suffix
-    if (child._g && ref.length >= child._g.length && node.edges[child._g] === 1) {
+    // Only inline a complete terminal suffix. A singleton can still point
+    // to another node; checking the parent would silently truncate that path.
+    if (child._g && ref.length >= child._g.length && child.edges[child._g] === 1) {
       ref = child._g
       line += sep + prop + ref
       sep = config.STRING_SEP
