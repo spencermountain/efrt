@@ -21,7 +21,7 @@ export default [
     input: 'src/index.js',
     output: [{ file: 'builds/efrt.min.js', format: 'umd', name: 'efrt' }],
     plugins: [
-      terser(),
+      terser({ compress: { passes: 3 } }),
       sizeCheck({
         expect: 8, // sizes in kb
         warn: 2, // acceptable change (+/-)
@@ -33,25 +33,25 @@ export default [
   {
     input: 'src/index.js',
     output: [{ banner: banner, file: 'builds/efrt.mjs', format: 'esm' }],
-    plugins: [terser()]
+    plugins: [terser({ compress: { passes: 3 } })]
   },
   // unpack cjs
   {
     input: 'src/unpack/index.js',
     output: [{ file: 'builds/efrt-unpack.cjs', format: 'cjs' }],
-    plugins: [terser()]
+    plugins: [terser({ compress: { passes: 3 } })]
   },
   // unpack browser min
   {
     input: 'src/unpack/index.js',
     output: [{ file: 'builds/efrt-unpack.min.js', format: 'umd', name: 'efrt' }],
-    plugins: [terser()]
+    plugins: [terser({ compress: { passes: 3 } })]
   },
 
   // unpack mjs min
   {
     input: 'src/unpack/index.js',
     output: [{ banner: banner, file: 'builds/efrt-unpack.mjs', format: 'esm' }],
-    plugins: [terser()]
+    plugins: [terser({ compress: { passes: 3 } })]
   }
 ]

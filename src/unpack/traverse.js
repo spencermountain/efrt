@@ -1,6 +1,7 @@
 import parseSymbols from './symbols.js'
 import encoding from '../encoding.js'
 import parseDictionary from './dictionary.js'
+import unescapeLabel from './escape.js'
 
 // References are either absolute (symbol) or relative (1 - based)
 const indexFromRef = function (trie, ref, index) {
@@ -31,8 +32,9 @@ const parseNodes = function (trie) {
         throw new SyntaxError('Invalid efrt packed data: node syntax')
       }
       const ref = match[2]
-      const text = trie.dictionary ? Array.from(match[1],
-        (char) => trie.dictionary[char] || char).join('') : match[1]
+      const label = trie.versioned ? unescapeLabel(match[1]) : match[1]
+      const text = trie.dictionary ? Array.from(label,
+        (char) => trie.dictionary[char] || char).join('') : label
       edges.push({
         text,
         target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
@@ -71,11 +73,12 @@ const toArray = function (trie) {
 }
 
 //PackedTrie - Trie traversal of the Trie packed-string representation.
-const unpack = function (str) {
+const unpack = function (str, versioned = false) {
   const trie = {
     nodes: str.split(';'),
     syms: [],
-    symCount: 0
+    symCount: 0,
+    versioned
   }
   parseDictionary(trie)
   //process symbols, if they have them

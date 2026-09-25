@@ -1,7 +1,12 @@
 ## 2.9.0 [Sep 2026]
+- **[change]** - accept Set word inputs, including `ReadonlySet<string>` in TypeScript, with the same validation and encoding as arrays
+- **[change]** - include TypeScript declarations for `efrt` and `efrt/unpack`, with ESM/CommonJS consumer tests and Are the Types Wrong checks in CI
+- **[change]** - support digits in keys with versioned label escaping, including suffix packing and fragment dictionaries
 - **[change]** - support more unicode and emoji
 - **[change]** - add dictionary support for repeated spans
 - **[change]** - support prefix/suffix direction change
+- **[change]** - support for escaping inputs with numbers
+- **[change]** - support for Set inputs
 
 ## 2.8.0 [Sep 2026]
 - **[change]** - Safer handling of prototype-related names.

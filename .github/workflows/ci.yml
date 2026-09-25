@@ -1,26 +1,52 @@
 name: Verify
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   verify:
+    name: Verify (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         node: [22, 24, 26]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
-      - uses: pnpm/action-setup@v6
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
         with:
           version: 11.5.0
           cache: true
-      - run: pnpm install --frozen-lockfile
-      - run: npm run verify
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build bundles
+        run: npm run build
+      - name: Check committed bundles
+        run: git diff --exit-code -- builds src/_version.js
+      - name: Lint
+        run: npm run lint
+      - name: Test source
+        run: npm test -- --raw
+      - name: Test built bundles
+        run: npm run testb -- --raw
+      - name: Test npm package in an isolated consumer
+        run: npm run test:package
+      - name: Check TypeScript consumers and package declarations
+        run: npm run test:types

@@ -23,7 +23,7 @@ test('packing directions preserve categories, normalization, and UTF-8', functio
   for (const direction of ['suffix', 'auto']) {
     t.throws(() => efrt.pack(['Apple', 'apple'], { strict: true, direction }),
       /both normalize/, 'strict validation precedes reversal')
-    t.throws(() => efrt.pack(['apple1'], { strict: true, direction }),
+    t.throws(() => efrt.pack(['apple!'], { strict: true, direction }),
       /unsupported key/, 'strict validation still rejects reserved characters')
     t.throws(() => efrt.pack(['İ'.repeat(513)], { direction }),
       /keys cannot exceed/, 'length limit applies before reversal')

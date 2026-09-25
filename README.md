@@ -16,6 +16,9 @@
   <code>npm install efrt</code>
 </div>
 
+TypeScript declarations are included for both `efrt` and `efrt/unpack`, with ESM
+and CommonJS support. No separate `@types` package is needed.
+
 if your data looks like this:
 
 ```js
@@ -53,8 +56,8 @@ obj['bedfordshire'] //'England'
 
 By doing this work ahead of time, **efrt** can reduce the data you ship to the client-side.
 
-The current minified browser builds are about **11.6 KB** for the whole library
-and **3.5 KB** for unpack only, before gzip or Brotli (1 KB = 1,000 bytes).
+The current minified browser builds are about **12.3 KB** for the whole library
+and **3.9 KB** for unpack only, before gzip or Brotli (1 KB = 1,000 bytes).
 
 it is based on:
 
@@ -102,7 +105,7 @@ console.log(obj.tomato)
 or, an Array:
 </h5>
 
-if you pass it an array of strings, it creates an object with `true` values.
+if you pass it an array or Set of strings, it creates an object with `true` values.
 Unpacking preserves the unique supported words after lowercasing, not the
 original array order, capitalization, or duplicates:
 
@@ -125,6 +128,15 @@ const words = Object.keys(unpack(packd))
 // the same unique month names; original order is not preserved
 ```
 
+Sets use the same packing options and validation as arrays, and the input Set
+is left unchanged:
+
+```js
+const packed = pack(new Set(['Apple', 'pear']), { strict: true })
+unpack(packed) // { apple: true, pear: true }
+const words = new Set(Object.keys(unpack(packed)))
+```
+
 ## Packing direction
 
 `pack(data, { direction: 'auto' })` tries prefix-first and suffix-first packing
@@ -139,13 +151,13 @@ const packed = pack(['singing', 'ringing', 'bringing', 'swinging'], {
 const words = unpack(packed) // direction is detected automatically
 ```
 
-The default is `direction: 'prefix'`, preserving the existing output format.
+The default is `direction: 'prefix'`, preserving existing output for keys without digits.
 Use `direction: 'suffix'` to force suffix-first packing. These options also work
 with `strict: true`. Keys are lowercased before reversing, and Unicode code
 points stay intact.
 
 Suffix-first categories have a single `:` immediately after `¦`, for example
-`true¦:elppa` decodes to `{ apple: true }`. Prefix-first categories have no marker;
+`true¦:elppa` decodes to `{ apple: true }`. Prefix-first categories have no direction marker;
 both directions can appear in the same packed string. The updated unpacker reads
 both old and new output, but older unpackers cannot read suffix-marked data.
 
@@ -174,6 +186,7 @@ Dictionary output has a versioned header before the trie:
 ```text
 category¦!1:TOKENS:FRAGMENT,FRAGMENT;TRIE
 category¦:!1:TOKENS:FRAGMENT,FRAGMENT;TRIE   (suffix-first)
+category¦!2;:!1:TOKENS:FRAGMENT,FRAGMENT;TRIE   (digit encoding, suffix-first)
 ```
 
 Tokens correspond to fragments in order. For example,
@@ -185,18 +198,39 @@ continues to accept the original format and suffix-first output.
 
 ## Reserved characters
 
-the keys of the object are normalized. Spaces/unicode are good, but numbers, case-sensitivity, and _some punctuation_ (semicolon, comma, exclamation-mark) are not (yet) supported.
+Keys are lowercased. Digits, spaces, underscores, backslashes, and Unicode are
+supported; case sensitivity and the punctuation `,;!:|¦` are not supported.
+After lowercasing, keys are checked against:
 
 ```js
-specialChars = new RegExp('[0-9A-Z,;!:|¦]')
+const specialChars = new RegExp('[A-Z,;!:|¦]')
 ```
 
+Categories containing supported digit keys use the version marker `!2;`
+immediately after `¦`, before any direction or dictionary header. In this format,
+literal digits `0` through `9` are written as `\a` through `\j`, and a literal
+backslash is written as `\\`. These are characters in the packed text, not
+JavaScript string-literal escapes. Node references still use ordinary digits.
+
+```js
+pack(['101domain.com']) // String.raw`true¦!2;\b\a\bdomain.com`
+unpack(String.raw`true¦!2;\b\a\bdomain.com`) // { '101domain.com': true }
+```
+
+Categories without digits keep their existing encoding, including literal
+backslashes. Both formats can coexist in one packed string. Updated unpackers
+read both; older unpackers cannot read `!2;` categories. Versioned dictionary
+definitions use the same escapes, and expanded fragments are not unescaped again.
+Unknown or incomplete escapes in versioned labels or definitions throw a
+`SyntaxError`. Digits work with strict mode and all packing options; other
+reserved punctuation remains unsupported.
+
 For input validation, use `pack(data, { strict: true })`. It throws a `TypeError`
-for empty or unsupported keys, non-string array entries, or distinct keys that
+for empty or unsupported keys, non-string array or Set entries, or distinct keys that
 become identical after lowercasing:
 
 ```js
-pack(['apple1'], { strict: true }) // throws: unsupported key "apple1"
+pack(['apple!'], { strict: true }) // throws: unsupported key "apple!"
 pack({ Apple: 'fruit', apple: 'company' }, { strict: true }) // throws: normalization collision
 pack(['Apple', 'Apple'], { strict: true }) // valid: exact duplicates are allowed
 ```
@@ -210,7 +244,7 @@ from word fragments.
 Category values cannot contain `|` or `¦`; `pack()` throws a `TypeError`
 instead of producing an ambiguous packed string. Categories use the existing
 string-based format: values are converted to strings, except the category
-`"true"` decodes as boolean `true` (also used for arrays of words). Consequently,
+`"true"` decodes as boolean `true` (also used for arrays and Sets of words). Consequently,
 `false` decodes as `"false"`, numbers decode as strings, and the string `"true"`
 cannot be distinguished from boolean `true`. Category arrays represent membership
 in multiple categories, not a general-purpose array serialization format.
@@ -265,7 +299,25 @@ There is no fixed break-even key count. Include the decoder's download size
 when comparing total transfer sizes, and measure unpacking time and memory on
 your target devices.
 
-## Use
+## Usage
+
+```ts
+// ESM
+import unpack from 'efrt/unpack'
+// CommonJS (.cts)
+import efrt = require('efrt')
+import unpack = require('efrt/unpack')
+const result = unpack(efrt.pack(['apple', 'pear']))
+
+// Typescript
+import { pack, unpack } from 'efrt'
+import type { PackInput, PackOptions, Unpacked } from 'efrt'
+
+const data: PackInput = { apple: ['fruit', 'food'], pear: 'fruit' }
+const options: PackOptions = { strict: true, direction: 'auto', dictionary: true }
+const packed: string = pack(data, options)
+const result: Unpacked = unpack(packed)
+```
 
 **Browser script tags**
 
@@ -279,7 +331,7 @@ your target devices.
 ```
 
 If you only need to unpack, load the standalone decoder. The minified CommonJS
-build is about **3.3 KB** before transport compression:
+build is about **3.7 KB** before transport compression:
 
 ```js
 const unpack = require('efrt/unpack') // node/cjs
@@ -294,16 +346,5 @@ const unpack = require('efrt/unpack') // node/cjs
 ```
 
 Thanks to [John Resig](https://johnresig.com/) for his fun [trie-compression post](https://johnresig.com/blog/javascript-trie-performance-analysis/) on his blog, and [Wiktor Jakubczyc](https://github.com/monolithpl) for his performance analysis work
-
-## Development checks
-
-Run `npm run verify` after installing development dependencies. It rebuilds the
-bundles, runs lint and both test suites, and tests an actual npm tarball installed
-offline in a temporary consumer project. The package check covers ESM, CommonJS,
-standalone unpack, browser globals, and exported version consistency.
-
-GitHub Actions runs these checks on Node 22, 24, and 26. Test commands use the
-local `tap-dancer` reporter while preserving both test and reporter failures.
-Use `npm test -- --raw` or `npm run testb -- --raw` for unformatted TAP output.
 
 MIT

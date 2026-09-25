@@ -2,6 +2,7 @@ import Histogram from './histogram.js'
 import encoding from '../encoding.js'
 import dictionary from './dictionary.js'
 import fns from './fns.js'
+import escapeLabel from './escape.js'
 
 const config = {
   NODE_SEP: ';',
@@ -131,7 +132,8 @@ const numberNodes = function (self, node) {
   self.nodes.push(node)
 }
 
-const pack = function (self, useDictionary = false) {
+const pack = function (self, useDictionary = false, versioned = false) {
+  const encodeLabel = versioned ? escapeLabel : (text) => text
   self.nodes = []
   self.nodeCount = 0
   self.syms = {}
@@ -155,7 +157,7 @@ const pack = function (self, useDictionary = false) {
     if (useDictionary) {
       labels.push(text)
     }
-    return text
+    return encodeLabel(text)
   }))
   const symbols = []
   // Prepend symbols
@@ -168,10 +170,10 @@ const pack = function (self, useDictionary = false) {
   }
   const plain = symbols.concat(lines).join(config.NODE_SEP)
   if (useDictionary) {
-    const dict = dictionary(labels)
+    const dict = dictionary(labels, encodeLabel)
     if (dict.header) {
       const encoded = dict.header + symbols.concat(
-        self.nodes.map((node) => nodeLine(self, node, dict.encode))
+        self.nodes.map((node) => nodeLine(self, node, (text) => encodeLabel(dict.encode(text))))
       ).join(config.NODE_SEP)
       if (fns.utf8Length(encoded) < fns.utf8Length(plain)) {
         return encoded

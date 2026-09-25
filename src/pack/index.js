@@ -1,5 +1,5 @@
 import Trie from './trie.js'
-import { normalizeKey, validateKeys } from './keys.js'
+import { normalizeKey, validateKeys, unsupportedChars } from './keys.js'
 import fns from './fns.js'
 
 const isArray = function (input) {
@@ -38,8 +38,12 @@ const pack = function (obj, options = {}) {
   if (options.dictionary !== undefined && typeof options.dictionary !== 'boolean') {
     throw new TypeError('efrt dictionary must be a boolean')
   }
+  const isSet = Object.prototype.toString.call(obj) === '[object Set]'
+  if (isSet) {
+    obj = Array.from(obj)
+  }
   if (options.strict && isArray(obj) && obj.some((key) => typeof key !== 'string')) {
-    throw new TypeError('efrt strict: array keys must be strings')
+    throw new TypeError('efrt strict: ' + (isSet ? 'Set' : 'array') + ' keys must be strings')
   }
   obj = handleFormats(obj)
   if (options.strict) {
@@ -60,20 +64,22 @@ const pack = function (obj, options = {}) {
   }, Object.create(null))
   //pack each into a compressed string
   Object.keys(flat).forEach(function (k) {
-    const words = flat[k]
+    const words = flat[k].map(normalizeKey)
+    const versioned = words.some((word) => /[0-9]/.test(word) && !unsupportedChars.test(word))
+    const marker = versioned ? '!2;' : ''
     if (direction === 'prefix') {
-      flat[k] = new Trie(words).pack(options.dictionary)
+      flat[k] = marker + new Trie(words).pack(options.dictionary, versioned)
       return
     }
     // Normalize before reversing: lowercasing can depend on letter order
     // (for example Greek final sigma) or expand a character into two.
-    const reversed = words.map((word) => Array.from(normalizeKey(word)).reverse().join(''))
-    const suffix = ':' + new Trie(reversed).pack(options.dictionary)
+    const reversed = words.map((word) => Array.from(word).reverse().join(''))
+    const suffix = marker + ':' + new Trie(reversed).pack(options.dictionary, versioned)
     if (direction === 'suffix') {
       flat[k] = suffix
       return
     }
-    const prefix = new Trie(words).pack(options.dictionary)
+    const prefix = marker + new Trie(words).pack(options.dictionary, versioned)
     flat[k] = fns.utf8Length(suffix) < fns.utf8Length(prefix) ? suffix : prefix
   })
   return Object.keys(flat)

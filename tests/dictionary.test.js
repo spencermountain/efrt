@@ -60,7 +60,7 @@ test('invalid dictionary headers are rejected', function (t) {
   for (const dictionary of [null, 1, 'auto', {}]) {
     t.throws(() => efrt.pack([], { dictionary }), /dictionary must be/, 'validates option')
   }
-  t.throws(() => efrt.pack(['bad1'], { strict: true, dictionary: true }),
+  t.throws(() => efrt.pack(['bad!'], { strict: true, dictionary: true }),
     /unsupported key/, 'existing reserved characters are still rejected')
   t.end()
 })
