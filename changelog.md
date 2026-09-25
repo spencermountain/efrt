@@ -1,4 +1,5 @@
 ## 2.9.0 [Sep 2026]
+- **[change]** - support digits in keys with versioned label escaping, including suffix packing and fragment dictionaries
 - **[change]** - support more unicode and emoji
 - **[change]** - add dictionary support for repeated spans
 - **[change]** - support prefix/suffix direction change

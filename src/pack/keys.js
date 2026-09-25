@@ -1,4 +1,4 @@
-export const unsupportedChars = /[0-9A-Z,;!:|¦]/
+export const unsupportedChars = /[A-Z,;!:|¦]/
 
 export const normalizeKey = function (key) {
   const normalized = key.toLowerCase()

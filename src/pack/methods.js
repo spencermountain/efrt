@@ -142,7 +142,8 @@ const methods = {
         sig.push(prop)
       }
     }
-    sig = sig.join('-')
+    // Preserve the distinction between digit labels and numeric child IDs.
+    sig = JSON.stringify(sig)
 
     const shared = this.suffixes[sig]
     if (shared) {
@@ -226,8 +227,8 @@ const methods = {
     return undefined
   },
 
-  pack: function (useDictionary) {
-    return pack(this, useDictionary)
+  pack: function (useDictionary, versioned) {
+    return pack(this, useDictionary, versioned)
   }
 }
 export default methods

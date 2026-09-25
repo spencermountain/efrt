@@ -149,7 +149,7 @@
   // additional restrictions on input keys are needed, and tokens cost one byte.
   const alphabet = '#$%&()*+-./<=>?@[]^_`~';
 
-  const dictionary$1 = function (labels) {
+  const dictionary$1 = function (labels, encodeLabel = (text) => text) {
     const used = new Set(labels.join(''));
     const tokens = Array.from(alphabet).filter((char) => !used.has(char));
     if (tokens.length === 0) {
@@ -169,7 +169,7 @@
       }
     }
     const candidates = Array.from(counts, ([text, count]) => {
-      const size = fns.utf8Length(text);
+      const size = fns.utf8Length(encodeLabel(text));
       return { text, size, saving: ((size - 1) * count) - size - 2 }
     }).filter((entry) => entry.saving > 0).sort((a, b) => b.saving - a.saving).slice(0, 256);
     let remaining = labels.slice();
@@ -189,7 +189,7 @@
     }
     return {
       header: entries.length > 0 ? '!1:' + entries.map((entry) => entry.token).join('') + ':' +
-        entries.map((entry) => entry.text).join(',') + ';' : '',
+        entries.map((entry) => encodeLabel(entry.text)).join(',') + ';' : '',
       encode: function (label) {
         for (const entry of entries) {
           label = label.split(entry.text).join(entry.token);
@@ -197,6 +197,12 @@
         return label
       }
     }
+  };
+
+  // Escape only serialized labels, after trie optimization and token selection.
+  const escapeLabel = function (text) {
+    return text.replace(/[0-9\\]/g, (char) =>
+      char === '\\' ? '\\\\' : '\\' + 'abcdefghij'[Number(char)])
   };
 
   const config = {
@@ -327,7 +333,8 @@
     self.nodes.push(node);
   };
 
-  const pack$1 = function (self, useDictionary = false) {
+  const pack$1 = function (self, useDictionary = false, versioned = false) {
+    const encodeLabel = versioned ? escapeLabel : (text) => text;
     self.nodes = [];
     self.nodeCount = 0;
     self.syms = {};
@@ -351,7 +358,7 @@
       if (useDictionary) {
         labels.push(text);
       }
-      return text
+      return encodeLabel(text)
     }));
     const symbols = [];
     // Prepend symbols
@@ -364,10 +371,10 @@
     }
     const plain = symbols.concat(lines).join(config.NODE_SEP);
     if (useDictionary) {
-      const dict = dictionary$1(labels);
+      const dict = dictionary$1(labels, encodeLabel);
       if (dict.header) {
         const encoded = dict.header + symbols.concat(
-          self.nodes.map((node) => nodeLine(self, node, dict.encode))
+          self.nodes.map((node) => nodeLine(self, node, (text) => encodeLabel(dict.encode(text))))
         ).join(config.NODE_SEP);
         if (fns.utf8Length(encoded) < fns.utf8Length(plain)) {
           return encoded
@@ -377,7 +384,7 @@
     return plain
   };
 
-  const unsupportedChars = /[0-9A-Z,;!:|¦]/;
+  const unsupportedChars = /[A-Z,;!:|¦]/;
 
   const normalizeKey = function (key) {
     const normalized = key.toLowerCase();
@@ -548,7 +555,8 @@
           sig.push(prop);
         }
       }
-      sig = sig.join('-');
+      // Preserve the distinction between digit labels and numeric child IDs.
+      sig = JSON.stringify(sig);
 
       const shared = this.suffixes[sig];
       if (shared) {
@@ -632,8 +640,8 @@
       return undefined
     },
 
-    pack: function (useDictionary) {
-      return pack$1(this, useDictionary)
+    pack: function (useDictionary, versioned) {
+      return pack$1(this, useDictionary, versioned)
     }
   };
 
@@ -729,20 +737,22 @@
     }, Object.create(null));
     //pack each into a compressed string
     Object.keys(flat).forEach(function (k) {
-      const words = flat[k];
+      const words = flat[k].map(normalizeKey);
+      const versioned = words.some((word) => /[0-9]/.test(word) && !unsupportedChars.test(word));
+      const marker = versioned ? '!2;' : '';
       if (direction === 'prefix') {
-        flat[k] = new Trie(words).pack(options.dictionary);
+        flat[k] = marker + new Trie(words).pack(options.dictionary, versioned);
         return
       }
       // Normalize before reversing: lowercasing can depend on letter order
       // (for example Greek final sigma) or expand a character into two.
-      const reversed = words.map((word) => Array.from(normalizeKey(word)).reverse().join(''));
-      const suffix = ':' + new Trie(reversed).pack(options.dictionary);
+      const reversed = words.map((word) => Array.from(word).reverse().join(''));
+      const suffix = marker + ':' + new Trie(reversed).pack(options.dictionary, versioned);
       if (direction === 'suffix') {
         flat[k] = suffix;
         return
       }
-      const prefix = new Trie(words).pack(options.dictionary);
+      const prefix = marker + new Trie(words).pack(options.dictionary, versioned);
       flat[k] = fns.utf8Length(suffix) < fns.utf8Length(prefix) ? suffix : prefix;
     });
     return Object.keys(flat)
@@ -771,6 +781,18 @@
     }
   };
 
+  const unescapeLabel = function (text) {
+    return text.replace(/\\([\s\S]|$)/g, (match, char) => {
+      if (char === '\\') {
+        return '\\'
+      }
+      if (char >= 'a' && char <= 'j') {
+        return String(char.charCodeAt(0) - 97)
+      }
+      throw new SyntaxError('Invalid efrt packed data: label escape')
+    })
+  };
+
   const dictionary = function (trie) {
     if (!trie.nodes[0].startsWith('!1:')) {
       return
@@ -781,13 +803,14 @@
     if (header.length !== 3 || tokens.length === 0 || tokens.length !== fragments.length ||
       new Set(tokens).size !== tokens.length || trie.nodes.length === 0 ||
       tokens.some((token) => token.length !== 1 || token.charCodeAt(0) < 33 ||
-        token.charCodeAt(0) > 126 || /[A-Za-z0-9,;!:|]/.test(token)) ||
+        token.charCodeAt(0) > 126 || /[A-Za-z0-9,;!:|]/.test(token) ||
+        (trie.versioned && token === '\\')) ||
       fragments.some((text) => !text || /[A-Z0-9,;!:|¦]/.test(text))) {
       throw new SyntaxError('Invalid efrt packed data: fragment dictionary')
     }
     trie.dictionary = Object.create(null);
     for (let i = 0; i < tokens.length; i++) {
-      trie.dictionary[tokens[i]] = fragments[i];
+      trie.dictionary[tokens[i]] = trie.versioned ? unescapeLabel(fragments[i]) : fragments[i];
     }
   };
 
@@ -820,8 +843,9 @@
           throw new SyntaxError('Invalid efrt packed data: node syntax')
         }
         const ref = match[2];
-        const text = trie.dictionary ? Array.from(match[1],
-          (char) => trie.dictionary[char] || char).join('') : match[1];
+        const label = trie.versioned ? unescapeLabel(match[1]) : match[1];
+        const text = trie.dictionary ? Array.from(label,
+          (char) => trie.dictionary[char] || char).join('') : label;
         edges.push({
           text,
           target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
@@ -860,11 +884,12 @@
   };
 
   //PackedTrie - Trie traversal of the Trie packed-string representation.
-  const unpack$1 = function (str) {
+  const unpack$1 = function (str, versioned = false) {
     const trie = {
       nodes: str.split(';'),
       syms: [],
-      symCount: 0
+      symCount: 0,
+      versioned
     };
     dictionary(trie);
     //process symbols, if they have them
@@ -892,9 +917,16 @@
     }, Object.create(null));
     const all = {};
     Object.keys(obj).forEach(function (cat) {
-      const data = obj[cat];
+      let data = obj[cat];
+      const versioned = data.startsWith('!2;');
+      if (versioned) {
+        data = data.slice(3);
+        if (!data || data === ':') {
+          throw new SyntaxError('Invalid efrt packed data: missing versioned trie')
+        }
+      }
       const reversed = data[0] === ':';
-      const arr = unpack$1(reversed ? data.slice(1) : data);
+      const arr = unpack$1(reversed ? data.slice(1) : data, versioned);
       //special case, for botched-boolean
       if (cat === 'true') {
         cat = true;

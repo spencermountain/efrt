@@ -4,7 +4,7 @@ import fns from './fns.js'
 // additional restrictions on input keys are needed, and tokens cost one byte.
 const alphabet = '#$%&()*+-./<=>?@[]^_`~'
 
-const dictionary = function (labels) {
+const dictionary = function (labels, encodeLabel = (text) => text) {
   const used = new Set(labels.join(''))
   const tokens = Array.from(alphabet).filter((char) => !used.has(char))
   if (tokens.length === 0) {
@@ -24,7 +24,7 @@ const dictionary = function (labels) {
     }
   }
   const candidates = Array.from(counts, ([text, count]) => {
-    const size = fns.utf8Length(text)
+    const size = fns.utf8Length(encodeLabel(text))
     return { text, size, saving: ((size - 1) * count) - size - 2 }
   }).filter((entry) => entry.saving > 0).sort((a, b) => b.saving - a.saving).slice(0, 256)
   let remaining = labels.slice()
@@ -44,7 +44,7 @@ const dictionary = function (labels) {
   }
   return {
     header: entries.length > 0 ? '!1:' + entries.map((entry) => entry.token).join('') + ':' +
-      entries.map((entry) => entry.text).join(',') + ';' : '',
+      entries.map((entry) => encodeLabel(entry.text)).join(',') + ';' : '',
     encode: function (label) {
       for (const entry of entries) {
         label = label.split(entry.text).join(entry.token)

@@ -18,9 +18,16 @@ const unpack = function (str) {
   }, Object.create(null))
   const all = {}
   Object.keys(obj).forEach(function (cat) {
-    const data = obj[cat]
+    let data = obj[cat]
+    const versioned = data.startsWith('!2;')
+    if (versioned) {
+      data = data.slice(3)
+      if (!data || data === ':') {
+        throw new SyntaxError('Invalid efrt packed data: missing versioned trie')
+      }
+    }
     const reversed = data[0] === ':'
-    const arr = traverse(reversed ? data.slice(1) : data)
+    const arr = traverse(reversed ? data.slice(1) : data, versioned)
     //special case, for botched-boolean
     if (cat === 'true') {
       cat = true

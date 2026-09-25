@@ -8,13 +8,25 @@
   "type": "module",
   "exports": {
     ".": {
-      "require": "./builds/efrt.cjs",
-      "import": "./src/index.js",
+      "require": {
+        "types": "./types/index.d.cts",
+        "default": "./builds/efrt.cjs"
+      },
+      "import": {
+        "types": "./types/index.d.ts",
+        "default": "./src/index.js"
+      },
       "default": "./builds/efrt.cjs"
     },
     "./unpack": {
-      "require": "./builds/efrt-unpack.cjs",
-      "import": "./src/unpack/index.js",
+      "require": {
+        "types": "./types/unpack.d.cts",
+        "default": "./builds/efrt-unpack.cjs"
+      },
+      "import": {
+        "types": "./types/unpack.d.ts",
+        "default": "./src/unpack/index.js"
+      },
       "default": "./builds/efrt-unpack.cjs"
     }
   },
@@ -28,21 +40,25 @@
     "test": "node scripts/test.js",
     "testb": "node scripts/test.js --prod",
     "test:package": "node scripts/test-package.js",
-    "verify": "npm run build && npm run lint && npm test && npm run testb && npm run test:package",
+    "verify": "npm run build && npm run lint && npm test && npm run testb && npm run test:package && npm run test:types",
     "watch": "node --watch ./scratch",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:types": "node scripts/test-types.js"
   },
   "files": [
     "builds/",
-    "src/"
+    "src/",
+    "types/"
   ],
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@rollup/plugin-terser": "1.0.0",
     "eslint": "10.11.0",
     "rollup": "4.63.5",
     "rollup-plugin-filesize-check": "2.0.1",
     "tap-dancer": "0.4.2",
-    "tape": "5.10.2"
+    "tape": "5.10.2",
+    "typescript": "7.0.2"
   },
   "unpkg": "./builds/efrt.min.js",
   "prettier": {
@@ -50,5 +66,13 @@
     "semi": false,
     "singleQuote": true,
     "printWidth": 100
+  },
+  "types": "./types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "unpack": [
+        "types/unpack.d.cts"
+      ]
+    }
   }
 }

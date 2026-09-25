@@ -48,3 +48,5 @@ jobs:
         run: npm run testb -- --raw
       - name: Test npm package in an isolated consumer
         run: npm run test:package
+      - name: Check TypeScript consumers and package declarations
+        run: npm run test:types

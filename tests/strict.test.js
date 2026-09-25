@@ -2,13 +2,13 @@ import test from 'tape'
 import efrt from './_lib.js'
 
 test('strict packing rejects unsupported keys before they are dropped', function (t) {
-  for (const key of ['', 'apple1', 'a,b', 'a;b', 'a!b', 'a:b', 'a|b', 'a¦b']) {
+  for (const key of ['', 'apple!', 'a,b', 'a;b', 'a!b', 'a:b', 'a|b', 'a¦b']) {
     t.throws(() => efrt.pack([key], { strict: true }), /unsupported key/, JSON.stringify(key))
     t.throws(() => efrt.pack({ [key]: [] }, { strict: true }), /unsupported key/, 'validate empty category lists')
   }
   t.throws(() => efrt.pack(['apple', 1], { strict: true }), /array keys must be strings/, 'reject coercion')
   t.throws(() => efrt.pack(['apple', null], { strict: true }), /array keys must be strings/, 'reject null key')
-  t.throws(() => efrt.pack('apple1 pear', { strict: true }), /unsupported key/, 'string input')
+  t.throws(() => efrt.pack('apple! pear', { strict: true }), /unsupported key/, 'string input')
   t.throws(() => efrt.pack({ ['a'.repeat(1025)]: [] }, { strict: true }), /keys cannot exceed/, 'length limit')
   t.end()
 })
@@ -30,7 +30,7 @@ test('strict packing detects normalization collisions across categories', functi
 })
 
 test('default packing preserves permissive behavior', function (t) {
-  const input = { Apple: 'fruit', apple: 'company', apple1: 'fruit', '': 'fruit' }
+  const input = { Apple: 'fruit', apple: 'company', 'apple!': 'fruit', '': 'fruit' }
   t.deepEqual(efrt.unpack(efrt.pack(input)), { apple: ['fruit', 'company'] }, 'legacy behavior')
   t.equal(efrt.pack(input, { strict: false }), efrt.pack(input), 'explicit opt out')
   t.end()
