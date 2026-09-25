@@ -295,15 +295,4 @@ const unpack = require('efrt/unpack') // node/cjs
 
 Thanks to [John Resig](https://johnresig.com/) for his fun [trie-compression post](https://johnresig.com/blog/javascript-trie-performance-analysis/) on his blog, and [Wiktor Jakubczyc](https://github.com/monolithpl) for his performance analysis work
 
-## Development checks
-
-Run `npm run verify` after installing development dependencies. It rebuilds the
-bundles, runs lint and both test suites, and tests an actual npm tarball installed
-offline in a temporary consumer project. The package check covers ESM, CommonJS,
-standalone unpack, browser globals, and exported version consistency.
-
-GitHub Actions runs these checks on Node 22, 24, and 26. Test commands use the
-local `tap-dancer` reporter while preserving both test and reporter failures.
-Use `npm test -- --raw` or `npm run testb -- --raw` for unformatted TAP output.
-
 MIT
