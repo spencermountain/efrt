@@ -129,19 +129,13 @@ const words = Object.keys(unpack(packd))
 ```
 
 Sets use the same packing options and validation as arrays, and the input Set
-is left unchanged. Unpacking still returns an object:
+is left unchanged:
 
 ```js
 const packed = pack(new Set(['Apple', 'pear']), { strict: true })
 unpack(packed) // { apple: true, pear: true }
 const words = new Set(Object.keys(unpack(packed)))
 ```
-
-An empty Set unpacks to `{}`. With `strict: true`, non-string entries and
-normalization collisions such as `new Set(['Apple', 'apple'])` throw. Set support
-applies to the top-level word collection; use arrays for multiple categories
-inside an object. TypeScript's `PackInput` accepts both `Set<string>` and
-`ReadonlySet<string>`.
 
 ## Packing direction
 

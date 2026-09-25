@@ -958,7 +958,7 @@
     return all
   };
 
-  var _version = '2.8.0';
+  var _version = '2.9.0';
 
   exports.pack = pack;
   exports.unpack = unpack;

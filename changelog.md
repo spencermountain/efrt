@@ -5,6 +5,8 @@
 - **[change]** - support more unicode and emoji
 - **[change]** - add dictionary support for repeated spans
 - **[change]** - support prefix/suffix direction change
+- **[change]** - support for escaping inputs with numbers
+- **[change]** - support for Set inputs
 
 ## 2.8.0 [Sep 2026]
 - **[change]** - Safer handling of prototype-related names.

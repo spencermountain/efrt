@@ -1,6 +1,6 @@
 {
   "name": "efrt",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "neato compression of key-value data",
   "license": "MIT",
   "repository": "github:spencermountain/efrt",
