@@ -18,17 +18,21 @@ const unpack = function (str) {
   }, Object.create(null))
   const all = {}
   Object.keys(obj).forEach(function (cat) {
-    const arr = traverse(obj[cat])
+    const data = obj[cat]
+    const reversed = data[0] === ':'
+    const arr = traverse(reversed ? data.slice(1) : data)
     //special case, for botched-boolean
     if (cat === 'true') {
       cat = true
     }
     for (let i = 0; i < arr.length; i++) {
-      const k = arr[i]
+      const k = reversed ? Array.from(arr[i]).reverse().join('') : arr[i]
       if (Object.prototype.hasOwnProperty.call(all, k)) {
         if (Array.isArray(all[k]) === false) {
-          all[k] = [all[k], cat]
-        } else {
+          if (all[k] !== cat) {
+            all[k] = [all[k], cat]
+          }
+        } else if (!all[k].includes(cat)) {
           all[k].push(cat)
         }
       } else {

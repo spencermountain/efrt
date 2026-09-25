@@ -79,19 +79,20 @@ const methods = {
   },
 
   // Add a terminal string to node.
-  // If 2 characters or less, just add with value == 1.
-  // If more than 2 characters, point to shared node
+  // An empty suffix or one code point is stored directly as a terminal.
+  // Longer suffixes point to a shared node, without splitting surrogate pairs.
   // Note - don't prematurely share suffixes - these
   // terminals may become split and joined with other
   // nodes in this part of the tree.
   addTerminal: function (node, prop) {
-    if (prop.length <= 1) {
+    const width = prop.codePointAt(0) > 0xffff ? 2 : 1
+    if (prop.length <= width) {
       node.edges[prop] = 1
       return
     }
     const next = createNode()
-    node.edges[prop[0]] = next
-    this.addTerminal(next, prop.slice(1))
+    node.edges[prop.slice(0, width)] = next
+    this.addTerminal(next, prop.slice(width))
   },
 
   // Well ordered list of properties in a node (string or object properties)
@@ -225,8 +226,8 @@ const methods = {
     return undefined
   },
 
-  pack: function () {
-    return pack(this)
+  pack: function (useDictionary) {
+    return pack(this, useDictionary)
   }
 }
 export default methods

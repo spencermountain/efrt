@@ -16,7 +16,7 @@ const toAlphaCode = function (n) {
   let range = BASE
   let s = ''
   for (; n >= range; n -= range, places++, range *= BASE) {}
-  while (places--) {
+  for (; places > 0; places--) {
     const d = n % BASE
     s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s
     n = (n - d) / BASE

@@ -7,8 +7,12 @@
   const commonPrefix = function (w1, w2) {
     const len = Math.min(w1.length, w2.length);
     let end = 0;
-    while (end < len && w1[end] === w2[end]) {
-      end++;
+    for (; end < len;) {
+      const point = w1.codePointAt(end);
+      if (point !== w2.codePointAt(end)) {
+        break
+      }
+      end += point > 0xffff ? 2 : 1;
     }
     return w1.slice(0, end)
   };
@@ -25,9 +29,28 @@
     a.length = count;
   };
 
+  // Measure the text as shipped in UTF-8, without depending on Node's Buffer.
+  const utf8Length = function (str) {
+    let size = 0;
+    for (const char of str) {
+      const point = char.codePointAt(0);
+      if (point < 0x80) {
+        size++;
+      } else if (point < 0x800) {
+        size += 2;
+      } else if (point < 0x10000) {
+        size += 3;
+      } else {
+        size += 4;
+      }
+    }
+    return size
+  };
+
   var fns = {
     commonPrefix,
-    unique
+    unique,
+    utf8Length
   };
 
   const Histogram = function () {
@@ -90,7 +113,7 @@
     let range = BASE;
     let s = '';
     for (; n >= range; n -= range, places++, range *= BASE) {}
-    while (places--) {
+    for (; places > 0; places--) {
       const d = n % BASE;
       s = String.fromCharCode((d < 10 ? 48 : 55) + d) + s;
       n = (n - d) / BASE;
@@ -120,6 +143,60 @@
   var encoding = {
     toAlphaCode,
     fromAlphaCode
+  };
+
+  // Only assign characters absent from the original labels. No escaping or
+  // additional restrictions on input keys are needed, and tokens cost one byte.
+  const alphabet = '#$%&()*+-./<=>?@[]^_`~';
+
+  const dictionary$1 = function (labels) {
+    const used = new Set(labels.join(''));
+    const tokens = Array.from(alphabet).filter((char) => !used.has(char));
+    if (tokens.length === 0) {
+      return { header: '', encode: (label) => label }
+    }
+    const counts = new Map();
+    for (const label of labels) {
+      const chars = Array.from(label);
+      for (let start = 0; start < chars.length; start++) {
+        let fragment = '';
+        for (let end = start; end < Math.min(chars.length, start + 12); end++) {
+          fragment += chars[end];
+          if (end > start) {
+            counts.set(fragment, (counts.get(fragment) || 0) + 1);
+          }
+        }
+      }
+    }
+    const candidates = Array.from(counts, ([text, count]) => {
+      const size = fns.utf8Length(text);
+      return { text, size, saving: ((size - 1) * count) - size - 2 }
+    }).filter((entry) => entry.saving > 0).sort((a, b) => b.saving - a.saving).slice(0, 256);
+    let remaining = labels.slice();
+    const entries = [];
+    for (const candidate of candidates) {
+      if (entries.length === tokens.length) {
+        break
+      }
+      const parts = remaining.map((label) => label.split(candidate.text));
+      const count = parts.reduce((sum, pieces) => sum + pieces.length - 1, 0);
+      if ((candidate.size - 1) * count <= candidate.size + 2) {
+        continue
+      }
+      const token = tokens[entries.length];
+      entries.push({ token, text: candidate.text });
+      remaining = parts.map((pieces) => pieces.join(token));
+    }
+    return {
+      header: entries.length > 0 ? '!1:' + entries.map((entry) => entry.token).join('') + ':' +
+        entries.map((entry) => entry.text).join(',') + ';' : '',
+      encode: function (label) {
+        for (const entry of entries) {
+          label = label.split(entry.text).join(entry.token);
+        }
+        return label
+      }
+    }
   };
 
   const config = {
@@ -158,7 +235,7 @@
   // with a (relative!) line number of the node that string references.
   // Terminal strings (those without child node references) are
   // separated by ',' characters.
-  const nodeLine = function (self, node) {
+  const nodeLine = function (self, node, label = (text) => text) {
     let line = '',
       sep = '';
     if (self.isTerminal(node)) {
@@ -169,24 +246,25 @@
       const prop = props[i];
       const child = node.edges[prop];
       if (typeof child === 'number') {
-        line += sep + prop;
+        line += sep + label(prop);
         sep = config.STRING_SEP;
         continue
       }
       if (self.syms[child._n]) {
-        line += sep + prop + self.syms[child._n];
+        line += sep + label(prop) + self.syms[child._n];
         sep = '';
         continue
       }
       let ref = encoding.toAlphaCode(node._n - child._n - 1 + self.symCount);
-      // Large reference to smaller string suffix -> duplicate suffix
-      if (child._g && ref.length >= child._g.length && node.edges[child._g] === 1) {
+      // Only inline a complete terminal suffix. A singleton can still point
+      // to another node; checking the parent would silently truncate that path.
+      if (child._g && ref.length >= child._g.length && child.edges[child._g] === 1) {
         ref = child._g;
-        line += sep + prop + ref;
+        line += sep + label(prop + ref);
         sep = config.STRING_SEP;
         continue
       }
-      line += sep + prop + ref;
+      line += sep + label(prop) + ref;
       sep = '';
     }
     return line
@@ -249,7 +327,7 @@
     self.nodes.push(node);
   };
 
-  const pack$1 = function (self) {
+  const pack$1 = function (self, useDictionary = false) {
     self.nodes = [];
     self.nodeCount = 0;
     self.syms = {};
@@ -268,18 +346,35 @@
     for (let sym = 0; sym < self.symCount; sym++) {
       self.syms[self.histAbs[sym][0]] = encoding.toAlphaCode(sym);
     }
-    for (let i = 0; i < self.nodeCount; i++) {
-      self.nodes[i] = nodeLine(self, self.nodes[i]);
-    }
+    const labels = [];
+    const lines = self.nodes.map((node) => nodeLine(self, node, (text) => {
+      if (useDictionary) {
+        labels.push(text);
+      }
+      return text
+    }));
+    const symbols = [];
     // Prepend symbols
     for (let sym = self.symCount - 1; sym >= 0; sym--) {
-      self.nodes.unshift(
+      symbols.unshift(
         encoding.toAlphaCode(sym) +
           config.KEY_VAL +
           encoding.toAlphaCode(self.nodeCount - self.histAbs[sym][0] - 1)
       );
     }
-    return self.nodes.join(config.NODE_SEP)
+    const plain = symbols.concat(lines).join(config.NODE_SEP);
+    if (useDictionary) {
+      const dict = dictionary$1(labels);
+      if (dict.header) {
+        const encoded = dict.header + symbols.concat(
+          self.nodes.map((node) => nodeLine(self, node, dict.encode))
+        ).join(config.NODE_SEP);
+        if (fns.utf8Length(encoded) < fns.utf8Length(plain)) {
+          return encoded
+        }
+      }
+    }
+    return plain
   };
 
   const unsupportedChars = /[0-9A-Z,;!:|¦]/;
@@ -390,19 +485,20 @@
     },
 
     // Add a terminal string to node.
-    // If 2 characters or less, just add with value == 1.
-    // If more than 2 characters, point to shared node
+    // An empty suffix or one code point is stored directly as a terminal.
+    // Longer suffixes point to a shared node, without splitting surrogate pairs.
     // Note - don't prematurely share suffixes - these
     // terminals may become split and joined with other
     // nodes in this part of the tree.
     addTerminal: function (node, prop) {
-      if (prop.length <= 1) {
+      const width = prop.codePointAt(0) > 0xffff ? 2 : 1;
+      if (prop.length <= width) {
         node.edges[prop] = 1;
         return
       }
       const next = createNode();
-      node.edges[prop[0]] = next;
-      this.addTerminal(next, prop.slice(1));
+      node.edges[prop.slice(0, width)] = next;
+      this.addTerminal(next, prop.slice(width));
     },
 
     // Well ordered list of properties in a node (string or object properties)
@@ -536,8 +632,8 @@
       return undefined
     },
 
-    pack: function () {
-      return pack$1(this)
+    pack: function (useDictionary) {
+      return pack$1(this, useDictionary)
     }
   };
 
@@ -604,6 +700,13 @@
 
   //turn an array into a compressed string
   const pack = function (obj, options = {}) {
+    const direction = options.direction === undefined ? 'prefix' : options.direction;
+    if (!['prefix', 'suffix', 'auto'].includes(direction)) {
+      throw new TypeError('efrt direction must be prefix, suffix, or auto')
+    }
+    if (options.dictionary !== undefined && typeof options.dictionary !== 'boolean') {
+      throw new TypeError('efrt dictionary must be a boolean')
+    }
     if (options.strict && isArray(obj) && obj.some((key) => typeof key !== 'string')) {
       throw new TypeError('efrt strict: array keys must be strings')
     }
@@ -626,8 +729,21 @@
     }, Object.create(null));
     //pack each into a compressed string
     Object.keys(flat).forEach(function (k) {
-      const t = new Trie(flat[k]);
-      flat[k] = t.pack();
+      const words = flat[k];
+      if (direction === 'prefix') {
+        flat[k] = new Trie(words).pack(options.dictionary);
+        return
+      }
+      // Normalize before reversing: lowercasing can depend on letter order
+      // (for example Greek final sigma) or expand a character into two.
+      const reversed = words.map((word) => Array.from(normalizeKey(word)).reverse().join(''));
+      const suffix = ':' + new Trie(reversed).pack(options.dictionary);
+      if (direction === 'suffix') {
+        flat[k] = suffix;
+        return
+      }
+      const prefix = new Trie(words).pack(options.dictionary);
+      flat[k] = fns.utf8Length(suffix) < fns.utf8Length(prefix) ? suffix : prefix;
     });
     return Object.keys(flat)
       .map((k) => {
@@ -650,8 +766,28 @@
     }
     t.symCount = t.syms.length;
     t.nodes = t.nodes.slice(t.symCount);
-    if (!t.nodes.length || t.syms.some((index) => !Number.isSafeInteger(index) || index >= t.nodes.length)) {
+    if (t.nodes.length === 0 || t.syms.some((index) => !Number.isSafeInteger(index) || index >= t.nodes.length)) {
       throw new SyntaxError('Invalid efrt packed data: symbol target')
+    }
+  };
+
+  const dictionary = function (trie) {
+    if (!trie.nodes[0].startsWith('!1:')) {
+      return
+    }
+    const header = trie.nodes.shift().split(':');
+    const tokens = Array.from(header[1]);
+    const fragments = (header[2] || '').split(',');
+    if (header.length !== 3 || tokens.length === 0 || tokens.length !== fragments.length ||
+      new Set(tokens).size !== tokens.length || trie.nodes.length === 0 ||
+      tokens.some((token) => token.length !== 1 || token.charCodeAt(0) < 33 ||
+        token.charCodeAt(0) > 126 || /[A-Za-z0-9,;!:|]/.test(token)) ||
+      fragments.some((text) => !text || /[A-Z0-9,;!:|¦]/.test(text))) {
+      throw new SyntaxError('Invalid efrt packed data: fragment dictionary')
+    }
+    trie.dictionary = Object.create(null);
+    for (let i = 0; i < tokens.length; i++) {
+      trie.dictionary[tokens[i]] = fragments[i];
     }
   };
 
@@ -675,19 +811,21 @@
       const terminal = node[0] === '!';
       const body = terminal ? node.slice(1) : node;
       const edges = [];
-      const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/g;
-      let offset = 0;
-      while (offset < body.length) {
+      // Match only at the current offset. Searching later positions would
+      // repeatedly rescan a long malformed fragment before rejecting it.
+      const token = /([^A-Z0-9,;!:|¦]+)([A-Z0-9]+|,|$)/y;
+      for (let offset = 0; offset < body.length; offset = token.lastIndex) {
         const match = token.exec(body);
         if (!match || match.index !== offset || (match[2] === ',' && token.lastIndex === body.length)) {
           throw new SyntaxError('Invalid efrt packed data: node syntax')
         }
         const ref = match[2];
+        const text = trie.dictionary ? Array.from(match[1],
+          (char) => trie.dictionary[char] || char).join('') : match[1];
         edges.push({
-          text: match[1],
+          text,
           target: ref === '' || ref === ',' ? -1 : indexFromRef(trie, ref, index)
         });
-        offset = token.lastIndex;
       }
       return { terminal, edges }
     })
@@ -697,7 +835,7 @@
     const nodes = parseNodes(trie);
     const all = [];
     const stack = [{ index: 0, pref: '', edge: -1 }];
-    while (stack.length) {
+    for (; stack.length > 0;) {
       const frame = stack[stack.length - 1];
       const node = nodes[frame.index];
       if (frame.edge === -1) {
@@ -728,6 +866,7 @@
       syms: [],
       symCount: 0
     };
+    dictionary(trie);
     //process symbols, if they have them
     if (str.match(':')) {
       symbols(trie);
@@ -753,17 +892,21 @@
     }, Object.create(null));
     const all = {};
     Object.keys(obj).forEach(function (cat) {
-      const arr = unpack$1(obj[cat]);
+      const data = obj[cat];
+      const reversed = data[0] === ':';
+      const arr = unpack$1(reversed ? data.slice(1) : data);
       //special case, for botched-boolean
       if (cat === 'true') {
         cat = true;
       }
       for (let i = 0; i < arr.length; i++) {
-        const k = arr[i];
+        const k = reversed ? Array.from(arr[i]).reverse().join('') : arr[i];
         if (Object.prototype.hasOwnProperty.call(all, k)) {
           if (Array.isArray(all[k]) === false) {
-            all[k] = [all[k], cat];
-          } else {
+            if (all[k] !== cat) {
+              all[k] = [all[k], cat];
+            }
+          } else if (!all[k].includes(cat)) {
             all[k].push(cat);
           }
         } else {

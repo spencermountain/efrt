@@ -1,5 +1,6 @@
 import Trie from './trie.js'
-import { validateKeys } from './keys.js'
+import { normalizeKey, validateKeys } from './keys.js'
+import fns from './fns.js'
 
 const isArray = function (input) {
   return Object.prototype.toString.call(input) === '[object Array]'
@@ -30,6 +31,13 @@ const handleFormats = function (input) {
 
 //turn an array into a compressed string
 const pack = function (obj, options = {}) {
+  const direction = options.direction === undefined ? 'prefix' : options.direction
+  if (!['prefix', 'suffix', 'auto'].includes(direction)) {
+    throw new TypeError('efrt direction must be prefix, suffix, or auto')
+  }
+  if (options.dictionary !== undefined && typeof options.dictionary !== 'boolean') {
+    throw new TypeError('efrt dictionary must be a boolean')
+  }
   if (options.strict && isArray(obj) && obj.some((key) => typeof key !== 'string')) {
     throw new TypeError('efrt strict: array keys must be strings')
   }
@@ -52,8 +60,21 @@ const pack = function (obj, options = {}) {
   }, Object.create(null))
   //pack each into a compressed string
   Object.keys(flat).forEach(function (k) {
-    const t = new Trie(flat[k])
-    flat[k] = t.pack()
+    const words = flat[k]
+    if (direction === 'prefix') {
+      flat[k] = new Trie(words).pack(options.dictionary)
+      return
+    }
+    // Normalize before reversing: lowercasing can depend on letter order
+    // (for example Greek final sigma) or expand a character into two.
+    const reversed = words.map((word) => Array.from(normalizeKey(word)).reverse().join(''))
+    const suffix = ':' + new Trie(reversed).pack(options.dictionary)
+    if (direction === 'suffix') {
+      flat[k] = suffix
+      return
+    }
+    const prefix = new Trie(words).pack(options.dictionary)
+    flat[k] = fns.utf8Length(suffix) < fns.utf8Length(prefix) ? suffix : prefix
   })
   return Object.keys(flat)
     .map((k) => {
