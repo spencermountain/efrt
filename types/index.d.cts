@@ -1,7 +1,7 @@
 /** Categories are converted to strings when packed. */
 export type Category = string | number | boolean | null | undefined
 
-export type PackInput = string | readonly string[] | Record<string, Category | readonly Category[]>
+export type PackInput = string | readonly string[] | ReadonlySet<string> | Record<string, Category | readonly Category[]>
 
 export interface PackOptions {
   /** Reject unsupported keys and normalization collisions. */

@@ -3,6 +3,8 @@ import unpack = require('efrt/unpack')
 
 const options: efrt.PackOptions = { direction: 'suffix', dictionary: true }
 const packed: string = efrt.pack(['a1', 'b2'], options)
+const words: ReadonlySet<string> = new Set(['a1', 'b2'])
+efrt.pack(words, options)
 const decoded: efrt.Unpacked = unpack(packed)
 const main: efrt.Unpacked = efrt.unpack(packed)
 const version: string = efrt.version

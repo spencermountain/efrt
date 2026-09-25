@@ -16,7 +16,8 @@
   <code>npm install efrt</code>
 </div>
 
-TypeScript declarations are included for both `efrt` and `efrt/unpack`, with ESM and CommonJS support.
+TypeScript declarations are included for both `efrt` and `efrt/unpack`, with ESM
+and CommonJS support. No separate `@types` package is needed.
 
 if your data looks like this:
 
@@ -104,7 +105,7 @@ console.log(obj.tomato)
 or, an Array:
 </h5>
 
-if you pass it an array of strings, it creates an object with `true` values.
+if you pass it an array or Set of strings, it creates an object with `true` values.
 Unpacking preserves the unique supported words after lowercasing, not the
 original array order, capitalization, or duplicates:
 
@@ -126,6 +127,21 @@ const packd = pack(data)
 const words = Object.keys(unpack(packd))
 // the same unique month names; original order is not preserved
 ```
+
+Sets use the same packing options and validation as arrays, and the input Set
+is left unchanged. Unpacking still returns an object:
+
+```js
+const packed = pack(new Set(['Apple', 'pear']), { strict: true })
+unpack(packed) // { apple: true, pear: true }
+const words = new Set(Object.keys(unpack(packed)))
+```
+
+An empty Set unpacks to `{}`. With `strict: true`, non-string entries and
+normalization collisions such as `new Set(['Apple', 'apple'])` throw. Set support
+applies to the top-level word collection; use arrays for multiple categories
+inside an object. TypeScript's `PackInput` accepts both `Set<string>` and
+`ReadonlySet<string>`.
 
 ## Packing direction
 
@@ -216,7 +232,7 @@ Unknown or incomplete escapes in versioned labels or definitions throw a
 reserved punctuation remains unsupported.
 
 For input validation, use `pack(data, { strict: true })`. It throws a `TypeError`
-for empty or unsupported keys, non-string array entries, or distinct keys that
+for empty or unsupported keys, non-string array or Set entries, or distinct keys that
 become identical after lowercasing:
 
 ```js
@@ -234,7 +250,7 @@ from word fragments.
 Category values cannot contain `|` or `¦`; `pack()` throws a `TypeError`
 instead of producing an ambiguous packed string. Categories use the existing
 string-based format: values are converted to strings, except the category
-`"true"` decodes as boolean `true` (also used for arrays of words). Consequently,
+`"true"` decodes as boolean `true` (also used for arrays and Sets of words). Consequently,
 `false` decodes as `"false"`, numbers decode as strings, and the string `"true"`
 cannot be distinguished from boolean `true`. Category arrays represent membership
 in multiple categories, not a general-purpose array serialization format.
@@ -289,7 +305,25 @@ There is no fixed break-even key count. Include the decoder's download size
 when comparing total transfer sizes, and measure unpacking time and memory on
 your target devices.
 
-## Use
+## Usage
+
+```ts
+// ESM
+import unpack from 'efrt/unpack'
+// CommonJS (.cts)
+import efrt = require('efrt')
+import unpack = require('efrt/unpack')
+const result = unpack(efrt.pack(['apple', 'pear']))
+
+// Typescript
+import { pack, unpack } from 'efrt'
+import type { PackInput, PackOptions, Unpacked } from 'efrt'
+
+const data: PackInput = { apple: ['fruit', 'food'], pear: 'fruit' }
+const options: PackOptions = { strict: true, direction: 'auto', dictionary: true }
+const packed: string = pack(data, options)
+const result: Unpacked = unpack(packed)
+```
 
 **Browser script tags**
 

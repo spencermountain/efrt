@@ -11,6 +11,9 @@ const standalone: Unpacked = unpackOnly(packed)
 const release: string = version
 pack({ apple: ['fruit', true] as const, pear: 42, plum: false, empty: null })
 pack('apple pear')
+pack(new Set(['apple', 'pear']), options)
+const wordSet: ReadonlySet<string> = new Set(['apple'])
+pack(wordSet)
 pack()
 pack(null)
 unpack()
@@ -25,6 +28,8 @@ pack(words, { dictionary: 'yes' })
 pack(words, { strict: 'yes' })
 // @ts-expect-error Word arrays contain strings
 pack([123])
+// @ts-expect-error Word Sets contain strings
+pack(new Set([123]))
 // @ts-expect-error Unpack expects packed text
 unpack(123)
 // @ts-expect-error Standalone unpack expects packed text

@@ -715,8 +715,12 @@
     if (options.dictionary !== undefined && typeof options.dictionary !== 'boolean') {
       throw new TypeError('efrt dictionary must be a boolean')
     }
+    const isSet = Object.prototype.toString.call(obj) === '[object Set]';
+    if (isSet) {
+      obj = Array.from(obj);
+    }
     if (options.strict && isArray(obj) && obj.some((key) => typeof key !== 'string')) {
-      throw new TypeError('efrt strict: array keys must be strings')
+      throw new TypeError('efrt strict: ' + (isSet ? 'Set' : 'array') + ' keys must be strings')
     }
     obj = handleFormats(obj);
     if (options.strict) {

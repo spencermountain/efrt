@@ -31,6 +31,7 @@ for (const decode of [esm.unpack, unpack, cjs.unpack, unpackCjs]) {
   assert.throws(() => decode('fruit¦0:0;a0'), SyntaxError)
 }
 for (const library of [esm, cjs]) {
+  assert.strictEqual(library.pack(new Set(digitInput), { strict: true, direction: 'suffix', dictionary: true }), digitPacked)
   assert.deepStrictEqual(library.unpack(library.pack(['101domain.com'], { strict: true })),
     { '101domain.com': true })
   assert.deepStrictEqual(library.unpack(library.pack(['_c'], { strict: true })), { _c: true })
@@ -51,6 +52,7 @@ for (const filename of ['efrt.min.js', 'efrt-unpack.min.js']) {
   assert.deepStrictEqual(JSON.parse(JSON.stringify(decode(digitPacked))), digitExpected)
   assert.strictEqual(decode('true¦_c')._c, true)
   if (filename === 'efrt.min.js') {
+    assert.strictEqual(context.efrt.pack(new Set(digitInput), { strict: true, direction: 'suffix', dictionary: true }), digitPacked)
     assert.strictEqual(context.efrt.pack(['_c']), 'true¦_c')
     assert.strictEqual(context.efrt.pack(['101domain.com']), String.raw`true¦!2;\b\a\bdomain.com`)
   }
