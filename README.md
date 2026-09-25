@@ -36,7 +36,7 @@ you can compress it like this:
 ```js
 import { pack } from 'efrt'
 var str = pack(data)
-//'England:b0che1;ambridge0edford0uckingham0;shire|Scotland:a0banff1;berdeen0rgyll0yr0;shire'
+//'England¦b0che1;ambridge0edford0uckingham0;shire|Scotland¦a0banff1;berdeen0rgyll0yr0;shire'
 ```
 
 then \_very!\_ quickly flip it back into:
@@ -49,11 +49,12 @@ obj['bedfordshire'] //'England'
 
 <h1 align="center">Yep,</h1>
 
-**efrt** packs category-type data into a _[very compressed prefix trie](https://en.wikipedia.org/wiki/Trie)_ format, so that redundancies in the data are shared, and nothing is repeated.
+**efrt** packs category-type data into a _[compressed prefix trie](https://en.wikipedia.org/wiki/Trie)_ format, sharing repeated prefixes and suffixes within each category.
 
-By doing this clever-stuff ahead-of-time, **efrt** lets you ship _much more_ data to the client-side, without hassle or overhead.
+By doing this work ahead of time, **efrt** can reduce the data you ship to the client-side.
 
-The whole library is **8kb**, the unpack half is barely **2kb**.
+The current minified browser builds are about **11.6 KB** for the whole library
+and **3.5 KB** for unpack only, before gzip or Brotli (1 KB = 1,000 bytes).
 
 it is based on:
 
@@ -73,7 +74,7 @@ Basically,
 
 - get a js object into very compact form
 - reduce filesize/bandwidth a bunch
-- ensure the unpacking time is negligible
+- unpack once into an object for repeated lookups
 - keep word-lookups on critical-path
 
 ```js
@@ -88,7 +89,7 @@ var foods = {
   pepper: 'vegetable'
 }
 var str = pack(foods)
-//'{"fruit":"bl0straw1tomato;ack0ue0;berry","vegetable":"cucumb0pepp0tomato;er"}'
+//'fruit¦bl0straw1tomato;ack0ue0;berry|vegetable¦cucumb0pepp0tomato;er'
 
 var obj = unpack(str)
 console.log(obj.tomato)
@@ -101,7 +102,9 @@ console.log(obj.tomato)
 or, an Array:
 </h5>
 
-if you pass it an array of strings, it just creates an object with `true` values:
+if you pass it an array of strings, it creates an object with `true` values.
+Unpacking preserves the unique supported words after lowercasing, not the
+original array order, capitalization, or duplicates:
 
 ```js
 const data = [
@@ -117,9 +120,9 @@ const data = [
   'december'
 ]
 const packd = pack(data)
-// true¦a6dec4febr3j1ma0nov4octo5sept4;rch,y;an1u0;ly,ne;uary;em0;ber;pril,ugust
-const sameArray = Object.keys(unpack(packd))
-// same thing !
+// true¦a5dec3febr2j0nov3octo4sept3;an1u0;ly,ne;uary;em0;ber;pril,ugust
+const words = Object.keys(unpack(packd))
+// the same unique month names; original order is not preserved
 ```
 
 ## Packing direction
@@ -226,33 +229,41 @@ If you find another use for efrt, please [drop us a line](mailto:spencermountain
 
 ## Performance
 
-_efrt_ is tuned to be very quick to unzip. It is O(1) to lookup. Packing-up the data is the slowest part, which is usually fine:
+_efrt_ is designed to pack data ahead of time and unpack it once into a plain
+JavaScript object. Subsequent lookups use normal object property access.
+Packing and unpacking time depend on the data, options, runtime, and device;
+measure them on your own workload:
 
 ```js
-var compressed = pack(skateboarders) //1k words (on a macbook)
+var compressed = pack(skateboarders) // your dataset
+console.time('unpack')
 var trie = unpack(compressed)
-// unpacking-step: 5.1ms
+console.timeEnd('unpack')
 
-trie.hasOwnProperty('tony hawk')
-// cached-lookup: 0.02ms
+Object.prototype.hasOwnProperty.call(trie, 'tony hawk')
 ```
 
 ## Size
 
-`efrt` will pack filesize down as much as possible, depending upon the redundancy of the prefixes/suffixes in the words, and the size of the list.
+`efrt` can reduce data size depending on repeated prefixes, suffixes, fragments,
+and the number of categories. Small or less repetitive inputs may grow.
 
-- list of countries - `1.5k -> 0.8k` _(46% compressed)_
-- all adverbs in wordnet - `58k -> 24k` _(58% compressed)_
-- all adjectives in wordnet - `265k -> 99k` _(62% compressed)_
-- all nouns in wordnet - `1,775k -> 692k` _(61% compressed)_
+For the repository's current test fixtures, comparing `JSON.stringify(array)`
+with default `pack(array)` output in UTF-8 bytes, before gzip or Brotli and
+excluding the decoder:
+
+- 110 country names — `1,182 -> 865 bytes` _(26.8% smaller)_
+- 785 male names — `6,860 -> 3,486 bytes` _(49.2% smaller)_
 
 but there are some things to consider:
 
-- bigger files compress further (see [🎈 birthday problem](https://en.wikipedia.org/wiki/Birthday_problem))
-- using efrt will reduce gains from gzip compression, which most webservers quietly use
-- english is more suffix-redundant than prefix-redundant, so non-english words may benefit from other styles
+- more repeated word fragments give the packer more opportunities to share data
+- compare JSON and packed data after the same gzip or Brotli compression used for delivery
+- `direction: 'auto'` and `dictionary: true` can help some datasets, but choose by raw UTF-8 size rather than gzip or Brotli size
 
-Assuming your data has a low _category-to-data ratio_, you will hit-breakeven with at about 250 keys. If your data is in the thousands, you can very be confident about saving your users some considerable bandwidth.
+There is no fixed break-even key count. Include the decoder's download size
+when comparing total transfer sizes, and measure unpacking time and memory on
+your target devices.
 
 ## Use
 
@@ -267,7 +278,8 @@ Assuming your data has a low _category-to-data ratio_, you will hit-breakeven wi
 </script>
 ```
 
-if you're doing the second step in the client, you can load just the CJS unpack-half of the library(~3k):
+If you only need to unpack, load the standalone decoder. The minified CommonJS
+build is about **3.3 KB** before transport compression:
 
 ```js
 const unpack = require('efrt/unpack') // node/cjs
@@ -277,7 +289,7 @@ const unpack = require('efrt/unpack') // node/cjs
 <script src="https://unpkg.com/efrt@latest/builds/efrt-unpack.min.js"></script>
 <script>
   var trie = efrt(compressedStuff)
-  trie.hasOwnProperty('miles davis')
+  Object.prototype.hasOwnProperty.call(trie, 'miles davis')
 </script>
 ```
 
