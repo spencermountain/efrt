@@ -1,6 +1,6 @@
 {
   "name": "efrt",
-  "version": "2.9.0",
+  "version": "2.9.1",
   "description": "neato compression of key-value data",
   "license": "MIT",
   "repository": "github:spencermountain/efrt",
@@ -76,6 +76,5 @@
         "types/unpack.d.cts"
       ]
     }
-  },
-  "dependencies": {}
+  }
 }
