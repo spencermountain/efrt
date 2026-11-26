@@ -1,20 +1,21 @@
 <div align="center">
+  <div><b>efrt</b></div>
   <div>compression of key-value data</div>
-  <img width="300" height="8" alt="image" src="https://github.com/user-attachments/assets/a8454327-add3-4486-ad7d-c24be50f9d8d" />
+  <div>
+    <img width="300" height="8" alt="image" src="https://github.com/user-attachments/assets/a8454327-add3-4486-ad7d-c24be50f9d8d" />
+  </div>
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
   </a>
-  <a href="https://unpkg.com/efrt/builds/efrt.min.js">
-     <img src="https://badge-size.herokuapp.com/spencermountain/efrt/master/builds/efrt.min.js" />
+  <a href="https://bundlephobia.com/result?p=efrt">
+    <img src="https://badgen.net/bundlejs/min/efrt" />
   </a>
-  <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
-    <img src="https://img.shields.io/badge/stability-stable-green.svg?style=flat-square" />
-  </a>
+  <div align="center">
+    <code>npm install efrt</code>
+  </div>
 </div>
-
-<div align="center">
-  <code>npm install efrt</code>
-</div>
+<!-- spacer -->
+<img height="20px" src="https://user-images.githubusercontent.com/399657/68221862-17ceb980-ffb8-11e9-87d4-7b30b6488f16.png"/>
 
 if your data looks like this:
 
