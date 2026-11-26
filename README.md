@@ -1,5 +1,6 @@
 <div align="center">
   <img src="https://cloud.githubusercontent.com/assets/399657/23590290/ede73772-01aa-11e7-8915-181ef21027bc.png" />
+  <img width="400" height="8" alt="image" src="https://github.com/user-attachments/assets/a8454327-add3-4486-ad7d-c24be50f9d8d" />
   <div>compression of key-value data</div>
   <a href="https://npmjs.org/package/efrt">
     <img src="https://img.shields.io/npm/v/efrt.svg?style=flat-square" />
