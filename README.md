@@ -16,9 +16,6 @@
   <code>npm install efrt</code>
 </div>
 
-TypeScript declarations are included for both `efrt` and `efrt/unpack`, with ESM
-and CommonJS support. No separate `@types` package is needed.
-
 if your data looks like this:
 
 ```js
@@ -344,6 +341,11 @@ const unpack = require('efrt/unpack') // node/cjs
   Object.prototype.hasOwnProperty.call(trie, 'miles davis')
 </script>
 ```
+
+TypeScript declarations are included for both `efrt` and `efrt/unpack`, with ESM
+and CommonJS support. No separate `@types` package is needed.
+
+---
 
 Thanks to [John Resig](https://johnresig.com/) for his fun [trie-compression post](https://johnresig.com/blog/javascript-trie-performance-analysis/) on his blog, and [Wiktor Jakubczyc](https://github.com/monolithpl) for his performance analysis work
 
