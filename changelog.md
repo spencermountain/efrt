@@ -1,4 +1,4 @@
-## 2.9.1 [Sep 2026]
+## 2.9.1 [Nov 2026]
 
 - **[update]** - dependencies
 

@@ -59,8 +59,8 @@
     "tap-dancer": "0.4.4",
     "tape": "5.11.0",
     "typescript": "7.0.2",
-    "eslint-plugin-redos": "^4.6.2",
-    "eslint-plugin-regexp": "^3.3.3"
+    "eslint-plugin-redos": "4.6.2",
+    "eslint-plugin-regexp": "3.3.3"
   },
   "unpkg": "./builds/efrt.min.js",
   "prettier": {

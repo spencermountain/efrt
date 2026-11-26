@@ -21,10 +21,10 @@ importers:
         specifier: 10.15.0
         version: 10.15.0(supports-color@7.2.0)
       eslint-plugin-redos:
-        specifier: ^4.6.2
+        specifier: 4.6.2
         version: 4.6.2(eslint@10.15.0(supports-color@7.2.0))
       eslint-plugin-regexp:
-        specifier: ^3.3.3
+        specifier: 3.3.3
         version: 3.3.3(eslint@10.15.0(supports-color@7.2.0))
       rollup:
         specifier: 4.68.8
