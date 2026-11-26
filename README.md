@@ -48,6 +48,9 @@ var obj = unpack(str)
 obj['bedfordshire'] //'England'
 ```
 
+<!-- spacer -->
+<img height="20px" src="https://user-images.githubusercontent.com/399657/68221862-17ceb980-ffb8-11e9-87d4-7b30b6488f16.png"/>
+
 <h1 align="center">Yep,</h1>
 
 **efrt** packs category-type data into a _[compressed prefix trie](https://en.wikipedia.org/wiki/Trie)_ format, sharing repeated prefixes and suffixes within each category.
@@ -135,167 +138,8 @@ unpack(packed) // { apple: true, pear: true }
 const words = new Set(Object.keys(unpack(packed)))
 ```
 
-## Packing direction
-
-`pack(data, { direction: 'auto' })` tries prefix-first and suffix-first packing
-for each category and chooses the smaller UTF-8 text output, including the
-direction marker. Ties keep prefix-first packing. This takes more packing work;
-it does not optimize for gzip or Brotli.
-
-```js
-const packed = pack(['singing', 'ringing', 'bringing', 'swinging'], {
-  direction: 'auto'
-})
-const words = unpack(packed) // direction is detected automatically
-```
-
-The default is `direction: 'prefix'`, preserving existing output for keys without digits.
-Use `direction: 'suffix'` to force suffix-first packing. These options also work
-with `strict: true`. Keys are lowercased before reversing, and Unicode code
-points stay intact.
-
-Suffix-first categories have a single `:` immediately after `¦`, for example
-`true¦:elppa` decodes to `{ apple: true }`. Prefix-first categories have no direction marker;
-both directions can appear in the same packed string. The updated unpacker reads
-both old and new output, but older unpackers cannot read suffix-marked data.
-
-## Fragment dictionaries
-
-Use `pack(data, { dictionary: true, direction: 'auto' })` to learn a small
-dictionary of repeated word fragments independently for each category. There
-is no built-in language list. Candidates come from Unicode code-point sequences
-in the trie's word labels, after prefix/suffix sharing. They never include node
-separators or references. Tokens are emitted in edge labels and resolved when
-those labels are decoded; this is not compression of the serialized trie syntax.
-
-The option defaults to `false`. When enabled, the packer counts the UTF-8 bytes
-of the definitions, header, and encoded trie, and uses the dictionary only if
-the complete representation is smaller. With `direction: 'auto'`, both directions
-are compared including their dictionaries. Packing takes additional time and
-memory; dictionaries are stored in the output rather than bundled with unpack.
-
-No new characters are reserved in input keys. Each dictionary chooses one-byte
-punctuation tokens absent from that category's original word labels. Literal
-punctuation stays supported; if no suitable tokens are available, packing falls
-back to the existing format. The existing reserved characters still apply.
-
-Dictionary output has a versioned header before the trie:
-
-```text
-category¦!1:TOKENS:FRAGMENT,FRAGMENT;TRIE
-category¦:!1:TOKENS:FRAGMENT,FRAGMENT;TRIE   (suffix-first)
-category¦!2;:!1:TOKENS:FRAGMENT,FRAGMENT;TRIE   (digit encoding, suffix-first)
-```
-
-Tokens correspond to fragments in order. For example,
-`true¦!1:#:ありがとう;a#,b#` decodes to the words `aありがとう` and `bありがとう`.
-Definitions are literal strings, not recursive token expressions. A header
-applies only to its category; marked and unmarked categories can be mixed.
-Older unpackers cannot read dictionary-marked output. The updated unpacker
-continues to accept the original format and suffix-first output.
-
-## Reserved characters
-
-Keys are lowercased. Digits, spaces, underscores, backslashes, and Unicode are
-supported; case sensitivity and the punctuation `,;!:|¦` are not supported.
-After lowercasing, keys are checked against:
-
-```js
-const specialChars = new RegExp('[A-Z,;!:|¦]')
-```
-
-Categories containing supported digit keys use the version marker `!2;`
-immediately after `¦`, before any direction or dictionary header. In this format,
-literal digits `0` through `9` are written as `\a` through `\j`, and a literal
-backslash is written as `\\`. These are characters in the packed text, not
-JavaScript string-literal escapes. Node references still use ordinary digits.
-
-```js
-pack(['101domain.com']) // String.raw`true¦!2;\b\a\bdomain.com`
-unpack(String.raw`true¦!2;\b\a\bdomain.com`) // { '101domain.com': true }
-```
-
-Categories without digits keep their existing encoding, including literal
-backslashes. Both formats can coexist in one packed string. Updated unpackers
-read both; older unpackers cannot read `!2;` categories. Versioned dictionary
-definitions use the same escapes, and expanded fragments are not unescaped again.
-Unknown or incomplete escapes in versioned labels or definitions throw a
-`SyntaxError`. Digits work with strict mode and all packing options; other
-reserved punctuation remains unsupported.
-
-For input validation, use `pack(data, { strict: true })`. It throws a `TypeError`
-for empty or unsupported keys, non-string array or Set entries, or distinct keys that
-become identical after lowercasing:
-
-```js
-pack(['apple!'], { strict: true }) // throws: unsupported key "apple!"
-pack({ Apple: 'fruit', apple: 'company' }, { strict: true }) // throws: normalization collision
-pack(['Apple', 'Apple'], { strict: true }) // valid: exact duplicates are allowed
-```
-
-Strict mode still lowercases keys and uses the category semantics below. Without
-this option, unsupported keys are silently dropped and normalization collisions
-are merged, preserving the existing behavior. Underscores are supported, including
-names such as `_c`, `_d`, `_v`, `_g`, and `_n`: trie metadata is stored separately
-from word fragments.
-
-Category values cannot contain `|` or `¦`; `pack()` throws a `TypeError`
-instead of producing an ambiguous packed string. Categories use the existing
-string-based format: values are converted to strings, except the category
-`"true"` decodes as boolean `true` (also used for arrays and Sets of words). Consequently,
-`false` decodes as `"false"`, numbers decode as strings, and the string `"true"`
-cannot be distinguished from boolean `true`. Category arrays represent membership
-in multiple categories, not a general-purpose array serialization format.
-
-Keys are limited to 1,024 UTF-16 code units after lowercasing. Longer keys throw
-a `RangeError` to bound recursive trie construction. `unpack()` validates the
-packed syntax and references and throws a `SyntaxError` for malformed data;
-its traversal is iterative, so deeply nested valid tries do not exhaust the call
-stack. Empty strings, `null`, and `undefined` unpack to `{}`; other non-string
-inputs throw a `TypeError`. Duplicate words within a packed category produce
-only one membership in that category. Trie edges preserve complete Unicode
-code points, so valid Unicode keys, including emoji, survive UTF-8 transport.
-
-_efrt_ is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
-If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
-
-## Performance
-
-_efrt_ is designed to pack data ahead of time and unpack it once into a plain
-JavaScript object. Subsequent lookups use normal object property access.
-Packing and unpacking time depend on the data, options, runtime, and device;
-measure them on your own workload:
-
-```js
-var compressed = pack(skateboarders) // your dataset
-console.time('unpack')
-var trie = unpack(compressed)
-console.timeEnd('unpack')
-
-Object.prototype.hasOwnProperty.call(trie, 'tony hawk')
-```
-
-## Size
-
-`efrt` can reduce data size depending on repeated prefixes, suffixes, fragments,
-and the number of categories. Small or less repetitive inputs may grow.
-
-For the repository's current test fixtures, comparing `JSON.stringify(array)`
-with default `pack(array)` output in UTF-8 bytes, before gzip or Brotli and
-excluding the decoder:
-
-- 110 country names — `1,182 -> 865 bytes` _(26.8% smaller)_
-- 785 male names — `6,860 -> 3,486 bytes` _(49.2% smaller)_
-
-but there are some things to consider:
-
-- more repeated word fragments give the packer more opportunities to share data
-- compare JSON and packed data after the same gzip or Brotli compression used for delivery
-- `direction: 'auto'` and `dictionary: true` can help some datasets, but choose by raw UTF-8 size rather than gzip or Brotli size
-
-There is no fixed break-even key count. Include the decoder's download size
-when comparing total transfer sizes, and measure unpacking time and memory on
-your target devices.
+<!-- spacer -->
+<img height="20px" src="https://user-images.githubusercontent.com/399657/68221862-17ceb980-ffb8-11e9-87d4-7b30b6488f16.png"/>
 
 ## Usage
 
@@ -346,7 +190,97 @@ const unpack = require('efrt/unpack') // node/cjs
 TypeScript declarations are included for both `efrt` and `efrt/unpack`, with ESM
 and CommonJS support. No separate `@types` package is needed.
 
+<!-- spacer -->
+<img height="20px" src="https://user-images.githubusercontent.com/399657/68221862-17ceb980-ffb8-11e9-87d4-7b30b6488f16.png"/>
+
+## Details
+
+### Packing direction
+
+`pack(data, { direction: 'auto' })` tries prefix-first and suffix-first packing
+for each category and chooses the smaller UTF-8 text output, including the
+direction marker. Ties keep prefix-first packing. This takes more packing work;
+it does not optimize for gzip or Brotli.
+
+```js
+const packed = pack(['singing', 'ringing', 'bringing', 'swinging'], {
+  direction: 'auto'
+})
+const words = unpack(packed) // direction is detected automatically
+```
+
+The default is `direction: 'prefix'`, preserving existing output for keys without digits.
+Use `direction: 'suffix'` to force suffix-first packing. These options also work
+with `strict: true`. Keys are lowercased before reversing, and Unicode code
+points stay intact.
+
+Suffix-first categories have a single `:` immediately after `¦`, for example
+`true¦:elppa` decodes to `{ apple: true }`. Prefix-first categories have no direction marker;
+both directions can appear in the same packed string. The updated unpacker reads
+both old and new output, but older unpackers cannot read suffix-marked data.
+
+### Reserved characters
+
+Keys are lowercased. Digits, spaces, underscores, backslashes, and Unicode are
+supported; case sensitivity and the punctuation `,;!:|¦` are not supported.
+After lowercasing, keys are checked against:
+
+```js
+const specialChars = new RegExp('[A-Z,;!:|¦]')
+```
+
+see more details in [Docs/Reserved-characters](./docs/reserved-characters.md)
+
+### Fragment dictionaries
+
+Use `pack(data, { dictionary: true, direction: 'auto' })` to learn a small
+dictionary of repeated word fragments independently for each category. There
+is no built-in language list.
+
+see more details in [Docs/Fragment-dictionaries](./docs/fragment-dictionaries.md)
+
+## Performance
+
+_efrt_ is designed to pack data ahead of time and unpack it once into a plain
+JavaScript object. Subsequent lookups use normal object property access.
+Packing and unpacking time depend on the data, options, runtime, and device;
+measure them on your own workload:
+
+```js
+var compressed = pack(skateboarders) // your dataset
+console.time('unpack')
+var trie = unpack(compressed)
+console.timeEnd('unpack')
+
+Object.prototype.hasOwnProperty.call(trie, 'tony hawk')
+```
+
+## Size
+
+`efrt` can reduce data size depending on repeated prefixes, suffixes, fragments,
+and the number of categories. Small or less repetitive inputs may grow.
+
+For the repository's current test fixtures, comparing `JSON.stringify(array)`
+with default `pack(array)` output in UTF-8 bytes, before gzip or Brotli and
+excluding the decoder:
+
+- 110 country names — `1,182 -> 865 bytes` _(26.8% smaller)_
+- 785 male names — `6,860 -> 3,486 bytes` _(49.2% smaller)_
+
+but there are some things to consider:
+
+- more repeated word fragments give the packer more opportunities to share data
+- compare JSON and packed data after the same gzip or Brotli compression used for delivery
+- `direction: 'auto'` and `dictionary: true` can help some datasets, but choose by raw UTF-8 size rather than gzip or Brotli size
+
+There is no fixed break-even key count. Include the decoder's download size
+when comparing total transfer sizes, and measure unpacking time and memory on
+your target devices.
+
 ---
+
+_efrt_ is built-for, and used heavily in [compromise](https://github.com/nlp-compromise/compromise), to expand the amount of data it can ship onto the client-side.
+If you find another use for efrt, please [drop us a line](mailto:spencermountain@gmail.com)🎈
 
 Thanks to [John Resig](https://johnresig.com/) for his fun [trie-compression post](https://johnresig.com/blog/javascript-trie-performance-analysis/) on his blog, and [Wiktor Jakubczyc](https://github.com/monolithpl) for his performance analysis work
 
