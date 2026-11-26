@@ -52,13 +52,15 @@
   ],
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
-    "@rollup/plugin-terser": "1.0.0",
-    "eslint": "10.11.0",
-    "rollup": "4.63.5",
+    "@rollup/plugin-terser": "1.0.2",
+    "eslint": "10.15.0",
+    "rollup": "4.68.8",
     "rollup-plugin-filesize-check": "2.0.1",
-    "tap-dancer": "0.4.2",
-    "tape": "5.10.2",
-    "typescript": "7.0.2"
+    "tap-dancer": "0.4.4",
+    "tape": "5.11.0",
+    "typescript": "7.0.2",
+    "eslint-plugin-redos": "^4.6.2",
+    "eslint-plugin-regexp": "^3.3.3"
   },
   "unpkg": "./builds/efrt.min.js",
   "prettier": {
@@ -74,5 +76,6 @@
         "types/unpack.d.cts"
       ]
     }
-  }
+  },
+  "dependencies": {}
 }

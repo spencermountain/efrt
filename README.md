@@ -239,7 +239,10 @@ is no built-in language list.
 
 see more details in [Docs/Fragment-dictionaries](./docs/fragment-dictionaries.md)
 
-## Performance
+<!-- spacer -->
+<img height="20px" src="https://user-images.githubusercontent.com/399657/68221862-17ceb980-ffb8-11e9-87d4-7b30b6488f16.png"/>
+
+## Speed
 
 _efrt_ is designed to pack data ahead of time and unpack it once into a plain
 JavaScript object. Subsequent lookups use normal object property access.

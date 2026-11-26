@@ -65,7 +65,7 @@ const pack = function (obj, options = {}) {
   //pack each into a compressed string
   Object.keys(flat).forEach(function (k) {
     const words = flat[k].map(normalizeKey)
-    const versioned = words.some((word) => /[0-9]/.test(word) && !unsupportedChars.test(word))
+    const versioned = words.some((word) => /\d/.test(word) && !unsupportedChars.test(word))
     const marker = versioned ? '!2;' : ''
     if (direction === 'prefix') {
       flat[k] = marker + new Trie(words).pack(options.dictionary, versioned)

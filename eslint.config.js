@@ -1,5 +1,15 @@
+import redos from 'eslint-plugin-redos'
+import * as regexpPlugin from 'eslint-plugin-regexp'
+
 export default [
-  { ignores: ['**/builds/*', './scratch.js'] },
+  { ignores: ['**/builds/*', '**/scratch.js', '**/rollup.config.js', '.claude/**'] },
+  // regex scanning
+  regexpPlugin.configs['flat/recommended'],
+  // specific regexDos vulnerability scanner
+  {
+    plugins: { redos },
+    rules: { 'redos/no-vulnerable': ['error', { ignoreErrors: false }] }
+  },
   {
     languageOptions: {
       ecmaVersion: 'latest',
