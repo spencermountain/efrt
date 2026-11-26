@@ -1,0 +1,73 @@
+name: Release
+
+# Publishes to npm when a GitHub release is published.
+# Auth is npm trusted publishing (OIDC) - there is no npm token to store.
+# The filename of this workflow must match the trusted publisher set on npmjs.com.
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write # lets npm exchange the GitHub OIDC token for publish rights
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.5.0
+          cache: true
+      - name: Check npm supports trusted publishing
+        run: |
+          node -e "
+            const v = process.argv[1].split('.').map(Number)
+            const ok = v[0] > 11 || (v[0] === 11 && (v[1] > 5 || (v[1] === 5 && v[2] >= 1)))
+            console.log('npm ' + process.argv[1])
+            if (!ok) { console.error('::error::npm >=11.5.1 is required for trusted publishing'); process.exit(1) }
+          " "$(npm --version)"
+      - name: Check release tag matches package version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ "${TAG#v}" != "$VERSION" ]; then
+            echo "::error::Release tag $TAG does not match package.json version $VERSION"
+            exit 1
+          fi
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build bundles
+        run: npm run build
+      - name: Check committed bundles
+        run: git diff --exit-code -- builds src/_version.js
+      - name: Lint
+        run: npm run lint
+      - name: Test source
+        run: npm test -- --raw
+      - name: Test built bundles
+        run: npm run testb -- --raw
+      - name: Test npm package in an isolated consumer
+        run: npm run test:package
+      - name: Check TypeScript consumers and package declarations
+        run: npm run test:types
+      - name: Publish
+        run: npm publish
