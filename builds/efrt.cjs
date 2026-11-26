@@ -423,7 +423,7 @@
         return
       }
       if (typeof words === 'string') {
-        words = words.split(/[^a-zA-Z]+/);
+        words = words.split(/[^a-z]+/i);
       }
       for (let i = 0; i < words.length; i++) {
         words[i] = normalizeKey(words[i]);
@@ -742,7 +742,7 @@
     //pack each into a compressed string
     Object.keys(flat).forEach(function (k) {
       const words = flat[k].map(normalizeKey);
-      const versioned = words.some((word) => /[0-9]/.test(word) && !unsupportedChars.test(word));
+      const versioned = words.some((word) => /\d/.test(word) && !unsupportedChars.test(word));
       const marker = versioned ? '!2;' : '';
       if (direction === 'prefix') {
         flat[k] = marker + new Trie(words).pack(options.dictionary, versioned);
@@ -807,7 +807,7 @@
     if (header.length !== 3 || tokens.length === 0 || tokens.length !== fragments.length ||
       new Set(tokens).size !== tokens.length || trie.nodes.length === 0 ||
       tokens.some((token) => token.length !== 1 || token.charCodeAt(0) < 33 ||
-        token.charCodeAt(0) > 126 || /[A-Za-z0-9,;!:|]/.test(token) ||
+        token.charCodeAt(0) > 126 || /[A-Z0-9,;!:|]/i.test(token) ||
         (trie.versioned && token === '\\')) ||
       fragments.some((text) => !text || /[A-Z0-9,;!:|¦]/.test(text))) {
       throw new SyntaxError('Invalid efrt packed data: fragment dictionary')
@@ -958,7 +958,7 @@
     return all
   };
 
-  var _version = '2.9.0';
+  var _version = '2.9.1';
 
   exports.pack = pack;
   exports.unpack = unpack;

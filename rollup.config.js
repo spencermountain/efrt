@@ -7,7 +7,8 @@ import fs from 'node:fs'
 const pkg = JSON.parse(fs.readFileSync('./package.json').toString())
 console.log('\n 📦  - running rollup..\n')
 
-const banner = `/* spencermountain/${pkg.name} ${pkg.version} ${pkg.license} */`
+// the '!' stops terser from stripping the comment
+const banner = `/*! spencermountain/${pkg.name} ${pkg.version} ${pkg.license} */`
 
 export default [
   //cjs
@@ -23,7 +24,7 @@ export default [
     plugins: [
       terser({ compress: { passes: 3 } }),
       sizeCheck({
-        expect: 8, // sizes in kb
+        expect: 12, // sizes in kb
         warn: 2, // acceptable change (+/-)
         throw: 10 // unacceptable change (+/-)
       })

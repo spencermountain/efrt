@@ -1,4 +1,9 @@
+## 2.9.1 [Nov 2026]
+
+- **[update]** - dependencies
+
 ## 2.9.0 [Sep 2026]
+
 - **[change]** - accept Set word inputs, including `ReadonlySet<string>` in TypeScript, with the same validation and encoding as arrays
 - **[change]** - include TypeScript declarations for `efrt` and `efrt/unpack`, with ESM/CommonJS consumer tests and Are the Types Wrong checks in CI
 - **[change]** - support digits in keys with versioned label escaping, including suffix packing and fragment dictionaries
@@ -9,6 +14,7 @@
 - **[change]** - support for Set inputs
 
 ## 2.8.0 [Sep 2026]
+
 - **[change]** - Safer handling of prototype-related names.
 - **[change]** - Category delimiter validation and documented value coercion.
 - **[fix]** - Working CommonJS unpack export.
@@ -17,21 +23,26 @@
 - **[update]** - dependencies
 
 ## 2.7.0 [Apr 2022]
+
 - **[fix]** - underscore character support
 
 ## 2.6.0 [Apr 2022]
+
 - **[change]** - give commonjs build a .cjs extension
 
 ## 2.4.0 [Jan 2022]
+
 - **[fix]** - empty-array runtime error on unpack
 - **[change]** - point package 'main' at ./src/index.js for tree-shaking
 - **[change]** - remove babel dependency
 - **[change]** - use .js for cjs builds
 
 ## 2.3.1 [June 2021]
+
 - **[change]** - use .cjs for commonjs file
 
 ## 2.3.0 [June 2021]
+
 - **[change]** - support es modules exports
 - **[change]** - remove mapfile
 - **[update]** - deps

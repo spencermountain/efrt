@@ -10,7 +10,7 @@ const dictionary = function (trie) {
   if (header.length !== 3 || tokens.length === 0 || tokens.length !== fragments.length ||
     new Set(tokens).size !== tokens.length || trie.nodes.length === 0 ||
     tokens.some((token) => token.length !== 1 || token.charCodeAt(0) < 33 ||
-      token.charCodeAt(0) > 126 || /[A-Za-z0-9,;!:|]/.test(token) ||
+      token.charCodeAt(0) > 126 || /[A-Z0-9,;!:|]/i.test(token) ||
       (trie.versioned && token === '\\')) ||
     fragments.some((text) => !text || /[A-Z0-9,;!:|¦]/.test(text))) {
     throw new SyntaxError('Invalid efrt packed data: fragment dictionary')

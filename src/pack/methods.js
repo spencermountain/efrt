@@ -10,7 +10,7 @@ const methods = {
       return
     }
     if (typeof words === 'string') {
-      words = words.split(/[^a-zA-Z]+/)
+      words = words.split(/[^a-z]+/i)
     }
     for (let i = 0; i < words.length; i++) {
       words[i] = normalizeKey(words[i])
